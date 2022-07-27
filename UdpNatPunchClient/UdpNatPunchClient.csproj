@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Crc32.net" Version="1.2.0" />
+    <PackageReference Include="Litenetlib" Version="0.9.5.2" />
+    <PackageReference Include="Meziantou.Framework.WPF" Version="1.5.4" />
+    <PackageReference Include="microsoft.toolkit.mvvm" Version="7.1.2" />
+    <PackageReference Include="newtonsoft.json" Version="13.0.1" />
+  </ItemGroup>
+
+</Project>
