@@ -25,6 +25,7 @@ namespace UdpNatPunchClient
         private bool _isConnectedToTracker;
         private string _currentMessage = string.Empty;
         private ConcurrentObservableCollection<MessageModel>? _messages;
+        private Action _scrollMessageBoxToEnd;
 
         public MainWindowViewModel()
         {
@@ -94,6 +95,11 @@ namespace UdpNatPunchClient
                     Messages = SelectedUser.Messages;
                 }
             }
+        }
+
+        public void PassScrollingDelegate(Action scrollToEndDelegate)
+        {
+            _scrollMessageBoxToEnd = scrollToEndDelegate;
         }
 
         public void StartApp()
@@ -377,6 +383,8 @@ namespace UdpNatPunchClient
                     CurrentMessage += AsciiArts.Jerma;
                     break;
             }
+
+            _scrollMessageBoxToEnd?.Invoke();
         }
     }
 }

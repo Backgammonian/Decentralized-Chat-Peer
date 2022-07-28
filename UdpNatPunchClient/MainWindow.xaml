@@ -13,11 +13,7 @@
         Loaded="Window_Loaded"
         Closing="Window_Closing">
     <Window.Resources>
-        <converters:DateTimeConverter x:Key="DateTimeConverter"/>
-        <converters:DeliveryStateConverter x:Key="DeliveryStateConverter"/>
-        <converters:MessageDirectionAlignmentConverter x:Key="MessageDirectionAlignmentConverter"/>
-        <converters:MessageDirectionColorConverter x:Key="MessageDirectionColorConverter"/>
-        <converters:MessageDirectionToVisibilityConverter x:Key="MessageDirectionToVisibilityConverter"/>
+        <ResourceDictionary Source="/Styles.xaml"/>
     </Window.Resources>
     <Window.DataContext>
         <local:MainWindowViewModel/>
@@ -27,41 +23,44 @@
             <RowDefinition Height="30"/>
             <RowDefinition Height="30"/>
             <RowDefinition Height="30"/>
-            <RowDefinition Height="30"/>
-            <RowDefinition Height="30"/>
-            <RowDefinition Height="30"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <TextBlock
+        <StackPanel
             Grid.Row="0"
-            Text="My ID:"/>
-        <TextBox
+            Orientation="Horizontal">
+            <TextBlock
+                Style="{StaticResource BaseTextBlock}"
+                Text="My ID:"/>
+            <TextBox
+                Style="{StaticResource BaseTextBox}"
+                IsReadOnly="True"
+                Text="{Binding ID, Mode=OneWay}"/>
+        </StackPanel>
+        <StackPanel
             Grid.Row="1"
-            IsReadOnly="True"
-            Text="{Binding ID, Mode=OneWay}"/>
+            Orientation="Horizontal">
+            <Button
+                Style="{StaticResource BaseButton}"
+                Command="{Binding ConnectToTrackerCommand}">
+                <TextBlock
+                    Style="{StaticResource BaseTextBlock}"
+                    Text="Connect to tracker"/>
+            </Button>
+            <TextBlock
+                Style="{StaticResource BaseTextBlock}"
+                Text="{Binding TrackerAddress, StringFormat={}Currect tracker: {0}}"/>
+        </StackPanel>
         <Button
             Grid.Row="2"
-            Command="{Binding ConnectToTrackerCommand}"
-            HorizontalAlignment="Left">
-            <TextBlock
-                Text="Connect to tracker"/>
-        </Button>
-        <TextBlock
-            Grid.Row="3"
-            Text="Currect tracker:"/>
-        <TextBlock
-            Grid.Row="4"
-            Text="{Binding TrackerAddress}"/>
-        <Button
-            Grid.Row="5"
+            Style="{StaticResource BaseButton}"
             Command="{Binding ConnectToPeerCommand}"
-            IsEnabled="{Binding IsConnectedToTracker}"
-            HorizontalAlignment="Left">
+            IsEnabled="{Binding IsConnectedToTracker}">
             <TextBlock
+                Style="{StaticResource BaseTextBlock}"
                 Text="Connect to new peer"/>
         </Button>
         <Grid
-            Grid.Row="6">
+            Grid.Row="3">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="200"/>
                 <ColumnDefinition Width="*"/>
@@ -74,6 +73,7 @@
                 </Grid.RowDefinitions>
                 <TextBlock
                     Grid.Row="0"
+                    Style="{StaticResource BaseTextBlock}"
                     Text="Connected peers:"/>
                 <ListBox
                     Grid.Row="1"
@@ -82,10 +82,12 @@
                     <ListBox.ItemTemplate>
                         <DataTemplate>
                             <StackPanel
-                                Margin="5">
+                                Margin="6">
                                 <TextBlock
+                                    Style="{StaticResource BaseTextBlock}"
                                     Text="{Binding ID}"/>
                                 <TextBlock
+                                    Style="{StaticResource BaseTextBlock}"
                                     Text="{Binding EndPoint, StringFormat={}({0})}"/>
                                 <Separator/>
                             </StackPanel>
@@ -102,6 +104,7 @@
                 </Grid.RowDefinitions>
                 <TextBlock
                     Grid.Row="0"
+                    Style="{StaticResource BaseTextBlock}"
                     Text="Messages:"/>
                 <ListBox
                     Grid.Row="1"
@@ -114,17 +117,15 @@
                                 HorizontalAlignment="{Binding Direction, Converter={StaticResource MessageDirectionAlignmentConverter}}"
                                 Background="{Binding Direction, Converter={StaticResource MessageDirectionColorConverter}}">
                                 <TextBlock
-                                    Text="{Binding Time, Converter={StaticResource DateTimeConverter}}"
-                                    FontStyle="Oblique"/>
+                                    Style="{StaticResource MessageDateTextBlock}"
+                                    Text="{Binding Time, Converter={StaticResource DateTimeConverter}}"/>
                                 <TextBlock
-                                    Text="{Binding Content}"
-                                    FontSize="16"/>
+                                    Style="{StaticResource MessageContentTextBlock}"
+                                    Text="{Binding Content}"/>
                                 <TextBlock
+                                    Style="{StaticResource MessageDeliveryStateTextBlock}"
                                     Text="{Binding DeliveryState, Converter={StaticResource DeliveryStateConverter}}"
-                                    Visibility="{Binding Direction, Converter={StaticResource MessageDirectionToVisibilityConverter}}"
-                                    HorizontalAlignment="Right"
-                                    FontStyle="Oblique"
-                                    FontSize="14"/>
+                                    Visibility="{Binding Direction, Converter={StaticResource MessageDirectionToVisibilityConverter}}"/>
                             </StackPanel>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
@@ -144,19 +145,21 @@
                         </Grid.RowDefinitions>
                         <TextBlock
                             Grid.Row="0"
-                            Text="ASCII Art"
-                            FontSize="14"/>
+                            Style="{StaticResource BaseTextBlock}"
+                            Text="ASCII Arts"/>
                         <ComboBox
                             Grid.Row="1"
-                            ItemsSource="{Binding TextArts}"
-                            SelectedItem="{Binding TextArts[0]}">
+                            Style="{StaticResource BaseComboBox}"
+                            ItemsSource="{Binding TextArts}">
                             <ComboBox.ItemTemplate>
                                 <DataTemplate>
                                     <StackPanel>
                                         <Button
+                                            Style="{StaticResource BaseButton}"
                                             Command="{Binding DataContext.PutAsciiArtCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"
                                             CommandParameter="{Binding}">
                                             <TextBlock
+                                                Style="{StaticResource BaseTextBlock}"
                                                 Text="{Binding}"/>
                                         </Button>
                                     </StackPanel>
@@ -166,16 +169,15 @@
                     </Grid>
                     <TextBox
                         Grid.Column="1"
-                        behaviours:TextBoxBehaviour.ScrollOnTextChanged="True"
-                        Text="{Binding CurrentMessage, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                        AcceptsReturn="True"
-                        AcceptsTab="True"
-                        ScrollViewer.VerticalScrollBarVisibility="Auto"
-                        ScrollViewer.HorizontalScrollBarVisibility="Auto"/>
+                        x:Name="MessageTextBox"
+                        Style="{StaticResource MessageTextBox}"
+                        Text="{Binding CurrentMessage, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                     <Button
                         Grid.Column="2"
+                        Style="{StaticResource SendMessageButton}"
                         Command="{Binding SendMessageCommand}">
                         <TextBlock
+                            Style="{StaticResource BaseTextBlock}"
                             Text="Send"/>
                     </Button>
                 </Grid>
