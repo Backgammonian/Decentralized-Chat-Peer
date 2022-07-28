@@ -4,7 +4,6 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:UdpNatPunchClient"
-        xmlns:converters="clr-namespace:Converters"
         xmlns:behaviours="clr-namespace:Behaviours"
         mc:Ignorable="d"
         Title="Client" 
@@ -23,6 +22,7 @@
             <RowDefinition Height="30"/>
             <RowDefinition Height="30"/>
             <RowDefinition Height="30"/>
+            <RowDefinition Height="30"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         <StackPanel
@@ -36,22 +36,31 @@
                 IsReadOnly="True"
                 Text="{Binding ID, Mode=OneWay}"/>
         </StackPanel>
-        <StackPanel
+        <Button
             Grid.Row="1"
-            Orientation="Horizontal">
-            <Button
-                Style="{StaticResource BaseButton}"
-                Command="{Binding ConnectToTrackerCommand}">
-                <TextBlock
-                    Style="{StaticResource BaseTextBlock}"
-                    Text="Connect to tracker"/>
-            </Button>
+            Style="{StaticResource BaseButton}"
+            Command="{Binding ConnectToTrackerCommand}">
             <TextBlock
                 Style="{StaticResource BaseTextBlock}"
-                Text="{Binding TrackerAddress, StringFormat={}Currect tracker: {0}}"/>
+                Text="Connect to tracker"/>
+        </Button>
+        <StackPanel
+            Grid.Row="2"
+            Orientation="Horizontal">
+            <TextBlock
+                Style="{StaticResource BaseTextBlock}"
+                Text="Currect tracker:"/>
+            <Button
+                Style="{StaticResource BaseButton}"
+                Width="150"
+                Command="{Binding SelectTrackerDialogCommand}">
+                <TextBlock
+                    Style="{StaticResource BaseTextBlock}"
+                    Text="{Binding TrackerAddress}"/>
+            </Button>
         </StackPanel>
         <Button
-            Grid.Row="2"
+            Grid.Row="3"
             Style="{StaticResource BaseButton}"
             Command="{Binding ConnectToPeerCommand}"
             IsEnabled="{Binding IsConnectedToTracker}">
@@ -60,7 +69,7 @@
                 Text="Connect to new peer"/>
         </Button>
         <Grid
-            Grid.Row="3">
+            Grid.Row="4">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="200"/>
                 <ColumnDefinition Width="*"/>
@@ -78,7 +87,7 @@
                 <ListBox
                     Grid.Row="1"
                     ItemsSource="{Binding ConnectedUsers}"
-                    SelectedItem="{Binding SelectedUser}">
+                    SelectedItem="{Binding SelectedPeer}">
                     <ListBox.ItemTemplate>
                         <DataTemplate>
                             <StackPanel
@@ -105,7 +114,7 @@
                 <TextBlock
                     Grid.Row="0"
                     Style="{StaticResource BaseTextBlock}"
-                    Text="Messages:"/>
+                    Text="{Binding SelectedPeer, Converter={StaticResource RecepientConverter}, StringFormat={}Recepient: {0}}"/>
                 <ListBox
                     Grid.Row="1"
                     HorizontalContentAlignment="Stretch"

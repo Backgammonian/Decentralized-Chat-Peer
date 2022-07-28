@@ -8,6 +8,7 @@
     <converters:MessageDirectionAlignmentConverter x:Key="MessageDirectionAlignmentConverter"/>
     <converters:MessageDirectionColorConverter x:Key="MessageDirectionColorConverter"/>
     <converters:MessageDirectionToVisibilityConverter x:Key="MessageDirectionToVisibilityConverter"/>
+    <converters:RecepientConverter x:Key="RecepientConverter"/>
 
     <Style TargetType="TextBlock" x:Key="BaseTextBlock">
         <Setter Property="FontSize" Value="14"/>

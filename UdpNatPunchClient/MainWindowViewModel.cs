@@ -21,11 +21,12 @@ namespace UdpNatPunchClient
     {
         private readonly Client _client;
         private readonly Users _connectedUsers;
-        private UserModel? _selectedUser;
+        private TrackerModel? _tracker;
         private bool _isConnectedToTracker;
         private string _currentMessage = string.Empty;
         private ConcurrentObservableCollection<MessageModel>? _messages;
-        private Action _scrollMessageBoxToEnd;
+        private PeerModel? _selectedPeer;
+        private Action? _scrollMessageBoxToEnd;
 
         public MainWindowViewModel()
         {
@@ -33,10 +34,12 @@ namespace UdpNatPunchClient
             ConnectToPeerCommand = new RelayCommand(ConnectToPeer);
             SendMessageCommand = new RelayCommand(SendMessage);
             PutAsciiArtCommand = new RelayCommand<AsciiArtsType>(PutAsciiArt);
+            SelectTrackerDialogCommand = new RelayCommand(SelectTrackerDialog);
 
             ID = RandomGenerator.GetRandomString(30);
             CurrentMessage = string.Empty;
             IsConnectedToTracker = false;
+            SelectedPeer = null;
 
             TextArts = new ObservableCollection<AsciiArtsType>(Enum.GetValues(typeof(AsciiArtsType)).Cast<AsciiArtsType>());
 
@@ -53,18 +56,20 @@ namespace UdpNatPunchClient
             _connectedUsers = new Users();
             _connectedUsers.UserAdded += OnConnectedPeerAdded;
             _connectedUsers.UserRemoved += OnConnectedPeerRemoved;
+
+            _tracker = null;
         }
 
         public ICommand ConnectToTrackerCommand { get; }
         public ICommand ConnectToPeerCommand { get; }
         public ICommand SendMessageCommand { get; }
         public ICommand PutAsciiArtCommand { get; }
+        public ICommand SelectTrackerDialogCommand { get; }
 
         public string ID { get; }
         public ObservableCollection<AsciiArtsType> TextArts { get; }
-        public string TrackerAddress => _client.Tracker == null ? "--" : _client.Tracker.EndPoint.ToString();
+        public string TrackerAddress => _tracker == null ? "---" : _tracker.EndPoint;
         public ObservableCollection<UserModel> ConnectedUsers => new ObservableCollection<UserModel>(_connectedUsers.List.OrderBy(user => user.ConnectionTime));
-        public EncryptedPeer? Tracker => _client.Tracker;
 
         public bool IsConnectedToTracker
         {
@@ -84,15 +89,15 @@ namespace UdpNatPunchClient
             set => SetProperty(ref _currentMessage, value);
         }
 
-        public UserModel? SelectedUser
+        public PeerModel? SelectedPeer
         {
-            get => _selectedUser;
+            get => _selectedPeer;
             set
             {
-                SetProperty(ref _selectedUser, value);
-                if (SelectedUser != null)
+                SetProperty(ref _selectedPeer, value);
+                if (SelectedPeer != null)
                 {
-                    Messages = SelectedUser.Messages;
+                    Messages = SelectedPeer.Messages;
                 }
             }
         }
@@ -109,7 +114,7 @@ namespace UdpNatPunchClient
 
         public void ShutdownApp()
         {
-            Tracker?.Disconnect();
+            _tracker?.Disconnect();
             _client.DisconnectAll();
             _client.Stop();
         }
@@ -225,22 +230,30 @@ namespace UdpNatPunchClient
 
         private void OnTrackerAdded(object? sender, EventArgs e)
         {
-            OnPropertyChanged(nameof(TrackerAddress));
+            if (_client.Tracker != null)
+            {
+                _tracker = new TrackerModel(_client.Tracker);
+
+                OnPropertyChanged(nameof(TrackerAddress));
+            }
         }
 
         private void OnTrackerConnected(object? sender, EventArgs e)
         {
-            OnPropertyChanged(nameof(TrackerAddress));
             IsConnectedToTracker = true;
 
             var introductionMessage = new IntroduceClientToTrackerMessage(ID);
-            Tracker?.SendEncrypted(introductionMessage, 0);
+            _tracker?.Send(introductionMessage);
+
+            OnPropertyChanged(nameof(TrackerAddress));
         }
 
         private void OnTrackerRemoved(object? sender, EventArgs e)
         {
-            OnPropertyChanged(nameof(TrackerAddress));
+            _tracker = null;
             IsConnectedToTracker = false;
+
+            OnPropertyChanged(nameof(TrackerAddress));
         }
 
         private void OnMessageFromTrackerReceived(object? sender, NetEventArgs e)
@@ -310,10 +323,10 @@ namespace UdpNatPunchClient
 
         private void ConnectToPeer()
         {
-            if (Tracker == null)
+            if (_tracker == null)
             {
                 MessageBox.Show(
-                   "No connection to Tracker, unable to connect to any users",
+                   "Without connection to Tracker it's not possible to connect to any users",
                    "Tracker connection error",
                    MessageBoxButton.OK,
                    MessageBoxImage.Error);
@@ -332,21 +345,21 @@ namespace UdpNatPunchClient
             }
 
             var clientConnectionRequest = new UserConnectionRequestMessage(id);
-            Tracker?.SendEncrypted(clientConnectionRequest);
+            _tracker?.Send(clientConnectionRequest);
         }
 
         private void SendMessage()
         {
-            if (SelectedUser == null)
+            if (SelectedPeer == null)
             {
                 return;
             }
 
             var textMessage = new MessageModel(ID, CurrentMessage);
-            SelectedUser.Messages.Add(textMessage);
+            SelectedPeer.Messages.Add(textMessage);
 
             var textMessageToPeer = new TextMessageToPeer(textMessage.MessageID, textMessage.Content, textMessage.AuthorID);
-            SelectedUser.Send(textMessageToPeer);
+            SelectedPeer.Send(textMessageToPeer);
 
             CurrentMessage = string.Empty;
         }
@@ -385,6 +398,14 @@ namespace UdpNatPunchClient
             }
 
             _scrollMessageBoxToEnd?.Invoke();
+        }
+
+        private void SelectTrackerDialog()
+        {
+            if (_tracker != null)
+            {
+                SelectedPeer = _tracker;
+            }
         }
     }
 }

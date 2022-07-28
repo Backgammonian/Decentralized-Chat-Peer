@@ -194,7 +194,7 @@ namespace Networking
 
         public void SendEncrypted(BaseMessage message)
         {
-            SendEncrypted(message, 0);
+            SendEncrypted(message, RandomGenerator.GetPseudoRandomByte(0, NetworkingConstants.ChannelsCount));
         }
 
         public void SendEncrypted(BaseMessage message, byte channelNumber)

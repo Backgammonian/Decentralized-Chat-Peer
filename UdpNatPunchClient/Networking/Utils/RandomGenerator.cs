@@ -5,6 +5,7 @@ namespace Networking.Utils
 {
     public class RandomGenerator : IDisposable
     {
+        private readonly static Random _random = new Random();
         private readonly RNGCryptoServiceProvider _csp;
         private const string _chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
         private bool _isDisposed;
@@ -90,6 +91,11 @@ namespace Networking.Utils
             }
 
             return Convert.ToUInt64(result, 2);
+        }
+
+        public static byte GetPseudoRandomByte(byte minValue, byte maxValue)
+        {
+            return (byte)_random.Next(minValue, maxValue);
         }
 
         public void Dispose()
