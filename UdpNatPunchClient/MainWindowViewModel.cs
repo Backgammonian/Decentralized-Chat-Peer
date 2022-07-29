@@ -27,6 +27,7 @@ namespace UdpNatPunchClient
         private ConcurrentObservableCollection<MessageModel>? _messages;
         private PeerModel? _selectedPeer;
         private Action? _scrollMessageBoxToEnd;
+        private bool _canSendMessage;
 
         public MainWindowViewModel()
         {
@@ -40,6 +41,7 @@ namespace UdpNatPunchClient
             CurrentMessage = string.Empty;
             IsConnectedToTracker = false;
             SelectedPeer = null;
+            CanSendMessage = false;
 
             TextArts = new ObservableCollection<AsciiArtsType>(Enum.GetValues(typeof(AsciiArtsType)).Cast<AsciiArtsType>());
 
@@ -77,16 +79,22 @@ namespace UdpNatPunchClient
             private set => SetProperty(ref _isConnectedToTracker, value);
         }
 
-        public ConcurrentObservableCollection<MessageModel>? Messages
-        {
-            get => _messages;
-            private set => SetProperty(ref _messages, value);
-        }
-
         public string CurrentMessage
         {
             get => _currentMessage;
             set => SetProperty(ref _currentMessage, value);
+        }
+
+        public bool CanSendMessage
+        {
+            get => _canSendMessage;
+            private set => SetProperty(ref _canSendMessage, value);
+        }
+
+        public ConcurrentObservableCollection<MessageModel>? Messages
+        {
+            get => _messages;
+            private set => SetProperty(ref _messages, value);
         }
 
         public PeerModel? SelectedPeer
@@ -95,9 +103,19 @@ namespace UdpNatPunchClient
             set
             {
                 SetProperty(ref _selectedPeer, value);
+
                 if (SelectedPeer != null)
                 {
                     Messages = SelectedPeer.Messages;
+                    SelectedPeer.SendNotificationsToAllUnreadIncomingMessages();
+                    CanSendMessage = true;
+
+                    ScrollMessagesToEnd();
+                }
+                else
+                {
+                    CanSendMessage = false;
+                    Messages = null;
                 }
             }
         }
@@ -152,6 +170,11 @@ namespace UdpNatPunchClient
                 return;
             }
 
+            if (user == SelectedPeer)
+            {
+                SelectedPeer = null;
+            }
+
             _connectedUsers.Remove(user.ID);
         }
 
@@ -164,6 +187,8 @@ namespace UdpNatPunchClient
             Debug.WriteLine("(OnMessageFromPeerReceived) source = " + source.EndPoint);
             Debug.WriteLine("(OnMessageFromPeerReceived) type = " + type);
             Debug.WriteLine("(OnMessageFromPeerReceived) json = " + json);
+
+            var author = _connectedUsers.GetUserByPeer(source);
 
             switch (type)
             {
@@ -191,7 +216,6 @@ namespace UdpNatPunchClient
                     break;
 
                 case NetworkMessageType.TextMessage:
-                    var author = _connectedUsers.GetUserByPeer(source);
                     if (author == null)
                     {
                         return;
@@ -203,16 +227,23 @@ namespace UdpNatPunchClient
                         return;
                     }
 
-                    var message = new MessageModel(textMessageFromPeer);
-                    author.Messages.Add(message);
+                    var receivedMessage = author.AddIncomingMessage(textMessageFromPeer);
 
-                    var receiptNotification = new MessageReceiptNotification(message.MessageID);
-                    author.Send(receiptNotification);
+                    if (SelectedPeer == author)
+                    {
+                        author.DismissNewMessagesSignal();
+                        author.SendReadNotification(receivedMessage);
+
+                        ScrollMessagesToEnd();
+                    }
+                    else
+                    {
+                        author.SendReceiptNotification(receivedMessage);
+                    }
                     break;
 
                 case NetworkMessageType.MessageReceiptNotification:
-                    var receiver = _connectedUsers.GetUserByPeer(source);
-                    if (receiver == null)
+                    if (author == null)
                     {
                         return;
                     }
@@ -223,7 +254,22 @@ namespace UdpNatPunchClient
                         return;
                     }
 
-                    receiver.MarkMessageAsDelivered(messageReceiptNotification.MessageID);
+                    author.MarkMessageAsDelivered(messageReceiptNotification.MessageID);
+                    break;
+
+                case NetworkMessageType.MessageReadNotification:
+                    if (author == null)
+                    {
+                        return;
+                    }
+
+                    var messageReadNotification = JsonConvert.DeserializeObject<MessageReadNotification>(json);
+                    if (messageReadNotification == null)
+                    {
+                        return;
+                    }
+
+                    author.MarkMessageAsReadAndDelivered(messageReadNotification.MessageID);
                     break;
             }
         }
@@ -250,6 +296,12 @@ namespace UdpNatPunchClient
 
         private void OnTrackerRemoved(object? sender, EventArgs e)
         {
+            if (_tracker == SelectedPeer)
+            {
+                CanSendMessage = false;
+                Messages = null;
+            }
+
             _tracker = null;
             IsConnectedToTracker = false;
 
@@ -355,13 +407,17 @@ namespace UdpNatPunchClient
                 return;
             }
 
-            var textMessage = new MessageModel(ID, CurrentMessage);
-            SelectedPeer.Messages.Add(textMessage);
-
-            var textMessageToPeer = new TextMessageToPeer(textMessage.MessageID, textMessage.Content, textMessage.AuthorID);
-            SelectedPeer.Send(textMessageToPeer);
+            SelectedPeer.SendTextMessage(new MessageModel(ID, CurrentMessage));
 
             CurrentMessage = string.Empty;
+        }
+
+        private void ScrollMessagesToEnd()
+        {
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                _scrollMessageBoxToEnd?.Invoke();
+            });
         }
 
         private void PutAsciiArt(AsciiArtsType artType)
@@ -397,7 +453,7 @@ namespace UdpNatPunchClient
                     break;
             }
 
-            _scrollMessageBoxToEnd?.Invoke();
+            ScrollMessagesToEnd();
         }
 
         private void SelectTrackerDialog()

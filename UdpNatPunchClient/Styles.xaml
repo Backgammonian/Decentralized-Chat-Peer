@@ -3,6 +3,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:converters="clr-namespace:Converters">
 
+    <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
     <converters:DateTimeConverter x:Key="DateTimeConverter"/>
     <converters:DeliveryStateConverter x:Key="DeliveryStateConverter"/>
     <converters:MessageDirectionAlignmentConverter x:Key="MessageDirectionAlignmentConverter"/>
@@ -29,6 +30,12 @@
         <Setter Property="FontStyle" Value="Oblique"/>
     </Style>
 
+    <Style TargetType="TextBlock" x:Key="NewMessagesTextBlock" BasedOn="{StaticResource BaseTextBlock}">
+        <Setter Property="Visibility" Value="{Binding HasNewMessages, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+        <Setter Property="TextDecorations" Value="Underline"/>
+        <Setter Property="Text" Value="New messages!"/>
+    </Style>
+    
     <Style TargetType="TextBox" x:Key="BaseTextBox">
         <Setter Property="FontSize" Value="14"/>
         <Setter Property="Margin" Value="2"/>

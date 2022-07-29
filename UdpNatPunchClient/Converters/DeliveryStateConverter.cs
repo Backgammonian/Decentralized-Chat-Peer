@@ -13,9 +13,12 @@ namespace Converters
             {
                 default:
                 case DeliveryState.NotDelivered:
-                    return "✓";
+                    return string.Empty;
 
                 case DeliveryState.Delivered:
+                    return "✓";
+
+                case DeliveryState.ReadAndDelivered:
                     return "✓✓";
             }
         }

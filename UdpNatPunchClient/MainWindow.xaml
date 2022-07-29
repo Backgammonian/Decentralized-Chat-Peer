@@ -53,7 +53,8 @@
             <Button
                 Style="{StaticResource BaseButton}"
                 Width="150"
-                Command="{Binding SelectTrackerDialogCommand}">
+                Command="{Binding SelectTrackerDialogCommand}"
+                IsEnabled="{Binding IsConnectedToTracker}">
                 <TextBlock
                     Style="{StaticResource BaseTextBlock}"
                     Text="{Binding TrackerAddress}"/>
@@ -86,12 +87,15 @@
                     Text="Connected peers:"/>
                 <ListBox
                     Grid.Row="1"
+                    ScrollViewer.CanContentScroll="False"
                     ItemsSource="{Binding ConnectedUsers}"
                     SelectedItem="{Binding SelectedPeer}">
                     <ListBox.ItemTemplate>
                         <DataTemplate>
                             <StackPanel
                                 Margin="6">
+                                <TextBlock
+                                    Style="{StaticResource NewMessagesTextBlock}"/>
                                 <TextBlock
                                     Style="{StaticResource BaseTextBlock}"
                                     Text="{Binding ID}"/>
@@ -114,9 +118,10 @@
                 <TextBlock
                     Grid.Row="0"
                     Style="{StaticResource BaseTextBlock}"
-                    Text="{Binding SelectedPeer, Converter={StaticResource RecepientConverter}, StringFormat={}Recepient: {0}}"/>
+                    Text="{Binding SelectedPeer, Converter={StaticResource RecepientConverter}, StringFormat={}Correspondent: {0}}"/>
                 <ListBox
                     Grid.Row="1"
+                    ScrollViewer.CanContentScroll="False"
                     HorizontalContentAlignment="Stretch"
                     ItemsSource="{Binding Messages.AsObservable}">
                     <ListBox.ItemTemplate>
@@ -184,7 +189,8 @@
                     <Button
                         Grid.Column="2"
                         Style="{StaticResource SendMessageButton}"
-                        Command="{Binding SendMessageCommand}">
+                        Command="{Binding SendMessageCommand}"
+                        IsEnabled="{Binding CanSendMessage}">
                         <TextBlock
                             Style="{StaticResource BaseTextBlock}"
                             Text="Send"/>

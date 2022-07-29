@@ -2,6 +2,8 @@
 {
     public enum DeliveryState
     {
-        NotDelivered, Delivered
+        NotDelivered,
+        Delivered,
+        ReadAndDelivered
     }
 }

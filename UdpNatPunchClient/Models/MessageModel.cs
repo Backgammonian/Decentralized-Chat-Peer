@@ -48,7 +48,22 @@ namespace UdpNatPunchClient.Models
                 return;
             }
 
+            if (DeliveryState == DeliveryState.ReadAndDelivered)
+            {
+                return;
+            }
+
             DeliveryState = DeliveryState.Delivered;
+        }
+
+        public void MarkAsReadAndDelivered()
+        {
+            if (Direction == MessageDirection.Incoming)
+            {
+                return;
+            }
+
+            DeliveryState = DeliveryState.ReadAndDelivered;
         }
     }
 }
