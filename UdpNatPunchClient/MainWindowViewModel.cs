@@ -401,7 +401,11 @@ namespace UdpNatPunchClient
             {
                 if (!TryParseCommand(CurrentMessage, out var command, out var argument))
                 {
-                    _tracker?.SendCommandMessage(command, argument);
+                    tracker.SendCommandMessage(command.ToLower(), argument);
+                }
+                else
+                {
+                    tracker.PrintInfo(string.Format("Not valid command input: {0}", CurrentMessage));
                 }
             }
             

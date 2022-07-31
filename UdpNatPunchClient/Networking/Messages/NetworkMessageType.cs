@@ -6,6 +6,7 @@
         ExampleMessage = 10,
 
         IntroduceClientToTracker,
+        IntroduceClientToTrackerError,
         CommandToTracker,
         CommandReceiptNotification,
         CommandToTrackerError,
