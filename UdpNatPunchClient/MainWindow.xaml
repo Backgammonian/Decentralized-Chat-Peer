@@ -60,15 +60,10 @@
                     Text="{Binding TrackerAddress}"/>
             </Button>
         </StackPanel>
-        <Button
-            Grid.Row="3"
-            Style="{StaticResource BaseButton}"
-            Command="{Binding ConnectToPeerCommand}"
-            IsEnabled="{Binding IsConnectedToTracker}">
-            <TextBlock
-                Style="{StaticResource BaseTextBlock}"
-                Text="Connect to new peer"/>
-        </Button>
+        <StackPanel
+            Grid.Row="3">
+
+        </StackPanel>
         <Grid
             Grid.Row="4">
             <Grid.ColumnDefinitions>
@@ -90,6 +85,11 @@
                     ScrollViewer.CanContentScroll="False"
                     ItemsSource="{Binding ConnectedUsers}"
                     SelectedItem="{Binding SelectedPeer}">
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <EventSetter Event="MouseLeftButtonUp" Handler="OnConnectedPeersListBoxLeftMouseButtonUp"/>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
                     <ListBox.ItemTemplate>
                         <DataTemplate>
                             <StackPanel

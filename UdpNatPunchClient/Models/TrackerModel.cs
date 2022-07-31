@@ -12,61 +12,26 @@ namespace UdpNatPunchClient.Models
         {
         }
 
-        public override void Send(BaseMessage baseMessage)
+        public override void SendTextMessage(MessageModel message)
         {
-            _peer.SendEncrypted(baseMessage);
+            //pass
         }
 
-        public override void SendTextMessage(MessageModel textMessage)
+        public override MessageModel? AddIncomingMessage(TextMessageToPeer textMessageFromPeer)
         {
-            Messages.Add(textMessage);
-
-            var textMessageToPeer = new TextMessageToPeer(textMessage.MessageID, textMessage.Content, textMessage.AuthorID);
-            Send(textMessageToPeer);
+            //pass
+            return null;
         }
 
-        public override void Disconnect()
+        public void SendIntroductionMessage(string id)
         {
-            _peer.Disconnect();
+            var introductionMessage = new IntroduceClientToTrackerMessage(id);
+            Send(introductionMessage);
         }
 
-        public override void MarkMessageAsDelivered(string messageID)
+        public void SendCommandMessage(string command, string argument)
         {
-            try
-            {
-                var message = Messages.First(message => message.MessageID == messageID);
-                message.MarkAsDelivered();
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine(ex);
-            }
-        }
 
-        public override void MarkMessageAsReadAndDelivered(string messageID)
-        {
-            try
-            {
-                var message = Messages.First(message => message.MessageID == messageID);
-                message.MarkAsDelivered();
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine(ex);
-            }
-        }
-
-        public override void SendNotificationsToAllUnreadIncomingMessages()
-        {
-            //TODO
-        }
-
-        public override MessageModel AddIncomingMessage(TextMessageToPeer textMessageFromPeer)
-        {
-            var message = new MessageModel(textMessageFromPeer);
-            Messages.Add(message);
-
-            return message;
         }
     }
 }

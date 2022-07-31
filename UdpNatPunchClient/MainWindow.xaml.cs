@@ -1,5 +1,8 @@
 ﻿using System.Windows;
+using System.Windows.Input;
+using System.Windows.Controls;
 using System.ComponentModel;
+using UdpNatPunchClient.Models;
 
 namespace UdpNatPunchClient
 {
@@ -24,6 +27,23 @@ namespace UdpNatPunchClient
         private void ScrollMessageTextBoxToEnd()
         {
             MessageTextBox.ScrollToEnd();
+        }
+
+        private void OnConnectedPeersListBoxLeftMouseButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            var listBoxItem = sender as ListBoxItem;
+            if (listBoxItem == null)
+            {
+                return;
+            }
+
+            var userModel = listBoxItem.DataContext as UserModel;
+            if (userModel == null)
+            {
+                return;
+            }
+
+            ((MainWindowViewModel)DataContext).SetSelectedUserModel(userModel);
         }
     }
 }

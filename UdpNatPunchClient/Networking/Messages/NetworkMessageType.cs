@@ -6,13 +6,17 @@
         ExampleMessage = 10,
 
         IntroduceClientToTracker,
-        UserConnectionRequest,
+        CommandToTracker,
+        CommandReceiptNotification,
+        CommandToTrackerError,
         UserConnectionResponse,
         ForwardedConnectionRequest,
+        UserNotFoundError,
+        PingResponse,
+        TimeResponse,
 
         IntroducePeerToPeer,
         IntroducePeerToPeerResponse,
-
         TextMessage,
         MessageReceiptNotification,
         MessageReadNotification,

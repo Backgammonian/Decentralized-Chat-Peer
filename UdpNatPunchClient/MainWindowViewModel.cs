@@ -32,7 +32,6 @@ namespace UdpNatPunchClient
         public MainWindowViewModel()
         {
             ConnectToTrackerCommand = new RelayCommand(ConnectToTracker);
-            ConnectToPeerCommand = new RelayCommand(ConnectToPeer);
             SendMessageCommand = new RelayCommand(SendMessage);
             PutAsciiArtCommand = new RelayCommand<AsciiArtsType>(PutAsciiArt);
             SelectTrackerDialogCommand = new RelayCommand(SelectTrackerDialog);
@@ -63,7 +62,6 @@ namespace UdpNatPunchClient
         }
 
         public ICommand ConnectToTrackerCommand { get; }
-        public ICommand ConnectToPeerCommand { get; }
         public ICommand SendMessageCommand { get; }
         public ICommand PutAsciiArtCommand { get; }
         public ICommand SelectTrackerDialogCommand { get; }
@@ -117,6 +115,18 @@ namespace UdpNatPunchClient
                     CanSendMessage = false;
                     Messages = null;
                 }
+            }
+        }
+
+        public void SetSelectedUserModel(UserModel userModel)
+        {
+            if (ConnectedUsers.Contains(userModel))
+            {
+                SelectedPeer = userModel;
+            }
+            else
+            {
+                Debug.WriteLine("(SetSelectedUserModel) Can't select userModel: " + userModel.ID);
             }
         }
 
@@ -228,6 +238,10 @@ namespace UdpNatPunchClient
                     }
 
                     var receivedMessage = author.AddIncomingMessage(textMessageFromPeer);
+                    if (receivedMessage == null)
+                    {
+                        return;
+                    }
 
                     if (SelectedPeer == author)
                     {
@@ -287,9 +301,7 @@ namespace UdpNatPunchClient
         private void OnTrackerConnected(object? sender, EventArgs e)
         {
             IsConnectedToTracker = true;
-
-            var introductionMessage = new IntroduceClientToTrackerMessage(ID);
-            _tracker?.Send(introductionMessage);
+            _tracker?.SendIntroductionMessage(ID);
 
             OnPropertyChanged(nameof(TrackerAddress));
         }
@@ -373,33 +385,6 @@ namespace UdpNatPunchClient
             _client.ConnectToTracker(address);
         }
 
-        private void ConnectToPeer()
-        {
-            if (_tracker == null)
-            {
-                MessageBox.Show(
-                   "Without connection to Tracker it's not possible to connect to any users",
-                   "Tracker connection error",
-                   MessageBoxButton.OK,
-                   MessageBoxImage.Error);
-                return;
-            }
-
-            var inputBox = new InputBoxUtils();
-            if (!inputBox.AskIDOfDesiredUser(out string id))
-            {
-                MessageBox.Show(
-                   "Peer's ID is not specified",
-                   "Peer connection error",
-                   MessageBoxButton.OK,
-                   MessageBoxImage.Error);
-                return;
-            }
-
-            var clientConnectionRequest = new UserConnectionRequestMessage(id);
-            _tracker?.Send(clientConnectionRequest);
-        }
-
         private void SendMessage()
         {
             if (SelectedPeer == null)
@@ -407,9 +392,44 @@ namespace UdpNatPunchClient
                 return;
             }
 
-            SelectedPeer.SendTextMessage(new MessageModel(ID, CurrentMessage));
-
+            if (SelectedPeer is UserModel user)
+            {
+                user.SendTextMessage(new MessageModel(ID, CurrentMessage));
+            }
+            else
+            if (SelectedPeer is TrackerModel tracker)
+            {
+                if (!TryParseCommand(CurrentMessage, out var command, out var argument))
+                {
+                    _tracker?.SendCommandMessage(command, argument);
+                }
+            }
+            
             CurrentMessage = string.Empty;
+        }
+
+        private bool TryParseCommand(string input, out string command, out string argument)
+        {
+            command = string.Empty;
+            argument = string.Empty;
+
+            if (input[0] != '/')
+            {
+                return false;
+            }
+
+            var spacePosition = input.IndexOf(' ');
+            if (spacePosition == -1)
+            {
+                command = input.Substring(1, input.Length - 1);
+            }
+            else
+            {
+                command = input.Substring(1, spacePosition - 1);
+                argument = input.Substring(spacePosition + 1, input.Length - spacePosition - 1);
+            }
+
+            return true;
         }
 
         private void ScrollMessagesToEnd()
