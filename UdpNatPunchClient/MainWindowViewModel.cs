@@ -331,6 +331,31 @@ namespace UdpNatPunchClient
 
             switch (type)
             {
+                case NetworkMessageType.IntroduceClientToTrackerError:
+                    MessageBox.Show("Tracker already has user with such ID: " + ID, "Tracker connection error");
+                    _tracker?.Disconnect();
+                    break;
+
+                case NetworkMessageType.CommandReceiptNotification:
+                    var commandReceiptNotification = JsonConvert.DeserializeObject<CommandReceiptNotificationMessage>(json);
+                    if (commandReceiptNotification == null)
+                    {
+                        return;
+                    }
+
+                    _tracker?.MarkCommandAsReadAndDelivered(commandReceiptNotification.CommandID);
+                    break;
+
+                case NetworkMessageType.CommandToTrackerError:
+                    var commandErrorMessage = JsonConvert.DeserializeObject<CommandToTrackerErrorMessage>(json);
+                    if (commandErrorMessage == null)
+                    {
+                        return;
+                    }
+
+                    _tracker?.PrintInfo(string.Format("Unrecognized command: '/{0} {1}'", commandErrorMessage.WrongCommand, commandErrorMessage.Argument));
+                    break;
+
                 case NetworkMessageType.UserConnectionResponse:
                     var userConnectionResponseMessage = JsonConvert.DeserializeObject<UserConnectionResponseMessage>(json);
                     if (userConnectionResponseMessage == null)
@@ -356,14 +381,46 @@ namespace UdpNatPunchClient
                         _client.ConnectToPeer(otherPeerEndPoint);
                     }
                     break;
+
+                case NetworkMessageType.UserNotFoundError:
+                    var userNotFoundErrorMessage = JsonConvert.DeserializeObject<UserNotFoundErrorMessage>(json);
+                    if (userNotFoundErrorMessage == null)
+                    {
+                        return;
+                    }
+
+                    _tracker?.PrintInfo(string.Format("User not found, unknown ID or nickname: {0}", userNotFoundErrorMessage.UserInfo));
+                    break;
+
+                case NetworkMessageType.PingResponse:
+                    var pingResponseMessage = JsonConvert.DeserializeObject<PingResponseMessage>(json);
+                    if (pingResponseMessage == null)
+                    {
+                        return;
+                    }
+                    
+                    _tracker?.PrintInfo(string.Format("Pong!\n{0} ms, {1}", pingResponseMessage.Ping, pingResponseMessage.PacketLossPercent)); //TODOOOOOOOOOOOOOO
+                    break;
+
+                case NetworkMessageType.TimeResponse:
+                    var timeResponseMessage = JsonConvert.DeserializeObject<TimeResponseMessage>(json);
+                    if (timeResponseMessage == null)
+                    {
+                        return;
+                    }
+
+                    var converter = new Converters.DateTimeConverter();
+                    var formattedTime = (string)converter.Convert(timeResponseMessage.Time, null, null, null);
+                    _tracker?.PrintInfo(string.Format("Tracker's time: {0}", formattedTime));
+                    break;
             }
         }
 
         private void ConnectToTracker()
         {
             var inputBox = new InputBoxUtils();
-            if (!(inputBox.AskServerAddressAndPort(out IPEndPoint? address) &&
-                address != null))
+            if (!inputBox.AskServerAddressAndPort(out IPEndPoint? address) ||
+                address == null)
             {
                 MessageBox.Show(
                     "Tracker address is not valid! Try enter correct IP address and port (example: 10.0.8.100:55000)",

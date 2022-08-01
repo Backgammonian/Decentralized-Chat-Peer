@@ -29,13 +29,13 @@ namespace UdpNatPunchClient.Models
             DeliveryState = DeliveryState.NotDelivered;
         }
 
-        public MessageModel(string input)
+        public MessageModel(string input, MessageDirection direction)
         {
             MessageID = RandomGenerator.GetRandomString(20);
             AuthorID = string.Empty;
             Content = input;
             Time = DateTime.Now;
-            Direction = MessageDirection.Incoming;
+            Direction = direction;
             DeliveryState = DeliveryState.NotDelivered;
         }
 

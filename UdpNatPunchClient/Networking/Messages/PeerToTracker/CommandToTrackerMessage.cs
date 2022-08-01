@@ -7,7 +7,7 @@ namespace Networking.Messages
         public CommandToTrackerMessage(string command, string argument)
         {
             Type = NetworkMessageType.CommandToTracker;
-            CommandID = RandomGenerator.GetRandomString(20);
+            CommandID = RandomGenerator.GetRandomString(21);
             Command = command;
             Argument = argument;
         }

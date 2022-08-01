@@ -13,7 +13,7 @@ namespace Converters
             return number.ToString().Length == 1 ? "0" + number : "" + number;
         }
 
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        public object Convert(object value, Type? targetType, object? parameter, CultureInfo? culture)
         {
             var dateTime = (DateTime)value;
             return string.Format("{0}:{1}:{2}, {3} {4} {5}",
@@ -25,7 +25,7 @@ namespace Converters
                 dateTime.Year);
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        public object ConvertBack(object value, Type? targetType, object? parameter, CultureInfo? culture)
         {
             return Binding.DoNothing;
         }

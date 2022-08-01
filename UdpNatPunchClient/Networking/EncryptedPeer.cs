@@ -22,7 +22,7 @@ namespace Networking
         private TimeSpan _connectionDuration;
         private readonly DispatcherTimer _disconnectTimer;
 
-        private const double _speedTimerInterval = 100.0;
+        private const int _speedTimerInterval = 100;
 
         private long _oldAmountOfDownloadedBytes, _newAmountOfDownloadedBytes;
         private DateTime _oldDownloadTimeStamp, _newDownloadTimeStamp;
@@ -59,13 +59,13 @@ namespace Networking
 
             _downloadSpeedValues = new Queue<double>();
             _downloadSpeedCounter = new DispatcherTimer(DispatcherPriority.Background, Application.Current.Dispatcher);
-            _downloadSpeedCounter.Interval = new TimeSpan(0, 0, 0, 0, Convert.ToInt32(_speedTimerInterval));
+            _downloadSpeedCounter.Interval = new TimeSpan(0, 0, 0, 0, _speedTimerInterval);
             _downloadSpeedCounter.Tick += OnDownloadSpeedCounterTick;
             _downloadSpeedCounter.Start();
 
             _uploadSpeedValues = new Queue<double>();
             _uploadSpeedCounter = new DispatcherTimer(DispatcherPriority.Background, Application.Current.Dispatcher);
-            _uploadSpeedCounter.Interval = new TimeSpan(0, 0, 0, 0, Convert.ToInt32(_speedTimerInterval));
+            _uploadSpeedCounter.Interval = new TimeSpan(0, 0, 0, 0, _speedTimerInterval);
             _uploadSpeedCounter.Tick += OnUploadSpeedCounterTick;
             _uploadSpeedCounter.Start();
         }
@@ -75,6 +75,8 @@ namespace Networking
         public bool IsSecurityEnabled => _cryptography.IsEnabled;
         public int Id => _peer.Id;
         public IPEndPoint EndPoint => _peer.EndPoint;
+        public int Ping => _peer.Ping;
+        public long PacketLossPercent => _peer.Statistics.PacketLossPercent;
         public ConnectionState ConnectionState => _peer.ConnectionState;
         public DateTime StartTime { get; }
 
