@@ -28,6 +28,11 @@ namespace UdpNatPunchClient
         private PeerModel? _selectedPeer;
         private Action? _scrollMessageBoxToEnd;
         private bool _canSendMessage;
+        private string _currentPlaceholder;
+
+        private const string _userMessagePlaceholder = "Write a message to user...";
+        private const string _trackerMessagePlaceholder = "Write a message to tracker...";
+        private const string _noMessagePlaceholder = "---";
 
         public MainWindowViewModel()
         {
@@ -83,6 +88,12 @@ namespace UdpNatPunchClient
             set => SetProperty(ref _currentMessage, value);
         }
 
+        public string CurrentPlaceholder
+        {
+            get => _currentPlaceholder;
+            set => SetProperty(ref _currentPlaceholder, value);
+        }
+
         public bool CanSendMessage
         {
             get => _canSendMessage;
@@ -109,11 +120,22 @@ namespace UdpNatPunchClient
                     CanSendMessage = true;
 
                     ScrollMessagesToEnd();
+
+                    if (SelectedPeer is UserModel)
+                    {
+                        CurrentPlaceholder = _userMessagePlaceholder;
+                    }
+                    else
+                    if (SelectedPeer is TrackerModel)
+                    {
+                        CurrentPlaceholder = _trackerMessagePlaceholder;
+                    }
                 }
                 else
                 {
                     CanSendMessage = false;
                     Messages = null;
+                    CurrentPlaceholder = _noMessagePlaceholder;
                 }
             }
         }

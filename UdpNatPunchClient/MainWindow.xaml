@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:UdpNatPunchClient"
         xmlns:behaviours="clr-namespace:Behaviours"
+        xmlns:custom="clr-namespace:PlaceholderTextBoxControl;assembly=PlaceholderTextBoxControl"
         mc:Ignorable="d"
         Title="Client" 
         Height="600"
@@ -181,11 +182,13 @@
                             </ComboBox.ItemTemplate>
                         </ComboBox>
                     </Grid>
-                    <TextBox
+                    <custom:PlaceholderTextBox
                         Grid.Column="1"
                         x:Name="MessageTextBox"
+                        IsEnabled="{Binding CanSendMessage}"
                         Style="{StaticResource MessageTextBox}"
-                        Text="{Binding CurrentMessage, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                        Text="{Binding CurrentMessage, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                        Placeholder="{Binding CurrentPlaceholder}"/>
                     <Button
                         Grid.Column="2"
                         Style="{StaticResource SendMessageButton}"

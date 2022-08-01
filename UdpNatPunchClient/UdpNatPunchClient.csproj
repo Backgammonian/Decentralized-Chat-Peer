@@ -15,4 +15,8 @@
     <PackageReference Include="newtonsoft.json" Version="13.0.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\PlaceholderTextBoxControl\PlaceholderTextBoxControl.csproj" />
+  </ItemGroup>
+
 </Project>
