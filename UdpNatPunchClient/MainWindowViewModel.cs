@@ -28,7 +28,8 @@ namespace UdpNatPunchClient
         private PeerModel? _selectedPeer;
         private Action? _scrollMessageBoxToEnd;
         private bool _canSendMessage;
-        private string _currentPlaceholder;
+        private string? _currentPlaceholder;
+        private IPEndPoint? _externalAddress;
 
         private const string _userMessagePlaceholder = "Write a message to user...";
         private const string _trackerMessagePlaceholder = "Write a message to tracker...";
@@ -64,6 +65,7 @@ namespace UdpNatPunchClient
             _connectedUsers.UserRemoved += OnConnectedPeerRemoved;
 
             _tracker = null;
+            ExternalEndPoint = null;
         }
 
         public ICommand ConnectToTrackerCommand { get; }
@@ -88,7 +90,7 @@ namespace UdpNatPunchClient
             set => SetProperty(ref _currentMessage, value);
         }
 
-        public string CurrentPlaceholder
+        public string? CurrentPlaceholder
         {
             get => _currentPlaceholder;
             set => SetProperty(ref _currentPlaceholder, value);
@@ -98,6 +100,12 @@ namespace UdpNatPunchClient
         {
             get => _canSendMessage;
             private set => SetProperty(ref _canSendMessage, value);
+        }
+
+        public IPEndPoint? ExternalEndPoint
+        {
+            get => _externalAddress;
+            private set => SetProperty(ref _externalAddress, value);
         }
 
         public ConcurrentObservableCollection<MessageModel>? Messages
@@ -338,6 +346,7 @@ namespace UdpNatPunchClient
 
             _tracker = null;
             IsConnectedToTracker = false;
+            ExternalEndPoint = null;
 
             OnPropertyChanged(nameof(TrackerAddress));
         }
@@ -356,6 +365,19 @@ namespace UdpNatPunchClient
                 case NetworkMessageType.IntroduceClientToTrackerError:
                     MessageBox.Show("Tracker already has user with such ID: " + ID, "Tracker connection error");
                     _tracker?.Disconnect();
+                    break;
+
+                case NetworkMessageType.IntroduceClientToTrackerResponse:
+                    var introductionResponse = JsonConvert.DeserializeObject<IntroduceClientToTrackerResponseMessage>(json);
+                    if (introductionResponse == null)
+                    {
+                        return;
+                    }
+
+                    if (IPEndPoint.TryParse(introductionResponse.EndPointString, out var externalEndPoint))
+                    {
+                        ExternalEndPoint = externalEndPoint;
+                    }
                     break;
 
                 case NetworkMessageType.CommandReceiptNotification:
@@ -421,7 +443,7 @@ namespace UdpNatPunchClient
                         return;
                     }
                     
-                    _tracker?.PrintInfo(string.Format("Pong!\n{0} ms, {1}", pingResponseMessage.Ping, pingResponseMessage.PacketLossPercent)); //TODOOOOOOOOOOOOOO
+                    _tracker?.PrintInfo(string.Format("Pong!\nPing: {0} ms", pingResponseMessage.Ping));
                     break;
 
                 case NetworkMessageType.TimeResponse:

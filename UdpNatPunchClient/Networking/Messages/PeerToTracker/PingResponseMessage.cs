@@ -2,14 +2,12 @@
 {
     public sealed class PingResponseMessage : BaseMessage
     {
-        public PingResponseMessage(int ping, long packetLossPercent)
+        public PingResponseMessage(int ping)
         {
             Type = NetworkMessageType.PingResponse;
             Ping = ping;
-            PacketLossPercent = packetLossPercent;
         }
 
         public int Ping { get; }
-        public long PacketLossPercent { get; }
     }
 }

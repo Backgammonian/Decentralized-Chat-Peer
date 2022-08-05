@@ -63,7 +63,9 @@
         </StackPanel>
         <StackPanel
             Grid.Row="3">
-
+            <TextBlock
+                Style="{StaticResource BaseTextBlock}"
+                Text="{Binding ExternalEndPoint, Converter={StaticResource AddressConverter}, StringFormat={}External address: {0}}"/>
         </StackPanel>
         <Grid
             Grid.Row="4">

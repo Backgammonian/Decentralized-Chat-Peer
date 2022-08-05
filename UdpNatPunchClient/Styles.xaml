@@ -10,6 +10,7 @@
     <converters:MessageDirectionColorConverter x:Key="MessageDirectionColorConverter"/>
     <converters:MessageDirectionToVisibilityConverter x:Key="MessageDirectionToVisibilityConverter"/>
     <converters:RecepientConverter x:Key="RecepientConverter"/>
+    <converters:AddressConverter x:Key="AddressConverter"/>
 
     <Style TargetType="TextBlock" x:Key="BaseTextBlock">
         <Setter Property="FontSize" Value="14"/>
