@@ -28,9 +28,9 @@ namespace UdpNatPunchClient.Models
             return null;
         }
 
-        public void SendIntroductionMessage(string id)
+        public void SendIntroductionMessage(string id, string nickname)
         {
-            var introductionMessage = new IntroduceClientToTrackerMessage(id);
+            var introductionMessage = new IntroduceClientToTrackerMessage(id, nickname);
             Send(introductionMessage);
         }
 
@@ -70,6 +70,12 @@ namespace UdpNatPunchClient.Models
             {
                 Debug.WriteLine(ex);
             }
+        }
+
+        public void SendUpdatedPersonalInfo(string newNickname)
+        {
+            var updatedInfoMessage = new UpdatedInfoToTrackerMessage(newNickname);
+            Send(updatedInfoMessage);
         }
     }
 }

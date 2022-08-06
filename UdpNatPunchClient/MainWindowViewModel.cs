@@ -3,8 +3,11 @@ using System.Diagnostics;
 using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Threading;
+using System.Windows.Media.Imaging;
 using System.Net;
 using System.Linq;
+using Microsoft.Win32;
 using Microsoft.Toolkit.Mvvm.ComponentModel;
 using Microsoft.Toolkit.Mvvm.Input;
 using Newtonsoft.Json;
@@ -19,21 +22,29 @@ namespace UdpNatPunchClient
 {
     public class MainWindowViewModel : ObservableObject
     {
+        private const string _userMessagePlaceholder = "Write a message to user...";
+        private const string _trackerMessagePlaceholder = "Write a message to tracker...";
+        private const string _noMessagePlaceholder = "---";
+
         private readonly Client _client;
         private readonly Users _connectedUsers;
         private TrackerModel? _tracker;
+        private string _nickname = "My nickname";
+        private bool _isNicknameUpdated;
+        private readonly DispatcherTimer _nicknameUpdateTimer;
+        private BitmapImage? _profilePicture;
+        private string _profilePictureBase64 = string.Empty;
         private bool _isConnectedToTracker;
         private string _currentMessage = string.Empty;
         private ConcurrentObservableCollection<MessageModel>? _messages;
         private PeerModel? _selectedPeer;
         private Action? _scrollMessageBoxToEnd;
+        private Action? _focusOnMessageBox;
         private bool _canSendMessage;
         private string? _currentPlaceholder;
         private IPEndPoint? _externalAddress;
-
-        private const string _userMessagePlaceholder = "Write a message to user...";
-        private const string _trackerMessagePlaceholder = "Write a message to tracker...";
-        private const string _noMessagePlaceholder = "---";
+        private IPEndPoint? _localAddress;
+        private int _tabIndex;
 
         public MainWindowViewModel()
         {
@@ -41,6 +52,7 @@ namespace UdpNatPunchClient
             SendMessageCommand = new RelayCommand(SendMessage);
             PutAsciiArtCommand = new RelayCommand<AsciiArtsType>(PutAsciiArt);
             SelectTrackerDialogCommand = new RelayCommand(SelectTrackerDialog);
+            ChangeProfilePictureCommand = new RelayCommand(ChangeProfilePicture);
 
             ID = RandomGenerator.GetRandomString(30);
             CurrentMessage = string.Empty;
@@ -66,17 +78,58 @@ namespace UdpNatPunchClient
 
             _tracker = null;
             ExternalEndPoint = null;
+            LocalEndPoint = new IPEndPoint(new LocalAddressResolver().GetLocalAddress(), _client.LocalPort);
+
+            IsNicknameUpdated = false;
+            _nicknameUpdateTimer = new DispatcherTimer();
+            _nicknameUpdateTimer.Interval = new TimeSpan(0, 0, 1);
+            _nicknameUpdateTimer.Tick += OnNcknameUpdateTimerTick;
         }
 
         public ICommand ConnectToTrackerCommand { get; }
         public ICommand SendMessageCommand { get; }
         public ICommand PutAsciiArtCommand { get; }
         public ICommand SelectTrackerDialogCommand { get; }
+        public ICommand ChangeProfilePictureCommand { get; }
 
         public string ID { get; }
         public ObservableCollection<AsciiArtsType> TextArts { get; }
         public string TrackerAddress => _tracker == null ? "---" : _tracker.EndPoint;
         public ObservableCollection<UserModel> ConnectedUsers => new ObservableCollection<UserModel>(_connectedUsers.List.OrderBy(user => user.ConnectionTime));
+
+        public string Nickname
+        {
+            get => _nickname;
+            set
+            {
+                if (StringExtensions.IsNotEmpty(value) &&
+                    value.Length <= 150)
+                {
+                    SetProperty(ref _nickname, value);
+                    IsNicknameUpdated = true;
+
+                    RestartNicknameUpdateTimerTick();
+                }
+            }
+        }
+
+        public bool IsNicknameUpdated
+        {
+            get => _isNicknameUpdated;
+            private set => SetProperty(ref _isNicknameUpdated, value);
+        }
+
+        public BitmapImage? ProfilePicture
+        {
+            get => _profilePicture;
+            private set => SetProperty(ref _profilePicture, value);
+        }
+
+        public string ProfilePictureBase64
+        {
+            get => _profilePictureBase64;
+            private set => SetProperty(ref _profilePictureBase64, value);
+        }
 
         public bool IsConnectedToTracker
         {
@@ -108,10 +161,32 @@ namespace UdpNatPunchClient
             private set => SetProperty(ref _externalAddress, value);
         }
 
+        public IPEndPoint? LocalEndPoint
+        {
+            get => _localAddress;
+            private set => SetProperty(ref _localAddress, value);
+        }
+
         public ConcurrentObservableCollection<MessageModel>? Messages
         {
             get => _messages;
             private set => SetProperty(ref _messages, value);
+        }
+
+        public int TabIndex
+        {
+            get => _tabIndex;
+            set
+            {
+                if (value >= 0)
+                {
+                    SetProperty(ref _tabIndex, value);
+                }
+                else
+                {
+                    SetProperty(ref _tabIndex, -1);
+                }
+            }
         }
 
         public PeerModel? SelectedPeer
@@ -165,6 +240,11 @@ namespace UdpNatPunchClient
             _scrollMessageBoxToEnd = scrollToEndDelegate;
         }
 
+        public void PassMessageTextBoxFocusDelegate(Action focusDelegate)
+        {
+            _focusOnMessageBox = focusDelegate;
+        }
+
         public void StartApp()
         {
             _client.StartListening();
@@ -175,6 +255,20 @@ namespace UdpNatPunchClient
             _tracker?.Disconnect();
             _client.DisconnectAll();
             _client.Stop();
+        }
+
+        private void RestartNicknameUpdateTimerTick()
+        {
+            _nicknameUpdateTimer.Stop();
+            _nicknameUpdateTimer.Start();
+        }
+
+        private void OnNcknameUpdateTimerTick(object? sender, EventArgs e)
+        {
+            IsNicknameUpdated = false;
+
+            _tracker?.SendUpdatedPersonalInfo(Nickname);
+            _connectedUsers.SendUpdatedInfoToConnectedUsers(Nickname);
         }
 
         private void OnConnectedPeerAdded(object? sender, EventArgs e)
@@ -196,7 +290,7 @@ namespace UdpNatPunchClient
         {
             Debug.WriteLine("(OnPeerConnected) " + e.Peer.Id);
 
-            var introducePeerToPeerMessage = new IntroducePeerToPeerMessage(ID);
+            var introducePeerToPeerMessage = new IntroducePeerToPeerMessage(ID, Nickname, ProfilePictureBase64);
             e.Peer.SendEncrypted(introducePeerToPeerMessage);
         }
 
@@ -239,9 +333,9 @@ namespace UdpNatPunchClient
                         return;
                     }
 
-                    _connectedUsers.Add(introducePeerToPeerMessage.ID, source);
+                    _connectedUsers.Add(introducePeerToPeerMessage, source);
 
-                    var introducePeerToPeerResponseMessage = new IntroducePeerToPeerResponse(ID);
+                    var introducePeerToPeerResponseMessage = new IntroducePeerToPeerResponse(ID, Nickname, ProfilePictureBase64);
                     source.SendEncrypted(introducePeerToPeerResponseMessage);
                     break;
 
@@ -252,7 +346,37 @@ namespace UdpNatPunchClient
                         return;
                     }
 
-                    _connectedUsers.Add(introducePeerToPeerResponse.ID, source);
+                    _connectedUsers.Add(introducePeerToPeerResponse, source);
+                    break;
+
+                case NetworkMessageType.UpdatedInfoForPeer:
+                    if (author == null)
+                    {
+                        return;
+                    }
+
+                    var updatedInfoMessage = JsonConvert.DeserializeObject<UpdatedInfoForPeerMessage>(json);
+                    if (updatedInfoMessage == null)
+                    {
+                        return;
+                    }
+
+                    author.UpdatePersonalInfo(updatedInfoMessage.UpdatedNickname);
+                    break;
+
+                case NetworkMessageType.UpdatedProfilePictureForPeer:
+                    if (author == null)
+                    {
+                        return;
+                    }
+
+                    var updatedPictureMessage = JsonConvert.DeserializeObject<UpdatedProfilePictureForPeerMessage>(json);
+                    if (updatedPictureMessage == null)
+                    {
+                        return;
+                    }
+
+                    author.UpdatePicture(updatedPictureMessage.UpdatedPictureBase64);
                     break;
 
                 case NetworkMessageType.TextMessage:
@@ -331,7 +455,7 @@ namespace UdpNatPunchClient
         private void OnTrackerConnected(object? sender, EventArgs e)
         {
             IsConnectedToTracker = true;
-            _tracker?.SendIntroductionMessage(ID);
+            _tracker?.SendIntroductionMessage(ID, Nickname);
 
             OnPropertyChanged(nameof(TrackerAddress));
         }
@@ -442,7 +566,7 @@ namespace UdpNatPunchClient
                     {
                         return;
                     }
-                    
+
                     _tracker?.PrintInfo(string.Format("Pong!\nPing: {0} ms", pingResponseMessage.Ping));
                     break;
 
@@ -545,6 +669,14 @@ namespace UdpNatPunchClient
             });
         }
 
+        private void FocusOnMessageTextBox()
+        {
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                _focusOnMessageBox?.Invoke();
+            });
+        }
+
         private void PutAsciiArt(AsciiArtsType artType)
         {
             switch (artType)
@@ -585,8 +717,39 @@ namespace UdpNatPunchClient
         {
             if (_tracker != null)
             {
+                TabIndex = 1;
                 SelectedPeer = _tracker;
+                FocusOnMessageTextBox();
             }
+        }
+
+        private void ChangeProfilePicture()
+        {
+            var openPictureDialog = new OpenFileDialog();
+            openPictureDialog.Filter = "Pictures|*.jpg;*.jpeg;*.png;*.png";
+            openPictureDialog.Title = "Select new profile picture";
+            if (openPictureDialog.ShowDialog() != true)
+            {
+                return;
+            }
+
+            var filePath = openPictureDialog.FileName;
+
+            if (BitmapImageExtensions.TryLoadBitmapImageFromPath(filePath, 300, 300, out var bitmapImage) &&
+                bitmapImage.TryConvertBitmapImageToBase64(out var base64))
+            {
+                ProfilePictureBase64 = base64;
+                ProfilePicture = bitmapImage;
+            }
+            else
+            {
+                MessageBox.Show("Couldn't load image: " + filePath,
+                    "Error",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
+
+            _connectedUsers.SendUpdatedProfilePictureToConnectedUsers(ProfilePictureBase64);
         }
     }
 }

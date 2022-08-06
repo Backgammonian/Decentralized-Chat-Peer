@@ -16,11 +16,14 @@
         UserNotFoundError,
         PingResponse,
         TimeResponse,
+        UpdatedInfoForTracker,
 
         IntroducePeerToPeer,
         IntroducePeerToPeerResponse,
         TextMessage,
         MessageReceiptNotification,
         MessageReadNotification,
+        UpdatedInfoForPeer,
+        UpdatedProfilePictureForPeer,
     }
 }

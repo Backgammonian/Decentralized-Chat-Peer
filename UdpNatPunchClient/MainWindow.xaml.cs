@@ -11,12 +11,17 @@ namespace UdpNatPunchClient
         public MainWindow()
         {
             InitializeComponent();
+
+            MessageTextBox.Focusable = true;
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            ((MainWindowViewModel)DataContext).PassScrollingDelegate(ScrollMessageTextBoxToEnd);
-            ((MainWindowViewModel)DataContext).StartApp();
+            var viewModel = (MainWindowViewModel)DataContext;
+
+            viewModel.PassScrollingDelegate(ScrollMessageTextBoxToEnd);
+            viewModel.PassMessageTextBoxFocusDelegate(FocusOnMessageTextBox);
+            viewModel.StartApp();
         }
 
         private void Window_Closing(object sender, CancelEventArgs e)
@@ -27,6 +32,11 @@ namespace UdpNatPunchClient
         private void ScrollMessageTextBoxToEnd()
         {
             MessageTextBox.ScrollToEnd();
+        }
+
+        private void FocusOnMessageTextBox()
+        {
+            MessageTextBox.Focus();
         }
 
         private void OnConnectedPeersListBoxLeftMouseButtonUp(object sender, MouseButtonEventArgs e)
