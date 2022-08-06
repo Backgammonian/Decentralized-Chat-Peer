@@ -191,15 +191,26 @@
                                             Margin="6">
                                             <TextBlock
                                                 Style="{StaticResource NewMessagesTextBlock}"/>
-                                            <TextBlock
-                                                Style="{StaticResource MessageContentTextBlock}"
-                                                Text="{Binding Nickname}"/>
-                                            <TextBlock
-                                                Style="{StaticResource BaseTextBlock}"
-                                                Text="{Binding ID, StringFormat={}({0})}"/>
-                                            <TextBlock
-                                                Style="{StaticResource BaseTextBlock}"
-                                                Text="{Binding EndPoint, StringFormat={}Address: {0}}"/>
+                                            <StackPanel
+                                                Orientation="Horizontal">
+                                                <Border
+                                                    Style="{StaticResource PeerPictureBorderStyle}">
+                                                    <Image
+                                                        Style="{StaticResource ProfilePictureStyle}"
+                                                        Source="{Binding Picture}"/>
+                                                </Border>
+                                                <StackPanel>
+                                                    <TextBlock
+                                                        Style="{StaticResource MessageContentTextBlock}"
+                                                        Text="{Binding Nickname}"/>
+                                                    <TextBlock
+                                                        Style="{StaticResource BaseTextBlock}"
+                                                        Text="{Binding ID, StringFormat={}({0})}"/>
+                                                    <TextBlock
+                                                        Style="{StaticResource BaseTextBlock}"
+                                                        Text="{Binding EndPoint, StringFormat={}Address: {0}}"/>
+                                                </StackPanel>
+                                            </StackPanel>
                                             <Separator/>
                                         </StackPanel>
                                     </DataTemplate>
@@ -231,8 +242,8 @@
                                             <TextBlock
                                                 Style="{StaticResource MessageDateTextBlock}"
                                                 Text="{Binding Time, Converter={StaticResource DateTimeConverter}}"/>
-                                            <TextBlock
-                                                Style="{StaticResource MessageContentTextBlock}"
+                                            <TextBox
+                                                Style="{StaticResource IncomingMessageTextBox}"
                                                 Text="{Binding Content}"/>
                                             <TextBlock
                                                 Style="{StaticResource MessageDeliveryStateTextBlock}"

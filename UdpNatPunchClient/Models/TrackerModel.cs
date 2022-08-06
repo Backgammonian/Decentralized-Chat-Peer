@@ -50,6 +50,35 @@ namespace UdpNatPunchClient.Models
             Messages.Add(new MessageModel(info, MessageDirection.Incoming));
         }
 
+        public void PrintSupport(string currentMessage)
+        {
+            PrintInfo(string.Format("Not valid command input: {0}\nPrint '/help' (without quotes) to get list of commands", currentMessage));
+        }
+
+        public void PrintHelp()
+        {
+            var help = "List of commands:\n";
+            help += "/connect [ID] - establish connection to peer with specified ID\n";
+            help += "/connect [Nickname] - get list of users with such nickname\n";
+            help += "/ping - get pong from tracker\n";
+            help += "/time - get tracker's current time";
+
+            PrintInfo(help);
+        }
+
+        public void PrintListOfUsers(UserInfoFromTracker[] users)
+        {
+            var i = 1;
+            var response = "Response from tracker:\n";
+            foreach (var user in users)
+            {
+                response += string.Format("{0}. Nickname: '{1}', ID: {2}\n", i, user.Nickname, user.ID);
+                i += 1;
+            }
+
+            PrintInfo(response);
+        }
+
         public void MarkCommandAsReadAndDelivered(string commandID)
         {
             if (!_commandsAndMessagesAccordance.ContainsKey(commandID))

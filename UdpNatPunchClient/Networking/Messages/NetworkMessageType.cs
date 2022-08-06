@@ -13,6 +13,7 @@
         CommandToTrackerError,
         UserConnectionResponse,
         ForwardedConnectionRequest,
+        ListOfUsersWithDesiredNickname,
         UserNotFoundError,
         PingResponse,
         TimeResponse,

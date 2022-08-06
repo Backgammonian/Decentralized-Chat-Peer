@@ -265,6 +265,7 @@ namespace UdpNatPunchClient
 
         private void OnNcknameUpdateTimerTick(object? sender, EventArgs e)
         {
+            _nicknameUpdateTimer.Stop();
             IsNicknameUpdated = false;
 
             _tracker?.SendUpdatedPersonalInfo(Nickname);
@@ -581,6 +582,22 @@ namespace UdpNatPunchClient
                     var formattedTime = (string)converter.Convert(timeResponseMessage.Time, null, null, null);
                     _tracker?.PrintInfo(string.Format("Tracker's time: {0}", formattedTime));
                     break;
+
+                case NetworkMessageType.ListOfUsersWithDesiredNickname:
+                    var listOfUsersResponse = JsonConvert.DeserializeObject<ListOfUsersWithDesiredNicknameMessage>(json);
+                    if (listOfUsersResponse == null)
+                    {
+                        return;
+                    }
+
+                    var usersQuery = listOfUsersResponse.Users;
+                    if (usersQuery.Length == 0)
+                    {
+                        return;
+                    }
+
+                    _tracker?.PrintListOfUsers(usersQuery);
+                    break;
             }
         }
 
@@ -626,11 +643,18 @@ namespace UdpNatPunchClient
             {
                 if (!TryParseCommand(CurrentMessage, out var command, out var argument))
                 {
-                    tracker.SendCommandMessage(command.ToLower(), argument);
+                    if (command == "help")
+                    {
+                        tracker.PrintHelp();
+                    }
+                    else
+                    {
+                        tracker.SendCommandMessage(command.ToLower(), argument);
+                    }
                 }
                 else
                 {
-                    tracker.PrintInfo(string.Format("Not valid command input: {0}", CurrentMessage));
+                    tracker.PrintSupport(CurrentMessage);
                 }
             }
             
@@ -740,6 +764,8 @@ namespace UdpNatPunchClient
             {
                 ProfilePictureBase64 = base64;
                 ProfilePicture = bitmapImage;
+
+                _connectedUsers.SendUpdatedProfilePictureToConnectedUsers(ProfilePictureBase64);
             }
             else
             {
@@ -748,8 +774,6 @@ namespace UdpNatPunchClient
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
             }
-
-            _connectedUsers.SendUpdatedProfilePictureToConnectedUsers(ProfilePictureBase64);
         }
     }
 }
