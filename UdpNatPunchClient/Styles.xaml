@@ -81,8 +81,8 @@
     </Style>
 
     <Style x:Key="ProfilePictureBorderStyle" TargetType="Border">
-        <Setter Property="Width" Value="100"/>
-        <Setter Property="Height" Value="100"/>
+        <Setter Property="Width" Value="200"/>
+        <Setter Property="Height" Value="200"/>
         <Setter Property="BorderBrush" Value="Black"/>
         <Setter Property="BorderThickness" Value="2"/>
         <Setter Property="Margin" Value="2"/>
@@ -90,8 +90,8 @@
     </Style>
 
     <Style x:Key="PeerPictureBorderStyle" TargetType="Border" BasedOn="{StaticResource ProfilePictureBorderStyle}">
-        <Setter Property="Width" Value="70"/>
-        <Setter Property="Height" Value="70"/>
+        <Setter Property="Width" Value="100"/>
+        <Setter Property="Height" Value="100"/>
         <Setter Property="BorderThickness" Value="1"/>
     </Style>
     

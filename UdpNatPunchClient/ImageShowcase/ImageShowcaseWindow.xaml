@@ -1,0 +1,26 @@
+﻿<Window x:Class="ImageShowcase.ImageShowcaseWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="ImageShowcaseWindow" 
+        Height="450" 
+        Width="800"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        WindowState="Maximized"
+        MouseUp="Window_MouseUp"
+        KeyUp="Window_KeyUp">
+    <Window.Background>
+        <SolidColorBrush Opacity="0.5" Color="Black"/>
+    </Window.Background>
+    <Grid>
+        <Image
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            x:Name="DisplayImage"
+            Stretch="Uniform"
+            StretchDirection="DownOnly"/>    
+    </Grid>
+</Window>

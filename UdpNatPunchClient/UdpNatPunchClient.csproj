@@ -13,14 +13,11 @@
     <PackageReference Include="Meziantou.Framework.WPF" Version="1.5.4" />
     <PackageReference Include="microsoft.toolkit.mvvm" Version="7.1.2" />
     <PackageReference Include="newtonsoft.json" Version="13.0.1" />
+    <PackageReference Include="System.drawing.common" Version="6.0.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\PlaceholderTextBoxControl\PlaceholderTextBoxControl.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Behaviours\" />
   </ItemGroup>
 
 </Project>

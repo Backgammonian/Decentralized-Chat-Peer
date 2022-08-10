@@ -28,6 +28,7 @@ namespace UdpNatPunchClient.Models
         public int PeerID => _peer.Id;
         public string EndPoint => _peer.EndPoint.ToString();
         public DateTime ConnectionTime => _peer.StartTime;
+        public int Ping => _peer.Ping;
         public ConcurrentObservableCollection<MessageModel> Messages { get; }
 
         public bool HasNewMessages

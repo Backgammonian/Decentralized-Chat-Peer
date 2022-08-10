@@ -16,6 +16,7 @@ using Networking;
 using Networking.Messages;
 using Networking.Utils;
 using InputBox;
+using ImageShowcase;
 using UdpNatPunchClient.Models;
 
 namespace UdpNatPunchClient
@@ -53,6 +54,8 @@ namespace UdpNatPunchClient
             PutAsciiArtCommand = new RelayCommand<AsciiArtsType>(PutAsciiArt);
             SelectTrackerDialogCommand = new RelayCommand(SelectTrackerDialog);
             ChangeProfilePictureCommand = new RelayCommand(ChangeProfilePicture);
+            ShowOwnProfilePictureCommand = new RelayCommand<MouseEventArgs?>(ShowOwnProfilePicture);
+            ShowPeerProfilePictureCommand = new RelayCommand<MouseEventArgs?>(ShowPeerProfilePicture);
 
             ID = RandomGenerator.GetRandomString(30);
             CurrentMessage = string.Empty;
@@ -91,6 +94,8 @@ namespace UdpNatPunchClient
         public ICommand PutAsciiArtCommand { get; }
         public ICommand SelectTrackerDialogCommand { get; }
         public ICommand ChangeProfilePictureCommand { get; }
+        public ICommand ShowOwnProfilePictureCommand { get; }
+        public ICommand ShowPeerProfilePictureCommand { get; }
 
         public string ID { get; }
         public ObservableCollection<AsciiArtsType> TextArts { get; }
@@ -255,6 +260,50 @@ namespace UdpNatPunchClient
             _tracker?.Disconnect();
             _client.DisconnectAll();
             _client.Stop();
+        }
+
+        private void ShowOwnProfilePicture(MouseEventArgs? e)
+        {
+            if (e == null)
+            {
+                return;
+            }
+
+            switch (e.LeftButton)
+            {
+                case MouseButtonState.Released:
+                    ShowImageFullScreen(ProfilePicture);
+                    break;
+            }
+        }
+
+        private void ShowPeerProfilePicture(MouseEventArgs? e)
+        {
+            if (e == null)
+            {
+                return;
+            }
+
+            switch (e.LeftButton)
+            {
+                case MouseButtonState.Released:
+                    if (SelectedPeer is UserModel user)
+                    {
+                        ShowImageFullScreen(user.Picture);
+                    }
+                    break;
+            }
+        }
+
+        private void ShowImageFullScreen(BitmapImage? image)
+        {
+            if (image == null)
+            {
+                return;
+            }
+
+            var showcaseWindow = new ImageShowcaseWindow(image);
+            showcaseWindow.ShowDialog();
         }
 
         private void RestartNicknameUpdateTimerTick()
@@ -629,11 +678,6 @@ namespace UdpNatPunchClient
 
         private void SendMessage()
         {
-            if (SelectedPeer == null)
-            {
-                return;
-            }
-
             if (SelectedPeer is UserModel user)
             {
                 user.SendTextMessage(new MessageModel(ID, CurrentMessage));
@@ -759,7 +803,7 @@ namespace UdpNatPunchClient
 
             var filePath = openPictureDialog.FileName;
 
-            if (BitmapImageExtensions.TryLoadBitmapImageFromPath(filePath, 300, 300, out var bitmapImage) &&
+            if (BitmapImageExtensions.TryLoadBitmapImageFromPath(filePath, 800, 800, out var bitmapImage) &&
                 bitmapImage.TryConvertBitmapImageToBase64(out var base64))
             {
                 ProfilePictureBase64 = base64;

@@ -1,6 +1,9 @@
 ﻿using System;
 using System.IO;
 using System.Windows.Media.Imaging;
+using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
 
 namespace UdpNatPunchClient
 {
@@ -44,7 +47,7 @@ namespace UdpNatPunchClient
             try
             {
                 using var memoryStream = new MemoryStream();
-                var encoder = new JpegBitmapEncoder();
+                var encoder = new PngBitmapEncoder();
                 encoder.Frames.Add(BitmapFrame.Create(bitmapImage));
                 encoder.Save(memoryStream);
                 base64 = Convert.ToBase64String(memoryStream.ToArray());
@@ -55,6 +58,66 @@ namespace UdpNatPunchClient
             {
                 return false;
             }
+        }
+
+        public static bool TryConvertBitmapToBitmapImage(this Bitmap bitmap, out BitmapImage result)
+        {
+            result = new BitmapImage();
+
+            try
+            {
+                using MemoryStream memory = new MemoryStream();
+                bitmap.Save(memory, ImageFormat.Png);
+                memory.Position = 0;
+
+                result.BeginInit();
+                result.StreamSource = memory;
+                result.CacheOption = BitmapCacheOption.OnLoad;
+                result.EndInit();
+
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        public static BitmapImage ResizeImageWithPreservedAspectRatio(this Bitmap image, int width, int height)
+        {
+            var sourceWidth = image.Width;
+            var sourceHeight = image.Height;
+            var sourceX = 0;
+            var sourceY = 0;
+            var destX = 0;
+            var destY = 0;
+            var nPercentW = width / (float)sourceWidth;
+            var nPercentH = height / (float)sourceHeight;
+
+            float nPercent;
+            if (nPercentH < nPercentW)
+            {
+                nPercent = nPercentH;
+                destX = Convert.ToInt32((width - (sourceWidth * nPercent)) / 2);
+            }
+            else
+            {
+                nPercent = nPercentW;
+                destY = Convert.ToInt32((height - (sourceHeight * nPercent)) / 2);
+            }
+
+            var destWidth = (int)(sourceWidth * nPercent);
+            var destHeight = (int)(sourceHeight * nPercent);
+
+            using var bitmap = new Bitmap(width, height, PixelFormat.Format32bppArgb);
+            bitmap.SetResolution(image.HorizontalResolution, image.VerticalResolution);
+            
+            using var gr = Graphics.FromImage(bitmap);
+            gr.Clear(Color.FromArgb(0, 0, 0, 0));
+            gr.InterpolationMode = InterpolationMode.HighQualityBicubic;
+            gr.DrawImage(image, new Rectangle(destX, destY, destWidth, destHeight), new Rectangle(sourceX, sourceY, sourceWidth, sourceHeight), GraphicsUnit.Pixel);
+
+            return bitmap.TryConvertBitmapToBitmapImage(out var result) ? result : new BitmapImage();
         }
 
         public static bool TryLoadBitmapImageFromPath(string path, int width, int height, out BitmapImage bitmapImage)
@@ -68,13 +131,8 @@ namespace UdpNatPunchClient
 
             try
             {
-                var uri = new Uri(path, UriKind.Absolute);
-                bitmapImage.BeginInit();
-                bitmapImage.UriSource = uri;
-                bitmapImage.DecodePixelHeight = width;
-                bitmapImage.DecodePixelWidth = height;
-                bitmapImage.CacheOption = BitmapCacheOption.OnLoad;
-                bitmapImage.EndInit();
+                using var bitmap = (Bitmap)Image.FromFile(path);
+                bitmapImage = bitmap.ResizeImageWithPreservedAspectRatio(width, height);
 
                 return true;
             }

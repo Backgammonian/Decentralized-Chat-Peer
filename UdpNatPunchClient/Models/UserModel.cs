@@ -33,10 +33,10 @@ namespace UdpNatPunchClient.Models
             {
                 if (value.TryConvertBase64ToBitmapImage(out var picture))
                 {
+                    SetProperty(ref _pictureBase64, value);
+
                     _picture = picture;
                     OnPropertyChanged(nameof(Picture));
-
-                    SetProperty(ref _pictureBase64, value);
                 }
             }
         }

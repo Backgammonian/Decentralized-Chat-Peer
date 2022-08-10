@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:UdpNatPunchClient"
         xmlns:custom="clr-namespace:PlaceholderTextBoxControl;assembly=PlaceholderTextBoxControl"
+        xmlns:MouseBehaviours="clr-namespace:Lovatts.MouseBehaviours"
         mc:Ignorable="d"
         Title="Client" 
         Height="600"
@@ -36,7 +37,7 @@
                         <Grid.RowDefinitions>
                             <RowDefinition Height="30"/>
                             <RowDefinition Height="30"/>
-                            <RowDefinition Height="180"/>
+                            <RowDefinition Height="280"/>
                             <RowDefinition Height="30"/>
                             <RowDefinition Height="30"/>
                             <RowDefinition Height="30"/>
@@ -81,7 +82,8 @@
                                 Style="{StaticResource ProfilePictureBorderStyle}">
                                 <Image
                                     Style="{StaticResource ProfilePictureStyle}"
-                                    Source="{Binding ProfilePicture}"/>
+                                    Source="{Binding ProfilePicture}"
+                                    MouseBehaviours:MouseBehaviour.MouseUpCommand="{Binding ShowOwnProfilePictureCommand}"/>
                             </Border>
                             <Button
                                 Style="{StaticResource BaseButton}"
@@ -178,6 +180,8 @@
                             <ListBox
                                 Grid.Row="3"
                                 ScrollViewer.CanContentScroll="False"
+                                ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                ScrollViewer.HorizontalScrollBarVisibility="Auto"
                                 ItemsSource="{Binding ConnectedUsers}"
                                 SelectedItem="{Binding SelectedPeer}">
                                 <ListBox.ItemContainerStyle>
@@ -197,7 +201,8 @@
                                                     Style="{StaticResource PeerPictureBorderStyle}">
                                                     <Image
                                                         Style="{StaticResource ProfilePictureStyle}"
-                                                        Source="{Binding Picture}"/>
+                                                        Source="{Binding Picture}"
+                                                        MouseBehaviours:MouseBehaviour.MouseUpCommand="{Binding DataContext.ShowPeerProfilePictureCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"/>
                                                 </Border>
                                                 <StackPanel>
                                                     <TextBlock
@@ -209,6 +214,9 @@
                                                     <TextBlock
                                                         Style="{StaticResource BaseTextBlock}"
                                                         Text="{Binding EndPoint, StringFormat={}Address: {0}}"/>
+                                                    <TextBlock
+                                                        Style="{StaticResource BaseTextBlock}"
+                                                        Text="{Binding Ping, StringFormat={}Ping: {0} ms}"/>
                                                 </StackPanel>
                                             </StackPanel>
                                             <Separator/>
@@ -244,6 +252,7 @@
                                                 Text="{Binding Time, Converter={StaticResource DateTimeConverter}}"/>
                                             <TextBox
                                                 Style="{StaticResource IncomingMessageTextBox}"
+                                                Background="{Binding Direction, Converter={StaticResource MessageDirectionColorConverter}}"
                                                 Text="{Binding Content}"/>
                                             <TextBlock
                                                 Style="{StaticResource MessageDeliveryStateTextBlock}"
@@ -308,23 +317,6 @@
                                 </Button>
                             </Grid>
                         </Grid>
-                    </Grid>
-                </TabItem.Content>
-            </TabItem>
-            <TabItem>
-                <TabItem.Header>
-                    <StackPanel
-                        Orientation="Horizontal">
-                        <Rectangle
-                            Style="{StaticResource RectangleStyle}"/>
-                        <TextBlock
-                            Style="{StaticResource TitleTextBlock}"
-                            Text="File manager    "/>
-                    </StackPanel>
-                </TabItem.Header>
-                <TabItem.Content>
-                    <Grid>
-                        
                     </Grid>
                 </TabItem.Content>
             </TabItem>

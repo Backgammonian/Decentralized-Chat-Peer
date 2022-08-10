@@ -38,6 +38,8 @@ namespace Networking
         private double _uploadSpeed;
         private readonly Queue<double> _uploadSpeedValues;
 
+        private readonly DispatcherTimer _pingUpdateTimer;
+
         public EncryptedPeer(NetPeer peer)
         {
             _peer = peer;
@@ -68,6 +70,11 @@ namespace Networking
             _uploadSpeedCounter.Interval = new TimeSpan(0, 0, 0, 0, _speedTimerInterval);
             _uploadSpeedCounter.Tick += OnUploadSpeedCounterTick;
             _uploadSpeedCounter.Start();
+
+            _pingUpdateTimer = new DispatcherTimer(DispatcherPriority.Background, Application.Current.Dispatcher);
+            _pingUpdateTimer.Interval = new TimeSpan(0, 0, 0, 0, 500);
+            _pingUpdateTimer.Tick += OnPingUdpateTimerTick;
+            _pingUpdateTimer.Start();
         }
 
         public event EventHandler<EncryptedPeerEventArgs>? PeerDisconnected;
@@ -76,7 +83,6 @@ namespace Networking
         public int Id => _peer.Id;
         public IPEndPoint EndPoint => _peer.EndPoint;
         public int Ping => _peer.Ping;
-        public long PacketLossPercent => _peer.Statistics.PacketLossPercent;
         public ConnectionState ConnectionState => _peer.ConnectionState;
         public DateTime StartTime { get; }
 
@@ -161,6 +167,11 @@ namespace Networking
             }
 
             UploadSpeed = _uploadSpeedValues.CalculateAverageValue();
+        }
+
+        private void OnPingUdpateTimerTick(object? sender, EventArgs e)
+        {
+            OnPropertyChanged(nameof(Ping));
         }
 
         public void SendPublicKeys()
@@ -286,6 +297,7 @@ namespace Networking
             _disconnectTimer.Stop();
             _downloadSpeedCounter.Stop();
             _uploadSpeedCounter.Stop();
+            _pingUpdateTimer.Stop();
 
             PeerDisconnected?.Invoke(this, new EncryptedPeerEventArgs(this));
         }
