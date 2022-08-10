@@ -20,7 +20,16 @@ namespace ImageShowcase
 
         private void Window_KeyUp(object sender, KeyEventArgs e)
         {
-            DialogResult = true;
+            switch (e.Key)
+            {
+                case Key.Escape:
+                case Key.Enter:
+                    DialogResult = true;
+                    break;
+
+                default:
+                    break;
+            }
         }
     }
 }
