@@ -60,20 +60,28 @@ namespace UdpNatPunchClient
             }
         }
 
+        public static BitmapImage ConvertBitmapToBitmapImage(this Bitmap bitmap)
+        {
+            using MemoryStream memory = new MemoryStream();
+            bitmap.Save(memory, ImageFormat.Png);
+            memory.Position = 0;
+
+            var result = new BitmapImage();
+            result.BeginInit();
+            result.StreamSource = memory;
+            result.CacheOption = BitmapCacheOption.OnLoad;
+            result.EndInit();
+
+            return result;
+        }
+
         public static bool TryConvertBitmapToBitmapImage(this Bitmap bitmap, out BitmapImage result)
         {
             result = new BitmapImage();
 
             try
             {
-                using MemoryStream memory = new MemoryStream();
-                bitmap.Save(memory, ImageFormat.Png);
-                memory.Position = 0;
-
-                result.BeginInit();
-                result.StreamSource = memory;
-                result.CacheOption = BitmapCacheOption.OnLoad;
-                result.EndInit();
+                result = bitmap.ConvertBitmapToBitmapImage();
 
                 return true;
             }
@@ -117,7 +125,7 @@ namespace UdpNatPunchClient
             gr.InterpolationMode = InterpolationMode.HighQualityBicubic;
             gr.DrawImage(image, new Rectangle(destX, destY, destWidth, destHeight), new Rectangle(sourceX, sourceY, sourceWidth, sourceHeight), GraphicsUnit.Pixel);
 
-            return bitmap.TryConvertBitmapToBitmapImage(out var result) ? result : new BitmapImage();
+            return bitmap.ConvertBitmapToBitmapImage();
         }
 
         public static bool TryLoadBitmapImageFromPath(string path, int width, int height, out BitmapImage bitmapImage)
@@ -133,6 +141,26 @@ namespace UdpNatPunchClient
             {
                 using var bitmap = (Bitmap)Image.FromFile(path);
                 bitmapImage = bitmap.ResizeImageWithPreservedAspectRatio(width, height);
+
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        public static bool TryLoadBitmapImageFromPath(string path, out BitmapImage bitmapImage)
+        {
+            bitmapImage = new BitmapImage();
+
+            try
+            {
+                var uri = new Uri(path, UriKind.Absolute);
+                bitmapImage.BeginInit();
+                bitmapImage.UriSource = uri;
+                bitmapImage.CacheOption = BitmapCacheOption.OnLoad;
+                bitmapImage.EndInit();
 
                 return true;
             }

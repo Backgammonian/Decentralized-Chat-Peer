@@ -7,21 +7,24 @@ using System.Windows.Threading;
 using System.Windows.Media.Imaging;
 using System.Net;
 using System.Linq;
+using System.ComponentModel;
 using Microsoft.Win32;
 using Microsoft.Toolkit.Mvvm.ComponentModel;
 using Microsoft.Toolkit.Mvvm.Input;
 using Newtonsoft.Json;
 using Meziantou.Framework.WPF.Collections;
+using SystemTrayApp.WPF;
 using Networking;
 using Networking.Messages;
 using Networking.Utils;
 using InputBox;
 using ImageShowcase;
+using DropFiles;
 using UdpNatPunchClient.Models;
 
 namespace UdpNatPunchClient
 {
-    public class MainWindowViewModel : ObservableObject
+    public partial class MainWindowViewModel : ObservableObject, IFilesDropped
     {
         private const string _userMessagePlaceholder = "Write a message to user...";
         private const string _trackerMessagePlaceholder = "Write a message to tracker...";
@@ -49,6 +52,8 @@ namespace UdpNatPunchClient
 
         public MainWindowViewModel()
         {
+            InitializeSystemTrayCommands();
+
             ConnectToTrackerCommand = new RelayCommand(ConnectToTracker);
             SendMessageCommand = new RelayCommand(SendMessage);
             PutAsciiArtCommand = new RelayCommand<AsciiArtsType>(PutAsciiArt);
@@ -228,38 +233,18 @@ namespace UdpNatPunchClient
             }
         }
 
-        public void SetSelectedUserModel(UserModel userModel)
-        {
-            if (ConnectedUsers.Contains(userModel))
-            {
-                SelectedPeer = userModel;
-            }
-            else
-            {
-                Debug.WriteLine("(SetSelectedUserModel) Can't select userModel: " + userModel.ID);
-            }
-        }
-
-        public void PassScrollingDelegate(Action scrollToEndDelegate)
-        {
-            _scrollMessageBoxToEnd = scrollToEndDelegate;
-        }
-
-        public void PassMessageTextBoxFocusDelegate(Action focusDelegate)
-        {
-            _focusOnMessageBox = focusDelegate;
-        }
-
-        public void StartApp()
+        private void StartApp()
         {
             _client.StartListening();
         }
 
-        public void ShutdownApp()
+        private void ShutdownApp()
         {
             _tracker?.Disconnect();
             _client.DisconnectAll();
             _client.Stop();
+
+            Application.Current.Shutdown();
         }
 
         private void ShowOwnProfilePicture(MouseEventArgs? e)
@@ -457,6 +442,8 @@ namespace UdpNatPunchClient
                     else
                     {
                         author.SendReceiptNotification(receivedMessage);
+
+                        Notify("New message", string.Format("Incoming message from {0} ({1})", author.Nickname, author.ID), 1500, System.Windows.Forms.ToolTipIcon.Info);
                     }
                     break;
 
@@ -818,6 +805,116 @@ namespace UdpNatPunchClient
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
             }
+        }
+
+        public void SetSelectedUserModel(UserModel userModel)
+        {
+            if (ConnectedUsers.Contains(userModel))
+            {
+                SelectedPeer = userModel;
+            }
+            else
+            {
+                Debug.WriteLine("(SetSelectedUserModel) Can't select userModel: " + userModel.ID);
+            }
+        }
+
+        public void PassScrollingDelegate(Action scrollToEndDelegate)
+        {
+            _scrollMessageBoxToEnd = scrollToEndDelegate;
+        }
+
+        public void PassMessageTextBoxFocusDelegate(Action focusDelegate)
+        {
+            _focusOnMessageBox = focusDelegate;
+        }
+
+        public void OnFilesDropped(string[] files)
+        {
+            foreach (var file in files)
+            {
+                //загружать и отправлять только одно (первое) изображение?
+                //или загружать и отправлять все изображения по очереди?
+
+                /*if (File.Exists(file))
+                {
+                    Debug.WriteLine("(OnFilesDropped) Dragging file: " + file);
+
+                    _sharedFiles.AddFile(file);
+                }*/
+            }
+        }
+    }
+
+    public partial class MainWindowViewModel
+    {
+        private NotifyIconWrapper.NotifyRequestRecord? _notifyRequest;
+        private bool _showInTaskbar;
+        private WindowState _windowState;
+
+        public ICommand? LoadedCommand { get; private set; }
+        public ICommand? ClosingCommand { get; private set; }
+        public ICommand? NotifyIconOpenCommand { get; private set; }
+        public ICommand? NotifyIconExitCommand { get; private set; }
+
+        public WindowState WindowState
+        {
+            get => _windowState;
+            set
+            {
+                ShowInTaskbar = true;
+                SetProperty(ref _windowState, value);
+                ShowInTaskbar = value != WindowState.Minimized;
+            }
+        }
+
+        public bool ShowInTaskbar
+        {
+            get => _showInTaskbar;
+            set => SetProperty(ref _showInTaskbar, value);
+        }
+
+        public NotifyIconWrapper.NotifyRequestRecord? NotifyRequest
+        {
+            get => _notifyRequest;
+            set => SetProperty(ref _notifyRequest, value);
+        }
+
+        private void Notify(string title, string message, int durationMs, System.Windows.Forms.ToolTipIcon icon)
+        {
+            NotifyRequest = new NotifyIconWrapper.NotifyRequestRecord
+            {
+                Title = title,
+                Text = message,
+                Duration = durationMs,
+                Icon = icon,
+            };
+        }
+
+        private void Loaded()
+        {
+            WindowState = WindowState.Normal;
+
+            StartApp();
+        }
+
+        private void Closing(CancelEventArgs? e)
+        {
+            if (e == null)
+            {
+                return;
+            }
+
+            e.Cancel = true;
+            WindowState = WindowState.Minimized;
+        }
+
+        private void InitializeSystemTrayCommands()
+        {
+            LoadedCommand = new RelayCommand(Loaded);
+            ClosingCommand = new RelayCommand<CancelEventArgs>(Closing);
+            NotifyIconOpenCommand = new RelayCommand(() => { WindowState = WindowState.Normal; });
+            NotifyIconExitCommand = new RelayCommand(ShutdownApp);
         }
     }
 }

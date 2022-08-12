@@ -4,20 +4,32 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Icon\peer_icon.ico" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Crc32.net" Version="1.2.0" />
     <PackageReference Include="Litenetlib" Version="0.9.5.2" />
     <PackageReference Include="Meziantou.Framework.WPF" Version="1.5.4" />
     <PackageReference Include="microsoft.toolkit.mvvm" Version="7.1.2" />
+    <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.39" />
     <PackageReference Include="newtonsoft.json" Version="13.0.1" />
     <PackageReference Include="System.drawing.common" Version="6.0.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\PlaceholderTextBoxControl\PlaceholderTextBoxControl.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Icon\peer_icon.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
 
 </Project>

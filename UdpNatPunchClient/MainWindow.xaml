@@ -6,12 +6,16 @@
         xmlns:local="clr-namespace:UdpNatPunchClient"
         xmlns:custom="clr-namespace:PlaceholderTextBoxControl;assembly=PlaceholderTextBoxControl"
         xmlns:MouseBehaviours="clr-namespace:Lovatts.MouseBehaviours"
+        xmlns:bh="http://schemas.microsoft.com/xaml/behaviors"
+        xmlns:tray="clr-namespace:SystemTrayApp.WPF"
+        xmlns:dropFiles="clr-namespace:DropFiles"
         mc:Ignorable="d"
         Title="Client" 
         Height="600"
         Width="750"
-        Loaded="Window_Loaded"
-        Closing="Window_Closing">
+        Icon="/Icon/peer_icon.ico"
+        ShowInTaskbar="{Binding ShowInTaskbar}"
+        WindowState="{Binding WindowState}">
     <Window.Resources>
         <ResourceDictionary Source="/Styles.xaml"/>
     </Window.Resources>
@@ -19,6 +23,16 @@
         <local:MainWindowViewModel/>
     </Window.DataContext>
     <Grid>
+        <tray:NotifyIconWrapper NotifyRequest="{Binding NotifyRequest}">
+            <bh:Interaction.Triggers>
+                <bh:EventTrigger EventName="OpenSelected">
+                    <bh:InvokeCommandAction Command="{Binding NotifyIconOpenCommand}"/>
+                </bh:EventTrigger>
+                <bh:EventTrigger EventName="ExitSelected">
+                    <bh:InvokeCommandAction Command="{Binding NotifyIconExitCommand}"/>
+                </bh:EventTrigger>
+            </bh:Interaction.Triggers>
+        </tray:NotifyIconWrapper>
         <TabControl
             SelectedIndex="{Binding TabIndex}">
             <TabItem>
@@ -302,6 +316,7 @@
                                 <custom:PlaceholderTextBox
                                     Grid.Column="1"
                                     x:Name="MessageTextBox"
+                                    dropFiles:DropFilesBehaviour.IsEnabled="True"
                                     IsEnabled="{Binding CanSendMessage}"
                                     Style="{StaticResource MessageTextBox}"
                                     Text="{Binding CurrentMessage, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
@@ -322,4 +337,12 @@
             </TabItem>
         </TabControl>
     </Grid>
+    <bh:Interaction.Triggers>
+        <bh:EventTrigger EventName="Loaded">
+            <bh:InvokeCommandAction Command="{Binding LoadedCommand}"/>
+        </bh:EventTrigger>
+        <bh:EventTrigger EventName="Closing">
+            <bh:InvokeCommandAction Command="{Binding ClosingCommand}" PassEventArgsToCommand="True"/>
+        </bh:EventTrigger>
+    </bh:Interaction.Triggers>
 </Window>

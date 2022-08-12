@@ -1,7 +1,6 @@
 ﻿using System.Windows;
 using System.Windows.Input;
 using System.Windows.Controls;
-using System.ComponentModel;
 using UdpNatPunchClient.Models;
 
 namespace UdpNatPunchClient
@@ -13,20 +12,10 @@ namespace UdpNatPunchClient
             InitializeComponent();
 
             MessageTextBox.Focusable = true;
-        }
 
-        private void Window_Loaded(object sender, RoutedEventArgs e)
-        {
             var viewModel = (MainWindowViewModel)DataContext;
-
             viewModel.PassScrollingDelegate(ScrollMessageTextBoxToEnd);
             viewModel.PassMessageTextBoxFocusDelegate(FocusOnMessageTextBox);
-            viewModel.StartApp();
-        }
-
-        private void Window_Closing(object sender, CancelEventArgs e)
-        {
-            ((MainWindowViewModel)DataContext).ShutdownApp();
         }
 
         private void ScrollMessageTextBoxToEnd()
