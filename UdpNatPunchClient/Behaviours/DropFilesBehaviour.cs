@@ -1,63 +1,35 @@
-﻿using System;
-using System.Windows;
-using System.Diagnostics;
+﻿using System.Windows;
+using System.Windows.Input;
 
 namespace DropFiles
 {
     //source: https://stackoverflow.com/questions/5916154/how-to-handle-drag-drop-without-violating-mvvm-principals
 
-    public class DropFilesBehaviour
+    public class DropFilesBehavior
     {
-        public static readonly DependencyProperty IsEnabledProperty = DependencyProperty.RegisterAttached(
-            "IsEnabled", typeof(bool),
-            typeof(DropFilesBehaviour),
-            new FrameworkPropertyMetadata(default(bool), OnPropChanged)
-            {
-                BindsTwoWayByDefault = false,
-            });
+        public static readonly DependencyProperty FilesDropCommandProperty =
+            DependencyProperty.RegisterAttached("FilesDropCommand", typeof(ICommand), typeof(DropFilesBehavior), new FrameworkPropertyMetadata(new PropertyChangedCallback(OnPropChanged)));
 
         private static void OnPropChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (!(d is FrameworkElement fe))
-            {
-                throw new InvalidOperationException();
-            }
+            var fe = (FrameworkElement)d;
 
-            if ((bool)e.NewValue)
-            {
-                fe.AllowDrop = true;
-                fe.Drop += OnDrop;
-                fe.PreviewDragOver += OnPreviewDragOver;
-            }
-            else
-            {
-                fe.AllowDrop = false;
-                fe.Drop -= OnDrop;
-                fe.PreviewDragOver -= OnPreviewDragOver;
-            }
+            fe.AllowDrop = true;
+            fe.Drop += OnDrop;
+            fe.PreviewDragOver += OnPreviewDragOver;
         }
 
         private static void OnPreviewDragOver(object sender, DragEventArgs e)
         {
-            // NOTE: PreviewDragOver subscription is required at least when FrameworkElement is a TextBox
-            // because it appears that TextBox by default prevent Drag on preview
-
             e.Effects = DragDropEffects.Move;
             e.Handled = true;
         }
 
         private static void OnDrop(object sender, DragEventArgs e)
         {
-            var dataContext = ((FrameworkElement)sender).DataContext;
-            if (!(dataContext is IFilesDropped filesDropped))
-            {
-                if (dataContext != null)
-                {
-                    Trace.TraceError($"Binding error, '{dataContext.GetType().Name}' doesn't implement '{nameof(IFilesDropped)}'.");
-                }
+            var element = (FrameworkElement)sender;
 
-                return;
-            }
+            var command = GetFilesDropCommand(element);
 
             if (!e.Data.GetDataPresent(DataFormats.FileDrop))
             {
@@ -66,18 +38,18 @@ namespace DropFiles
 
             if (e.Data.GetData(DataFormats.FileDrop) is string[] files)
             {
-                filesDropped.OnFilesDropped(files);
+                command.Execute(new FilesDroppedEventArgs(files));
             }
         }
 
-        public static void SetIsEnabled(DependencyObject element, bool value)
+        public static void SetFilesDropCommand(UIElement element, ICommand value)
         {
-            element.SetValue(IsEnabledProperty, value);
+            element.SetValue(FilesDropCommandProperty, value);
         }
 
-        public static bool GetIsEnabled(DependencyObject element)
+        public static ICommand GetFilesDropCommand(UIElement element)
         {
-            return (bool)element.GetValue(IsEnabledProperty);
+            return (ICommand)element.GetValue(FilesDropCommandProperty);
         }
     }
 }

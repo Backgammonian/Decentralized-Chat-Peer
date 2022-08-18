@@ -79,6 +79,7 @@
                                 Style="{StaticResource BaseTextBox}"
                                 x:Name="NicknameTextBox"
                                 MinWidth="150"
+                                MaxWidth="350"
                                 Text="{Binding Nickname, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                             <TextBlock
                                 Style="{StaticResource TitleTextBlock}"
@@ -93,7 +94,8 @@
                                 Style="{StaticResource BaseTextBlock}"
                                 Text="My profile picture:"/>
                             <Border
-                                Style="{StaticResource ProfilePictureBorderStyle}">
+                                Style="{StaticResource ProfilePictureBorderStyle}"
+                                dropFiles:DropFilesBehavior.FilesDropCommand="{Binding GetNewProfilePictureFromDropCommand}">
                                 <Image
                                     Style="{StaticResource ProfilePictureStyle}"
                                     Source="{Binding ProfilePicture}"
@@ -244,6 +246,7 @@
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="30"/>
                                 <RowDefinition Height="*"/>
+                                <RowDefinition Height="30"/>
                                 <RowDefinition Height="80"/>
                             </Grid.RowDefinitions>
                             <TextBlock
@@ -279,6 +282,22 @@
                             <Grid
                                 Grid.Row="2">
                                 <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="100"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Button
+                                    Grid.Column="0"
+                                    Style="{StaticResource BaseButton}"
+                                    IsEnabled="{Binding CanSendMessage}"
+                                    Command="{Binding SendImageCommand}">
+                                    <TextBlock
+                                        Style="{StaticResource BaseTextBlock}"
+                                        Text="Send image..."/>
+                                </Button>
+                            </Grid>
+                            <Grid
+                                Grid.Row="3">
+                                <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="70"/>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="50"/>
@@ -296,7 +315,8 @@
                                     <ComboBox
                                         Grid.Row="1"
                                         Style="{StaticResource BaseComboBox}"
-                                        ItemsSource="{Binding TextArts}">
+                                        ItemsSource="{Binding TextArts}"
+                                        IsEnabled="{Binding CanSendMessage}">
                                         <ComboBox.ItemTemplate>
                                             <DataTemplate>
                                                 <StackPanel>
@@ -316,7 +336,6 @@
                                 <custom:PlaceholderTextBox
                                     Grid.Column="1"
                                     x:Name="MessageTextBox"
-                                    dropFiles:DropFilesBehaviour.IsEnabled="True"
                                     IsEnabled="{Binding CanSendMessage}"
                                     Style="{StaticResource MessageTextBox}"
                                     Text="{Binding CurrentMessage, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"

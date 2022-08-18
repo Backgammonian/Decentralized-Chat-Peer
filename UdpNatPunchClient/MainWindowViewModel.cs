@@ -7,6 +7,7 @@ using System.Windows.Threading;
 using System.Windows.Media.Imaging;
 using System.Net;
 using System.Linq;
+using System.IO;
 using System.ComponentModel;
 using Microsoft.Win32;
 using Microsoft.Toolkit.Mvvm.ComponentModel;
@@ -20,11 +21,13 @@ using Networking.Utils;
 using InputBox;
 using ImageShowcase;
 using DropFiles;
+using Extensions;
+using Helpers;
 using UdpNatPunchClient.Models;
 
 namespace UdpNatPunchClient
 {
-    public partial class MainWindowViewModel : ObservableObject, IFilesDropped
+    public partial class MainWindowViewModel : ObservableObject
     {
         private const string _userMessagePlaceholder = "Write a message to user...";
         private const string _trackerMessagePlaceholder = "Write a message to tracker...";
@@ -49,6 +52,7 @@ namespace UdpNatPunchClient
         private IPEndPoint? _externalAddress;
         private IPEndPoint? _localAddress;
         private int _tabIndex;
+        private readonly DispatcherTimer _localAddressUpdater;
 
         public MainWindowViewModel()
         {
@@ -61,6 +65,8 @@ namespace UdpNatPunchClient
             ChangeProfilePictureCommand = new RelayCommand(ChangeProfilePicture);
             ShowOwnProfilePictureCommand = new RelayCommand<MouseEventArgs?>(ShowOwnProfilePicture);
             ShowPeerProfilePictureCommand = new RelayCommand<MouseEventArgs?>(ShowPeerProfilePicture);
+            SendImageCommand = new RelayCommand(SendImage);
+            GetNewProfilePictureFromDropCommand = new RelayCommand<FilesDroppedEventArgs?>(GetNewProfilePictureFromDrop);
 
             ID = RandomGenerator.GetRandomString(30);
             CurrentMessage = string.Empty;
@@ -86,7 +92,11 @@ namespace UdpNatPunchClient
 
             _tracker = null;
             ExternalEndPoint = null;
+            _localAddressUpdater = new DispatcherTimer();
+            _localAddressUpdater.Interval = new TimeSpan(0, 0, 2);
+            _localAddressUpdater.Tick += OnLocalAddressUpdaterTick;
             LocalEndPoint = new IPEndPoint(new LocalAddressResolver().GetLocalAddress(), _client.LocalPort);
+            _localAddressUpdater.Start();
 
             IsNicknameUpdated = false;
             _nicknameUpdateTimer = new DispatcherTimer();
@@ -101,6 +111,8 @@ namespace UdpNatPunchClient
         public ICommand ChangeProfilePictureCommand { get; }
         public ICommand ShowOwnProfilePictureCommand { get; }
         public ICommand ShowPeerProfilePictureCommand { get; }
+        public ICommand SendImageCommand { get; }
+        public ICommand GetNewProfilePictureFromDropCommand { get; }
 
         public string ID { get; }
         public ObservableCollection<AsciiArtsType> TextArts { get; }
@@ -233,77 +245,10 @@ namespace UdpNatPunchClient
             }
         }
 
-        private void StartApp()
+        private void OnLocalAddressUpdaterTick(object? sender, EventArgs e)
         {
-            _client.StartListening();
-        }
-
-        private void ShutdownApp()
-        {
-            _tracker?.Disconnect();
-            _client.DisconnectAll();
-            _client.Stop();
-
-            Application.Current.Shutdown();
-        }
-
-        private void ShowOwnProfilePicture(MouseEventArgs? e)
-        {
-            if (e == null)
-            {
-                return;
-            }
-
-            switch (e.LeftButton)
-            {
-                case MouseButtonState.Released:
-                    ShowImageFullScreen(ProfilePicture);
-                    break;
-            }
-        }
-
-        private void ShowPeerProfilePicture(MouseEventArgs? e)
-        {
-            if (e == null)
-            {
-                return;
-            }
-
-            switch (e.LeftButton)
-            {
-                case MouseButtonState.Released:
-                    if (SelectedPeer is UserModel user)
-                    {
-                        ShowImageFullScreen(user.Picture);
-                    }
-                    break;
-            }
-        }
-
-        private void ShowImageFullScreen(BitmapImage? image)
-        {
-            if (image == null)
-            {
-                return;
-            }
-
-            var showcaseWindow = new ImageShowcaseWindow(image);
-            showcaseWindow.ShowDialog();
-        }
-
-        private void RestartNicknameUpdateTimerTick()
-        {
-            _nicknameUpdateTimer.Stop();
-            _nicknameUpdateTimer.Start();
-        }
-
-        private void OnNcknameUpdateTimerTick(object? sender, EventArgs e)
-        {
-            _nicknameUpdateTimer.Stop();
-            IsNicknameUpdated = false;
-
-            _tracker?.SendUpdatedPersonalInfo(Nickname);
-            _connectedUsers.SendUpdatedInfoToConnectedUsers(Nickname);
+            _localAddressUpdater.Stop();
+            LocalEndPoint = new IPEndPoint(new LocalAddressResolver().GetLocalAddress(), _client.LocalPort);
         }
 
         private void OnConnectedPeerAdded(object? sender, EventArgs e)
@@ -778,20 +723,151 @@ namespace UdpNatPunchClient
             }
         }
 
-        private void ChangeProfilePicture()
+        private bool TrySelectFile(string title, string filter, out string path)
         {
-            var openPictureDialog = new OpenFileDialog();
-            openPictureDialog.Filter = "Pictures|*.jpg;*.jpeg;*.png;*.png";
-            openPictureDialog.Title = "Select new profile picture";
-            if (openPictureDialog.ShowDialog() != true)
+            path = string.Empty;
+
+            var selectFileDialog = new OpenFileDialog();
+            selectFileDialog.Filter = filter;
+            selectFileDialog.Title = title;
+            if (selectFileDialog.ShowDialog() != true)
+            {
+                return false;
+            }
+
+            path = selectFileDialog.FileName;
+            return true;
+        }
+
+        private bool TryGetFileSize(string path, out long size)
+        {
+            try
+            {
+                var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                size = stream.Length;
+                stream.Close();
+                stream.Dispose();
+
+                return true;
+            }
+            catch (Exception)
+            {
+                size = 0;
+
+                return false;
+            }
+        }
+
+        private void StartApp()
+        {
+            _client.StartListening();
+        }
+
+        private void ShutdownApp()
+        {
+            _tracker?.Disconnect();
+            _client.DisconnectAll();
+            _client.Stop();
+
+            Application.Current.Shutdown();
+        }
+
+        private void ShowOwnProfilePicture(MouseEventArgs? e)
+        {
+            if (e == null)
             {
                 return;
             }
 
-            var filePath = openPictureDialog.FileName;
+            switch (e.LeftButton)
+            {
+                case MouseButtonState.Released:
+                    ShowImageFullScreen(ProfilePicture);
+                    break;
+            }
+        }
 
-            if (BitmapImageExtensions.TryLoadBitmapImageFromPath(filePath, 800, 800, out var bitmapImage) &&
-                bitmapImage.TryConvertBitmapImageToBase64(out var base64))
+        private void ShowPeerProfilePicture(MouseEventArgs? e)
+        {
+            if (e == null)
+            {
+                return;
+            }
+
+            switch (e.LeftButton)
+            {
+                case MouseButtonState.Released:
+                    if (SelectedPeer is UserModel user)
+                    {
+                        ShowImageFullScreen(user.Picture);
+                    }
+                    break;
+            }
+        }
+
+        private void ShowImageFullScreen(BitmapImage? image)
+        {
+            if (image == null)
+            {
+                return;
+            }
+
+            var showcaseWindow = new ImageShowcaseWindow(image);
+            showcaseWindow.ShowDialog();
+        }
+
+        private void RestartNicknameUpdateTimerTick()
+        {
+            _nicknameUpdateTimer.Stop();
+            _nicknameUpdateTimer.Start();
+        }
+
+        private void OnNcknameUpdateTimerTick(object? sender, EventArgs e)
+        {
+            _nicknameUpdateTimer.Stop();
+            IsNicknameUpdated = false;
+
+            _tracker?.SendUpdatedPersonalInfo(Nickname);
+            _connectedUsers.SendUpdatedInfoToConnectedUsers(Nickname);
+        }
+
+        private void SendImage()
+        {
+
+        }
+
+        private void ChangeProfilePicture()
+        {
+            if (TrySelectFile("Select new profile picture", Constants.ImageFilter, out var path) &&
+                TryGetFileSize(path, out var size) &&
+                size < Constants.MaxProfilePictureSize)
+            {
+                UpdateProfilePicture(path);
+            }
+            else
+            {
+                MessageBox.Show("Selected image is too big, max. size: 5 MB",
+                    "Error",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
+        }
+
+        private void GetNewProfilePictureFromDrop(FilesDroppedEventArgs? args)
+        {
+            if (args == null ||
+                args.FilesPath.Length == 0)
+            {
+                return;
+            }
+
+            UpdateProfilePicture(args.FilesPath[0]);
+        }
+
+        private void UpdateProfilePicture(string path)
+        {
+            /*if (BitmapImageExtensions.TryLoadBitmapImageFromPath(filePath, 600, 600, out var bitmapImage) &&
+                //bitmapImage.TryConvertBitmapImageToBase64(out var base64))
             {
                 ProfilePictureBase64 = base64;
                 ProfilePicture = bitmapImage;
@@ -804,7 +880,7 @@ namespace UdpNatPunchClient
                     "Error",
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
-            }
+            }*/
         }
 
         public void SetSelectedUserModel(UserModel userModel)
@@ -827,22 +903,6 @@ namespace UdpNatPunchClient
         public void PassMessageTextBoxFocusDelegate(Action focusDelegate)
         {
             _focusOnMessageBox = focusDelegate;
-        }
-
-        public void OnFilesDropped(string[] files)
-        {
-            foreach (var file in files)
-            {
-                //загружать и отправлять только одно (первое) изображение?
-                //или загружать и отправлять все изображения по очереди?
-
-                /*if (File.Exists(file))
-                {
-                    Debug.WriteLine("(OnFilesDropped) Dragging file: " + file);
-
-                    _sharedFiles.AddFile(file);
-                }*/
-            }
         }
     }
 

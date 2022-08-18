@@ -1,16 +1,49 @@
-﻿using System.Windows;
+﻿using System;
+using System.IO;
+using System.Windows;
 using System.Windows.Input;
-using System.Windows.Media.Imaging;
+using XamlAnimatedGif;
+using Extensions;
+using UdpNatPunchClient.Models;
 
 namespace ImageShowcase
 {
     public partial class ImageShowcaseWindow : Window
     {
-        public ImageShowcaseWindow(BitmapImage image)
+        public ImageShowcaseWindow(ImageItem imageItem)
         {
             InitializeComponent();
 
-            DisplayImage.Source = image;
+            if (imageItem.IsAnimation)
+            {
+                try
+                {
+                    AnimationBehavior.SetSourceStream(DisplayImage, new FileStream(imageItem.Path, FileMode.Open, FileAccess.Read, FileShare.Read));
+                }
+                catch (Exception)
+                {
+                    ShowImageErrorMessage(imageItem.Path);
+                }
+            }
+            else
+            {
+                if (BitmapImageExtensions.TryLoadBitmapImageFromPath(imageItem.Path, out var image))
+                {
+                    DisplayImage.Source = image;
+                }
+                else
+                {
+                    ShowImageErrorMessage(imageItem.Path);
+                }
+            }
+        }
+
+        private void ShowImageErrorMessage(string imagePath)
+        {
+            var imageName = Path.GetFileName(imagePath);
+            ErrorTextBlock.Text = "Can't load image: " + imageName;
+            ErrorTextBlock.Visibility = Visibility.Visible;
+            ImageBorder.Visibility = Visibility.Hidden;
         }
 
         private void Window_MouseUp(object sender, MouseButtonEventArgs e)
@@ -20,16 +53,7 @@ namespace ImageShowcase
 
         private void Window_KeyUp(object sender, KeyEventArgs e)
         {
-            switch (e.Key)
-            {
-                case Key.Escape:
-                case Key.Enter:
-                    DialogResult = true;
-                    break;
-
-                default:
-                    break;
-            }
+            DialogResult = true;
         }
     }
 }

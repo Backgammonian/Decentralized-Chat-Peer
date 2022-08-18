@@ -20,6 +20,7 @@
     <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.39" />
     <PackageReference Include="newtonsoft.json" Version="13.0.1" />
     <PackageReference Include="System.drawing.common" Version="6.0.0" />
+    <PackageReference Include="XamlAnimatedGif" Version="2.0.2" />
   </ItemGroup>
 
   <ItemGroup>
