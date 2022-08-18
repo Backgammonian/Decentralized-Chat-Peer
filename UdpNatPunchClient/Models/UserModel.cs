@@ -8,7 +8,7 @@ namespace UdpNatPunchClient.Models
     {
         private string _nickname = string.Empty;
         private string _pictureBase64 = string.Empty;
-        private BitmapImage? _picture;
+        private ImageItem? _picture;
 
         public UserModel(EncryptedPeer peer, string id, string nickname, string pictureBase64) : base(peer)
         {
@@ -18,7 +18,7 @@ namespace UdpNatPunchClient.Models
         }
 
         public string ID { get; }
-        public BitmapImage? Picture => _picture;
+        public ImageItem? Picture => _picture;
 
         public string Nickname
         {

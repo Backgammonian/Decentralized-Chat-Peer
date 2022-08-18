@@ -48,8 +48,8 @@
             Text="Error: can't load image"
             HorizontalAlignment="Center"
             VerticalAlignment="Center"
-            FontSize="18"
-            Background="Transparent"
+            FontSize="22"
+            Background="Black"
             Foreground="LightGray"/>
     </Grid>
 </Window>

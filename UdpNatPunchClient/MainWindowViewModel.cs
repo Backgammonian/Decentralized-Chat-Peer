@@ -39,8 +39,7 @@ namespace UdpNatPunchClient
         private string _nickname = "My nickname";
         private bool _isNicknameUpdated;
         private readonly DispatcherTimer _nicknameUpdateTimer;
-        private BitmapImage? _profilePicture;
-        private string _profilePictureBase64 = string.Empty;
+        private ImageItem? _profilePicture;
         private bool _isConnectedToTracker;
         private string _currentMessage = string.Empty;
         private ConcurrentObservableCollection<MessageModel>? _messages;
@@ -91,6 +90,7 @@ namespace UdpNatPunchClient
             _connectedUsers.UserRemoved += OnConnectedPeerRemoved;
 
             _tracker = null;
+
             ExternalEndPoint = null;
             _localAddressUpdater = new DispatcherTimer();
             _localAddressUpdater.Interval = new TimeSpan(0, 0, 2);
@@ -124,12 +124,18 @@ namespace UdpNatPunchClient
             get => _nickname;
             set
             {
-                if (StringExtensions.IsNotEmpty(value) &&
-                    value.Length <= 150)
+                if (StringExtensions.IsNotEmpty(value))
                 {
-                    SetProperty(ref _nickname, value);
-                    IsNicknameUpdated = true;
+                    if (value.Length > Constants.MaxNicknameLength)
+                    {
+                        SetProperty(ref _nickname, value.Substring(0, Constants.MaxNicknameLength));
+                    }
+                    else
+                    {
+                        SetProperty(ref _nickname, value);
+                    }
 
+                    IsNicknameUpdated = true;
                     RestartNicknameUpdateTimerTick();
                 }
             }
@@ -141,16 +147,10 @@ namespace UdpNatPunchClient
             private set => SetProperty(ref _isNicknameUpdated, value);
         }
 
-        public BitmapImage? ProfilePicture
+        public ImageItem? ProfilePicture
         {
             get => _profilePicture;
             private set => SetProperty(ref _profilePicture, value);
-        }
-
-        public string ProfilePictureBase64
-        {
-            get => _profilePictureBase64;
-            private set => SetProperty(ref _profilePictureBase64, value);
         }
 
         public bool IsConnectedToTracker
@@ -162,13 +162,23 @@ namespace UdpNatPunchClient
         public string CurrentMessage
         {
             get => _currentMessage;
-            set => SetProperty(ref _currentMessage, value);
+            set
+            {
+                if (value.Length > Constants.MaxMessageLength)
+                {
+                    SetProperty(ref _currentMessage, value.Substring(0, Constants.MaxMessageLength));
+                }
+                else
+                {
+                    SetProperty(ref _currentMessage, value);
+                }
+            }
         }
 
         public string? CurrentPlaceholder
         {
             get => _currentPlaceholder;
-            set => SetProperty(ref _currentPlaceholder, value);
+            private set => SetProperty(ref _currentPlaceholder, value);
         }
 
         public bool CanSendMessage
@@ -805,7 +815,7 @@ namespace UdpNatPunchClient
             }
         }
 
-        private void ShowImageFullScreen(BitmapImage? image)
+        private void ShowImageFullScreen(ImageItem? image)
         {
             if (image == null)
             {
@@ -833,7 +843,7 @@ namespace UdpNatPunchClient
 
         private void SendImage()
         {
-
+            //TODO
         }
 
         private void ChangeProfilePicture()

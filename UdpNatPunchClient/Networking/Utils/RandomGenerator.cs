@@ -63,7 +63,7 @@ namespace Networking.Utils
             var result = "";
             for (var j = 0; j < length; j++)
             {
-                result += _chars[rnd.Next(0, _chars.Length - 1)];
+                result += _chars[rnd.Next(0, _chars.Length)];
             }
 
             return result;
