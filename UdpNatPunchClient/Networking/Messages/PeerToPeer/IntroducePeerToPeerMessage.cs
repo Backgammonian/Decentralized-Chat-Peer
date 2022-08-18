@@ -2,16 +2,18 @@
 {
     public sealed class IntroducePeerToPeerMessage : BaseMessage
     {
-        public IntroducePeerToPeerMessage(string id, string nickname, string pictureBase64)
+        public IntroducePeerToPeerMessage(string id, string nickname, byte[] pictureByteArray, string pictureExtension)
         {
             Type = NetworkMessageType.IntroducePeerToPeer;
             ID = id;
             Nickname = nickname;
-            PictureBase64 = pictureBase64;
+            PictureByteArray = pictureByteArray;
+            PictureExtension = pictureExtension;
         }
 
         public string ID { get; }
         public string Nickname { get; }
-        public string PictureBase64 { get; }
+        public byte[] PictureByteArray { get; }
+        public string PictureExtension { get; }
     }
 }

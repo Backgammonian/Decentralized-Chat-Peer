@@ -14,6 +14,10 @@ namespace UdpNatPunchClient.Models
 
         private BitmapImage? _preview;
 
+        public ImageItem()
+        {
+        }
+
         public ImageItem(string path, int previewWidth, int previewHeight)
         {
             Path = path;
@@ -26,23 +30,9 @@ namespace UdpNatPunchClient.Models
             }
         }
 
-        public ImageItem(byte[] array, string extension, int previewWidth, int previewHeight)
-        {
-            FileExtension = extension.ToUpper();
-            FileName = RandomGenerator.GetRandomString(20) + extension;
-            var newImagePath = _imageFolderName + "\\" + FileName;
-            Path = System.IO.Path.GetFullPath(newImagePath);
-            File.WriteAllBytes(Path, array);
-
-            if (BitmapImageExtensions.TryLoadBitmapImageFromPath(Path, previewWidth, previewHeight, out var image))
-            {
-                Preview = image;
-            }
-        }
-
-        public string Path { get; }
-        public string FileName { get; }
-        public string FileExtension { get; }
+        public string Path { get; private set; } = string.Empty;
+        public string FileName { get; private set; } = string.Empty;
+        public string FileExtension { get; private set; } = string.Empty;
         public bool IsAnimation => FileExtension == ".GIF";
 
         public BitmapImage? Preview
@@ -60,6 +50,29 @@ namespace UdpNatPunchClient.Models
             catch (Exception)
             {
                 return Array.Empty<byte>();
+            }
+        }
+
+        public bool TryMakeImageFromArray(byte[] array, string extension, int previewWidth, int previewHeight)
+        {
+            try
+            {
+                FileExtension = extension.ToUpper();
+                FileName = RandomGenerator.GetRandomString(20) + extension;
+                var newImagePath = _imageFolderName + "\\" + FileName;
+                Path = System.IO.Path.GetFullPath(newImagePath);
+                File.WriteAllBytes(Path, array);
+
+                if (BitmapImageExtensions.TryLoadBitmapImageFromPath(Path, previewWidth, previewHeight, out var image))
+                {
+                    Preview = image;
+                }
+
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
             }
         }
     }

@@ -2,11 +2,13 @@
 {
     public sealed class UpdatedProfilePictureForPeerMessage : BaseMessage
     {
-        public UpdatedProfilePictureForPeerMessage(string pictureBase64)
+        public UpdatedProfilePictureForPeerMessage(byte[] pictureArray, string pictureExtension)
         {
-            UpdatedPictureBase64 = pictureBase64;
+            UpdatedPictureArray = pictureArray;
+            UpdatedPictureExtension = pictureExtension;
         }
 
-        public string UpdatedPictureBase64 { get; }
+        public byte[] UpdatedPictureArray { get; }
+        public string UpdatedPictureExtension { get; }
     }
 }

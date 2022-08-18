@@ -1,5 +1,4 @@
-﻿using System.Windows.Media.Imaging;
-using Networking;
+﻿using Networking;
 using Networking.Messages;
 
 namespace UdpNatPunchClient.Models
@@ -7,18 +6,15 @@ namespace UdpNatPunchClient.Models
     public class UserModel : PeerModel
     {
         private string _nickname = string.Empty;
-        private string _pictureBase64 = string.Empty;
         private ImageItem? _picture;
 
-        public UserModel(EncryptedPeer peer, string id, string nickname, string pictureBase64) : base(peer)
+        public UserModel(EncryptedPeer peer, string id, string nickname) : base(peer)
         {
             ID = id;
             Nickname = nickname;
-            PictureBase64 = pictureBase64;
         }
 
         public string ID { get; }
-        public ImageItem? Picture => _picture;
 
         public string Nickname
         {
@@ -26,29 +22,31 @@ namespace UdpNatPunchClient.Models
             private set => SetProperty(ref _nickname, value);
         }
 
-        public string PictureBase64
+        public ImageItem? Picture
         {
-            get => _pictureBase64;
-            private set
-            {
-                if (value.TryConvertBase64ToBitmapImage(out var picture))
-                {
-                    SetProperty(ref _pictureBase64, value);
-
-                    _picture = picture;
-                    OnPropertyChanged(nameof(Picture));
-                }
-            }
+            get => _picture;
+            private set => SetProperty(ref _picture, value);
         }
 
-        public void UpdatePersonalInfo(string newNickname)
+        public void GetUpdatedPersonalInfo(string newNickname)
         {
             Nickname = newNickname;
         }
 
-        public void UpdatePicture(string newPictureBase64)
+        public void GetUpdatedPicture(byte[] pictureByteArray, string pictureExtension)
         {
-            PictureBase64 = newPictureBase64;
+            if (pictureByteArray.Length == 0 ||
+                pictureExtension.Length == 0)
+            {
+                return;
+            }
+
+            Picture = new ImageItem();
+            Picture.TryMakeImageFromArray(
+                pictureByteArray,
+                pictureExtension,
+                Constants.ProfilePictureThumbnailSize.Item1,
+                Constants.ProfilePictureThumbnailSize.Item2);
         }
 
         public void SendUpdatedPersonalInfo(string updatedNickname)
@@ -57,9 +55,9 @@ namespace UdpNatPunchClient.Models
             Send(updateMessage);
         }
 
-        public void SendUpdatedProfilePicture(string updatedPictureBase64)
+        public void SendUpdatedProfilePicture(byte[] pictureByteArray, string pictureExtension)
         {
-            var updateMessage = new UpdatedProfilePictureForPeerMessage(updatedPictureBase64);
+            var updateMessage = new UpdatedProfilePictureForPeerMessage(pictureByteArray, pictureExtension);
             Send(updateMessage);
         }
     }

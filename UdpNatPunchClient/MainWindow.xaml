@@ -339,7 +339,8 @@
                                     IsEnabled="{Binding CanSendMessage}"
                                     Style="{StaticResource MessageTextBox}"
                                     Text="{Binding CurrentMessage, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                    Placeholder="{Binding CurrentPlaceholder}"/>
+                                    Placeholder="{Binding CurrentPlaceholder}"
+                                    dropFiles:DropFilesBehavior.FilesDropCommand="{Binding SendImageFromDropCommand}"/>
                                 <Button
                                     Grid.Column="2"
                                     Style="{StaticResource SendMessageButton}"

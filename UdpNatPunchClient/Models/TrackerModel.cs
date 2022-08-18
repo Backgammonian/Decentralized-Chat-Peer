@@ -72,7 +72,7 @@ namespace UdpNatPunchClient.Models
             var response = "Response from tracker:\n";
             foreach (var user in users)
             {
-                response += string.Format("{0}. Nickname: '{1}', ID: {2}\n", i, user.Nickname, user.ID);
+                response += $"{i}. Nickname: '{user.Nickname}', ID: {user.ID}\n";
                 i += 1;
             }
 

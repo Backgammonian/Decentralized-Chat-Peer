@@ -23,12 +23,13 @@ namespace UdpNatPunchClient.Models
             _unreadMessages = new ConcurrentObservableCollection<MessageModel>();
             _incomingMessages = new ConcurrentObservableCollection<MessageModel>();
             Messages = new ConcurrentObservableCollection<MessageModel>();
+            EndPoint = _peer.EndPoint.ToString();
         }
 
         public int PeerID => _peer.Id;
-        public string EndPoint => _peer.EndPoint.ToString();
         public DateTime ConnectionTime => _peer.StartTime;
         public int Ping => _peer.Ping;
+        public string EndPoint { get; }
         public ConcurrentObservableCollection<MessageModel> Messages { get; }
 
         public bool HasNewMessages

@@ -18,8 +18,8 @@ namespace UdpNatPunchClient.Models
             _users = new ConcurrentDictionary<string, UserModel>();
         }
 
-        public event EventHandler<EventArgs>? UserAdded;
-        public event EventHandler<EventArgs>? UserRemoved;
+        public event EventHandler<UserUpdatedEventArgs>? UserAdded;
+        public event EventHandler<UserUpdatedEventArgs>? UserRemoved;
 
         public IEnumerable<UserModel> List => _users.Values;
 
@@ -41,24 +41,28 @@ namespace UdpNatPunchClient.Models
             return _users.ContainsKey(id);
         }
 
-        public void Add(string id, string nickname, string pictureBase64, EncryptedPeer peer)
+        public void Add(string id, string nickname, byte[] profilePictureArray, string profilePictureExtension, EncryptedPeer peer)
         {
-            var userModel = new UserModel(peer, id, nickname, pictureBase64);
-            if (!Has(id) &&
-                _users.TryAdd(id, userModel))
+            if (!Has(id))
             {
-                UserAdded?.Invoke(this, EventArgs.Empty);
+                var user = new UserModel(peer, id, nickname);
+                user.GetUpdatedPicture(profilePictureArray, profilePictureExtension);
+
+                if (_users.TryAdd(id, user))
+                {
+                    UserAdded?.Invoke(this, new UserUpdatedEventArgs(user));
+                }
             }
         }
 
         public void Add(IntroducePeerToPeerMessage message, EncryptedPeer peer)
         {
-            Add(message.ID, message.Nickname, message.PictureBase64, peer);
+            Add(message.ID, message.Nickname, message.PictureByteArray, message.PictureExtension, peer);
         }
 
         public void Add(IntroducePeerToPeerResponse message, EncryptedPeer peer)
         {
-            Add(message.ID, message.Nickname, message.PictureBase64, peer);
+            Add(message.ID, message.Nickname, message.PictureByteArray, message.PictureExtension, peer);
         }
 
         public void Remove(string id)
@@ -67,7 +71,7 @@ namespace UdpNatPunchClient.Models
                 _users.TryRemove(id, out UserModel? removedUser) &&
                 removedUser != null)
             {
-                UserRemoved?.Invoke(this, EventArgs.Empty);
+                UserRemoved?.Invoke(this, new UserUpdatedEventArgs(removedUser));
             }
         }
 
@@ -79,11 +83,11 @@ namespace UdpNatPunchClient.Models
             }
         }
 
-        public void SendUpdatedProfilePictureToConnectedUsers(string updatedPictureBase64)
+        public void SendUpdatedProfilePictureToConnectedUsers(byte[] updatedPictureArray, string updatedPictureExtension)
         {
             foreach (var user in _users.Values)
             {
-                user.SendUpdatedProfilePicture(updatedPictureBase64);
+                user.SendUpdatedProfilePicture(updatedPictureArray, updatedPictureExtension);
             }
         }
     }

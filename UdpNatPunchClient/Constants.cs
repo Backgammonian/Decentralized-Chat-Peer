@@ -2,12 +2,12 @@
 {
     public static class Constants
     {
-        public const int MaxNicknameLength = 150;
-        public const int MaxMessageLength = 3000;
-        public const string ImageFilter = "Pictures|*.jpg;*.jpeg;*.png;*.bmp;*.tiff;*.gif";
-        public const long MaxProfilePictureSize = 5242880; //5 MB
-        public const long MaxPictureSize = 52428800; //50 MB
-        public static readonly (int, int) ProfilePictureThumbnailSize = (400, 400);
-        public static readonly (int, int) ImageMessageThumbnailSize = (200, 200);
+        public static int MaxNicknameLength { get; } = 150;
+        public static int MaxMessageLength { get; } = 3000;
+        public static string ImageFilter { get; } = "Pictures|*.jpg;*.jpeg;*.png;*.bmp;*.tiff;*.gif";
+        public static long MaxProfilePictureSize { get; } = 5242880; //5 MB
+        public static long MaxPictureSize { get; } = 20971520; //20 MB
+        public static (int, int) ProfilePictureThumbnailSize { get; } = (200, 200);
+        public static (int, int) ImageMessageThumbnailSize { get; } = (300, 300);
     }
 }
