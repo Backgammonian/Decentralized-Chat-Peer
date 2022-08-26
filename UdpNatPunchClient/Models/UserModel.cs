@@ -1,5 +1,4 @@
-﻿using System.Threading.Tasks;
-using Networking;
+﻿using Networking;
 using Networking.Messages;
 
 namespace UdpNatPunchClient.Models

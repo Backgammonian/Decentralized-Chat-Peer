@@ -97,10 +97,25 @@
                             <Border
                                 Style="{StaticResource ProfilePictureBorderStyle}"
                                 dropFiles:DropFilesBehavior.FilesDropCommand="{Binding GetNewProfilePictureFromDropCommand}">
-                                <Image
-                                    Style="{StaticResource ProfilePictureStyle}"
-                                    gif:AnimationBehavior.SourceStream="{Binding ProfilePicture.PreviewPictureStream}"
-                                    MouseBehaviours:MouseBehaviour.MouseUpCommand="{Binding ShowOwnProfilePictureCommand}"/>
+                                <Grid>
+                                    <Image
+                                        Style="{StaticResource ProfilePictureStyle}"
+                                        gif:AnimationBehavior.SourceStream="{Binding ProfilePicture.PreviewPictureStream}"
+                                        MouseBehaviours:MouseBehaviour.MouseUpCommand="{Binding ShowOwnProfilePictureCommand}"/>
+                                    <TextBlock
+                                        Style="{StaticResource BaseTextBlock}"
+                                        Text="{Binding ProfilePicture.FileExtension}"
+                                        Margin="4"
+                                        Padding="2"
+                                        HorizontalAlignment="Right"
+                                        VerticalAlignment="Bottom"
+                                        Foreground="White"
+                                        FontSize="12">
+                                        <TextBlock.Background>
+                                            <SolidColorBrush Opacity="0.7" Color="Black"/>
+                                        </TextBlock.Background>
+                                    </TextBlock>
+                                </Grid>
                             </Border>
                             <Button
                                 Style="{StaticResource BaseButton}"
