@@ -69,7 +69,7 @@ namespace UdpNatPunchClient
             ChangeProfilePictureCommand = new AsyncRelayCommand(ChangeProfilePicture);
             ShowOwnProfilePictureCommand = new RelayCommand<MouseEventArgs?>(ShowOwnProfilePicture);
             ShowPeerProfilePictureCommand = new RelayCommand<MouseEventArgs?>(ShowPeerProfilePicture);
-            SendImageCommand = new RelayCommand(SendImage);
+            SendImageCommand = new RelayCommand(SelectImageToSend);
             GetNewProfilePictureFromDropCommand = new AsyncRelayCommand<FilesDroppedEventArgs?>(GetNewProfilePictureFromDrop);
             SendImageFromDropCommand = new RelayCommand<FilesDroppedEventArgs?>(SendImageFromFileDrop);
 
@@ -776,21 +776,6 @@ namespace UdpNatPunchClient
             CurrentMessage = string.Empty;
         }
 
-        private void SendImage()
-        {
-            //TODO
-        }
-
-        private void SendImageFromFileDrop(FilesDroppedEventArgs? args)
-        {
-            if (args == null)
-            {
-                return;
-            }
-
-            //TODO
-        }
-
         private bool TryParseCommand(string input, out string command, out string argument)
         {
             command = string.Empty;
@@ -815,20 +800,28 @@ namespace UdpNatPunchClient
             return true;
         }
 
-        private void ScrollMessagesToEnd()
+        private void SelectImageToSend()
         {
-            Application.Current.Dispatcher.Invoke(() =>
+            if (TrySelectFile("Select a picture to send", Constants.ImageFilter, out var path))
             {
-                _scrollMessageBoxToEnd?.Invoke();
-            });
+                SendImage(path);
+            }
         }
 
-        private void FocusOnMessageTextBox()
+        private void SendImageFromFileDrop(FilesDroppedEventArgs? args)
         {
-            Application.Current.Dispatcher.Invoke(() =>
+            if (args == null ||
+                args.FilesPath.Length == 0)
             {
-                _focusOnMessageBox?.Invoke();
-            });
+                return;
+            }
+
+            SendImage(args.FilesPath[0]);
+        }
+
+        private void SendImage(string path)
+        {
+            //TODO
         }
 
         private void PutAsciiArt(AsciiArtsType artType)
@@ -1049,6 +1042,22 @@ namespace UdpNatPunchClient
         public void PassMessageTextBoxFocusDelegate(Action focusDelegate)
         {
             _focusOnMessageBox = focusDelegate;
+        }
+
+        private void ScrollMessagesToEnd()
+        {
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                _scrollMessageBoxToEnd?.Invoke();
+            });
+        }
+
+        private void FocusOnMessageTextBox()
+        {
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                _focusOnMessageBox?.Invoke();
+            });
         }
     }
 
