@@ -16,7 +16,7 @@ namespace Converters
                 case MessageDirection.Incoming:
                     return HorizontalAlignment.Left;
 
-                case MessageDirection.Outcoming:
+                case MessageDirection.Outgoing:
                     return HorizontalAlignment.Right;
             }
         }

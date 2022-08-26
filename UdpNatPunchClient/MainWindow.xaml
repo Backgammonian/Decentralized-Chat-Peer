@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:UdpNatPunchClient"
+        xmlns:models="clr-namespace:UdpNatPunchClient.Models"
         xmlns:custom="clr-namespace:PlaceholderTextBoxControl;assembly=PlaceholderTextBoxControl"
         xmlns:MouseBehaviours="clr-namespace:Lovatts.MouseBehaviours"
         xmlns:bh="http://schemas.microsoft.com/xaml/behaviors"
@@ -274,8 +275,9 @@
                                 ScrollViewer.CanContentScroll="False"
                                 HorizontalContentAlignment="Stretch"
                                 ItemsSource="{Binding Messages.AsObservable}">
-                                <ListBox.ItemTemplate>
-                                    <DataTemplate>
+                                <ListBox.Resources>
+                                    <DataTemplate
+                                        DataType="{x:Type models:MessageModel}">
                                         <StackPanel
                                             Margin="5"
                                             HorizontalAlignment="{Binding Direction, Converter={StaticResource MessageDirectionAlignmentConverter}}"
@@ -293,7 +295,14 @@
                                                 Visibility="{Binding Direction, Converter={StaticResource MessageDirectionToVisibilityConverter}}"/>
                                         </StackPanel>
                                     </DataTemplate>
-                                </ListBox.ItemTemplate>
+                                    <DataTemplate
+                                        DataType="{x:Type models:ImageMessageModel}">
+                                        <StackPanel
+                                            Margin="5">
+                                            
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ListBox.Resources>
                             </ListBox>
                             <Grid
                                 Grid.Row="2">

@@ -16,7 +16,7 @@ namespace Converters
                 case MessageDirection.Incoming:
                     return Visibility.Collapsed;
 
-                case MessageDirection.Outcoming:
+                case MessageDirection.Outgoing:
                     return Visibility.Visible;
             }
         }

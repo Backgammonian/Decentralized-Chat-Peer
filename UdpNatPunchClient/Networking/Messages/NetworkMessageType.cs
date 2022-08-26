@@ -26,5 +26,6 @@
         MessageReadNotification,
         UpdatedInfoForPeer,
         UpdatedProfilePictureForPeer,
+        ImageMessage
     }
 }

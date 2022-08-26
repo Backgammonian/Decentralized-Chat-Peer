@@ -19,7 +19,7 @@ namespace Converters
                 case MessageDirection.Incoming:
                     return _incomingMessageColor;
 
-                case MessageDirection.Outcoming:
+                case MessageDirection.Outgoing:
                     return _outcomingMessageColor;
 
                 default:

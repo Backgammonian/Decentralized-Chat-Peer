@@ -37,7 +37,7 @@ namespace UdpNatPunchClient.Models
         public void SendCommandMessage(string command, string argument)
         {
             var commandMessage = new CommandToTrackerMessage(command, argument);
-            var message = new MessageModel(string.Format("/{0} {1}", command, argument), MessageDirection.Outcoming);
+            var message = new MessageModel(string.Format("/{0} {1}", command, argument), MessageDirection.Outgoing);
 
             _commandsAndMessagesAccordance.Add(commandMessage.Command, message);
             Messages.Add(message);
