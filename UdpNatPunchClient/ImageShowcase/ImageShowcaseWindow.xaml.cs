@@ -1,7 +1,6 @@
-﻿using System;
-using System.IO;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Input;
+using System.Windows.Media.Imaging;
 using XamlAnimatedGif;
 using Extensions;
 using UdpNatPunchClient.Models;
@@ -14,34 +13,33 @@ namespace ImageShowcase
         {
             InitializeComponent();
 
-            if (imageItem.IsAnimation)
+            if (imageItem.IsLoaded &&
+                imageItem.IsAnimation)
             {
-                try
-                {
-                    AnimationBehavior.SetSourceStream(DisplayImage, new FileStream(imageItem.Path, FileMode.Open, FileAccess.Read, FileShare.Read));
-                }
-                catch (Exception)
-                {
-                    ShowImageErrorMessage(imageItem.Path);
-                }
+                AnimationBehavior.SetSourceStream(DisplayImage, imageItem.PictureStream);
+            }
+            else
+            if (imageItem.IsLoaded &&
+                BitmapImageExtensions.TryLoadBitmapImageFromPath(imageItem.PicturePath, out var image))
+            {
+                DisplayImage.Source = image;
             }
             else
             {
-                if (BitmapImageExtensions.TryLoadBitmapImageFromPath(imageItem.Path, out var image))
-                {
-                    DisplayImage.Source = image;
-                }
-                else
-                {
-                    ShowImageErrorMessage(imageItem.Path);
-                }
+                ShowImageErrorMessage(imageItem.PicturePath);
             }
+        }
+
+        public ImageShowcaseWindow(BitmapImage image)
+        {
+            InitializeComponent();
+
+            DisplayImage.Source = image;
         }
 
         private void ShowImageErrorMessage(string imagePath)
         {
-            var imageName = Path.GetFileName(imagePath);
-            ErrorTextBlock.Text = "Can't load image: " + imageName;
+            ErrorTextBlock.Text = $"Can't load image: {imagePath}";
             ErrorTextBlock.Visibility = Visibility.Visible;
             ImageBorder.Visibility = Visibility.Hidden;
         }

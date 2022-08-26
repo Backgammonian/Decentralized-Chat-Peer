@@ -1,4 +1,5 @@
-﻿using Networking;
+﻿using System.Threading.Tasks;
+using Networking;
 using Networking.Messages;
 
 namespace UdpNatPunchClient.Models
@@ -28,25 +29,30 @@ namespace UdpNatPunchClient.Models
             private set => SetProperty(ref _picture, value);
         }
 
-        public void GetUpdatedPersonalInfo(string newNickname)
+        public void SetUpdatedPersonalInfo(string newNickname)
         {
             Nickname = newNickname;
         }
 
-        public void GetUpdatedPicture(byte[] pictureByteArray, string pictureExtension)
+        public bool TrySetUpdatedPicture(byte[] pictureByteArray, string pictureExtension)
         {
             if (pictureByteArray.Length == 0 ||
                 pictureExtension.Length == 0)
             {
-                return;
+                return false;
             }
 
-            Picture = new ImageItem();
-            Picture.TryMakeImageFromArray(
-                pictureByteArray,
-                pictureExtension,
-                Constants.ProfilePictureThumbnailSize.Item1,
-                Constants.ProfilePictureThumbnailSize.Item2);
+            var newPicture = ImageItem.TrySaveByteArrayAsImage(pictureByteArray, pictureExtension);
+            if (newPicture != null)
+            {
+                Picture = newPicture;
+                if (Picture.TryLoadImage())
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         public void SendUpdatedPersonalInfo(string updatedNickname)

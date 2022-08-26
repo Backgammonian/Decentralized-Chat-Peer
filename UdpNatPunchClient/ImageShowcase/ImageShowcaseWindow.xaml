@@ -43,6 +43,7 @@
         <TextBlock
             x:Name="ErrorTextBlock"
             Visibility="Hidden"
+            TextWrapping="Wrap"
             Grid.ColumnSpan="3"
             Grid.RowSpan="3"
             Text="Error: can't load image"
@@ -50,6 +51,6 @@
             VerticalAlignment="Center"
             FontSize="22"
             Background="Black"
-            Foreground="LightGray"/>
+            Foreground="White"/>
     </Grid>
 </Window>

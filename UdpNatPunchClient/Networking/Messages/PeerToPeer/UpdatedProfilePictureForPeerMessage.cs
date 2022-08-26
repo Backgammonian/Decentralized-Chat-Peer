@@ -4,6 +4,7 @@
     {
         public UpdatedProfilePictureForPeerMessage(byte[] pictureArray, string pictureExtension)
         {
+            Type = NetworkMessageType.UpdatedProfilePictureForPeer;
             UpdatedPictureArray = pictureArray;
             UpdatedPictureExtension = pictureExtension;
         }

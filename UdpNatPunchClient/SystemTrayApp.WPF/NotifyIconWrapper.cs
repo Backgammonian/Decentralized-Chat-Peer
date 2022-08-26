@@ -11,16 +11,17 @@ namespace SystemTrayApp.WPF
     public class NotifyIconWrapper : FrameworkElement, IDisposable
     {
         public static readonly DependencyProperty TextProperty =
-            DependencyProperty.Register("Text", typeof(string), typeof(NotifyIconWrapper), new PropertyMetadata(
-                (d, e) =>
-                {
-                    var notifyIcon = ((NotifyIconWrapper)d)._notifyIcon;
-                    if (notifyIcon == null)
+            DependencyProperty.Register("Text", typeof(string), typeof(NotifyIconWrapper),
+                new PropertyMetadata(
+                    (d, e) =>
                     {
-                        return;
-                    }
-                    notifyIcon.Text = (string)e.NewValue;
-                }));
+                        var notifyIcon = ((NotifyIconWrapper)d)._notifyIcon;
+                        if (notifyIcon == null)
+                        {
+                            return;
+                        }
+                        notifyIcon.Text = (string)e.NewValue;
+                    }));
 
         private static readonly DependencyProperty NotifyRequestProperty =
             DependencyProperty.Register("NotifyRequest", typeof(NotifyRequestRecord), typeof(NotifyIconWrapper),

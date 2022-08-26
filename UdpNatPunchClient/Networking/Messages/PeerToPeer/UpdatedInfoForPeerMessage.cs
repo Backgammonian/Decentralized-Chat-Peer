@@ -4,6 +4,7 @@
     {
         public UpdatedInfoForPeerMessage(string nickname)
         {
+            Type = NetworkMessageType.UpdatedInfoForPeer;
             UpdatedNickname = nickname;
         }
 

@@ -9,8 +9,9 @@
         xmlns:bh="http://schemas.microsoft.com/xaml/behaviors"
         xmlns:tray="clr-namespace:SystemTrayApp.WPF"
         xmlns:dropFiles="clr-namespace:DropFiles"
+        xmlns:gif="clr-namespace:XamlAnimatedGif;assembly=XamlAnimatedGif"
         mc:Ignorable="d"
-        Title="Client" 
+        Title="{Binding TitleText}"
         Height="600"
         Width="750"
         Icon="/Icon/peer_icon.ico"
@@ -98,7 +99,7 @@
                                 dropFiles:DropFilesBehavior.FilesDropCommand="{Binding GetNewProfilePictureFromDropCommand}">
                                 <Image
                                     Style="{StaticResource ProfilePictureStyle}"
-                                    Source="{Binding ProfilePicture}"
+                                    gif:AnimationBehavior.SourceStream="{Binding ProfilePicture.PreviewPictureStream}"
                                     MouseBehaviours:MouseBehaviour.MouseUpCommand="{Binding ShowOwnProfilePictureCommand}"/>
                             </Border>
                             <Button
@@ -217,7 +218,7 @@
                                                     Style="{StaticResource PeerPictureBorderStyle}">
                                                     <Image
                                                         Style="{StaticResource ProfilePictureStyle}"
-                                                        Source="{Binding Picture}"
+                                                        gif:AnimationBehavior.SourceStream="{Binding Picture.PreviewPictureStream}"
                                                         MouseBehaviours:MouseBehaviour.MouseUpCommand="{Binding DataContext.ShowPeerProfilePictureCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"/>
                                                 </Border>
                                                 <StackPanel>
@@ -247,7 +248,7 @@
                                 <RowDefinition Height="30"/>
                                 <RowDefinition Height="*"/>
                                 <RowDefinition Height="30"/>
-                                <RowDefinition Height="80"/>
+                                <RowDefinition Height="120"/>
                             </Grid.RowDefinitions>
                             <TextBlock
                                 Grid.Row="0"
@@ -340,7 +341,10 @@
                                     Style="{StaticResource MessageTextBox}"
                                     Text="{Binding CurrentMessage, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                     Placeholder="{Binding CurrentPlaceholder}"
-                                    dropFiles:DropFilesBehavior.FilesDropCommand="{Binding SendImageFromDropCommand}"/>
+                                    dropFiles:DropFilesBehavior.FilesDropCommand="{Binding SendImageFromDropCommand}"
+                                    ScrollViewer.CanContentScroll="false"
+                                    ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                    ScrollViewer.VerticalScrollBarVisibility="Auto"/>
                                 <Button
                                     Grid.Column="2"
                                     Style="{StaticResource SendMessageButton}"

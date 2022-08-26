@@ -9,7 +9,7 @@ namespace Extensions
 {
     public static class BitmapExtensions
     {
-        public static BitmapImage ConvertToBitmapImage(this Bitmap bitmap)
+        public static BitmapImage ToBitmapImage(this Bitmap bitmap)
         {
             using MemoryStream memory = new MemoryStream();
             bitmap.Save(memory, ImageFormat.Png);
@@ -24,7 +24,7 @@ namespace Extensions
             return bitmapImage;
         }
 
-        public static BitmapImage ResizeImageWithPreservedAspectRatio(this Bitmap image, int width, int height)
+        public static Bitmap ResizeImageWithPreservedAspectRatio(this Bitmap image, int width, int height)
         {
             var sourceWidth = image.Width;
             var sourceHeight = image.Height;
@@ -50,7 +50,7 @@ namespace Extensions
             var destWidth = (int)(sourceWidth * nPercent);
             var destHeight = (int)(sourceHeight * nPercent);
 
-            using var bitmap = new Bitmap(width, height, PixelFormat.Format32bppArgb);
+            var bitmap = new Bitmap(width, height, PixelFormat.Format32bppArgb);
             bitmap.SetResolution(image.HorizontalResolution, image.VerticalResolution);
 
             using var gr = Graphics.FromImage(bitmap);
@@ -58,7 +58,7 @@ namespace Extensions
             gr.InterpolationMode = InterpolationMode.HighQualityBicubic;
             gr.DrawImage(image, new Rectangle(destX, destY, destWidth, destHeight), new Rectangle(sourceX, sourceY, sourceWidth, sourceHeight), GraphicsUnit.Pixel);
 
-            return bitmap.ConvertToBitmapImage();
+            return bitmap;
         }
     }
 }

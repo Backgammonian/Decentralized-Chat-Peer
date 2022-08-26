@@ -32,6 +32,7 @@ namespace UdpNatPunchClient.Models
             catch (Exception e)
             {
                 Debug.WriteLine(e);
+
                 return null;
             }
         }
@@ -46,10 +47,10 @@ namespace UdpNatPunchClient.Models
             if (!Has(id))
             {
                 var user = new UserModel(peer, id, nickname);
-                user.GetUpdatedPicture(profilePictureArray, profilePictureExtension);
 
                 if (_users.TryAdd(id, user))
                 {
+                    user.TrySetUpdatedPicture(profilePictureArray, profilePictureExtension);
                     UserAdded?.Invoke(this, new UserUpdatedEventArgs(user));
                 }
             }
