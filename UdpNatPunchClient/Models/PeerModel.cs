@@ -22,7 +22,7 @@ namespace UdpNatPunchClient.Models
             _undeliveredMessages = new ConcurrentObservableCollection<MessageModel>();
             _unreadMessages = new ConcurrentObservableCollection<MessageModel>();
             _incomingMessages = new ConcurrentObservableCollection<MessageModel>();
-            Messages = new ConcurrentObservableCollection<MessageModel>();
+            Messages = new ConcurrentObservableCollection<BaseMessageModel>();
             EndPoint = _peer.EndPoint.ToString();
         }
 
@@ -30,7 +30,7 @@ namespace UdpNatPunchClient.Models
         public DateTime ConnectionTime => _peer.StartTime;
         public int Ping => _peer.Ping;
         public string EndPoint { get; }
-        public ConcurrentObservableCollection<MessageModel> Messages { get; }
+        public ConcurrentObservableCollection<BaseMessageModel> Messages { get; }
 
         public bool HasNewMessages
         {

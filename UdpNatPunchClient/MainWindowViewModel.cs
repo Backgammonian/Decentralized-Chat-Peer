@@ -31,7 +31,7 @@ namespace UdpNatPunchClient
         private const string _userMessagePlaceholder = "Write a message to user...";
         private const string _trackerMessagePlaceholder = "Write a message to tracker...";
         private const string _noMessagePlaceholder = "---";
-        private const string _title = "Client";
+        private const string _title = "Chat Client";
         private const int _profileTabIndex = 0;
         private const int _chatTabIndex = 0;
 
@@ -46,7 +46,7 @@ namespace UdpNatPunchClient
         private ImageItem? _profilePicture;
         private bool _isConnectedToTracker;
         private string _currentMessage = string.Empty;
-        private ConcurrentObservableCollection<MessageModel>? _messages;
+        private ConcurrentObservableCollection<BaseMessageModel>? _messages;
         private PeerModel? _selectedPeer;
         private Action? _scrollMessageBoxToEnd;
         private Action? _focusOnMessageBox;
@@ -57,27 +57,32 @@ namespace UdpNatPunchClient
         private int _tabIndex;
         private byte[]? _profilePictureBytes;
         private bool _isProfilePictureBytesLoaded = false;
+        private BaseMessageModel? _selectedMessage;
+        private string _systemTrayText = string.Empty;
 
         public MainWindowViewModel()
         {
             InitializeSystemTrayCommands();
 
             ConnectToTrackerCommand = new RelayCommand(ConnectToTracker);
-            SendMessageCommand = new RelayCommand(SendMessage);
             PutAsciiArtCommand = new RelayCommand<AsciiArtsType>(PutAsciiArt);
+            SendMessageCommand = new RelayCommand(SendMessage);
             SelectTrackerDialogCommand = new RelayCommand(SelectTrackerDialog);
             ChangeProfilePictureCommand = new AsyncRelayCommand(ChangeProfilePicture);
+            GetNewProfilePictureFromDropCommand = new AsyncRelayCommand<FilesDroppedEventArgs?>(GetNewProfilePictureFromDrop);
+            SendImageCommand = new AsyncRelayCommand(SelectImageToSend);
+            SendImagesFromDropCommand = new AsyncRelayCommand<FilesDroppedEventArgs?>(SendImagesFromFileDrop);
             ShowOwnProfilePictureCommand = new RelayCommand<MouseEventArgs?>(ShowOwnProfilePicture);
             ShowPeerProfilePictureCommand = new RelayCommand<MouseEventArgs?>(ShowPeerProfilePicture);
-            SendImageCommand = new RelayCommand(SelectImageToSend);
-            GetNewProfilePictureFromDropCommand = new AsyncRelayCommand<FilesDroppedEventArgs?>(GetNewProfilePictureFromDrop);
-            SendImageFromDropCommand = new RelayCommand<FilesDroppedEventArgs?>(SendImageFromFileDrop);
+            ShowPictureFromMessageCommand = new RelayCommand<MouseEventArgs?>(ShowPictureFromMessage);
 
+            SystemTrayText = _title;
             ID = RandomGenerator.GetRandomString(30);
             CurrentMessage = string.Empty;
             IsConnectedToTracker = false;
             SelectedPeer = null;
             CanSendMessage = false;
+            IsProfilePictureBytesLoaded = false;
 
             TextArts = new ObservableCollection<AsciiArtsType>(Enum.GetValues(typeof(AsciiArtsType)).Cast<AsciiArtsType>());
 
@@ -119,12 +124,19 @@ namespace UdpNatPunchClient
         public ICommand ShowPeerProfilePictureCommand { get; }
         public ICommand SendImageCommand { get; }
         public ICommand GetNewProfilePictureFromDropCommand { get; }
-        public ICommand SendImageFromDropCommand { get; }
+        public ICommand SendImagesFromDropCommand { get; }
+        public ICommand ShowPictureFromMessageCommand { get; }
 
         public string ID { get; }
         public ObservableCollection<AsciiArtsType> TextArts { get; }
         public string TrackerAddress => _tracker == null ? "---" : _tracker.EndPoint;
         public ObservableCollection<UserModel> ConnectedUsers => new ObservableCollection<UserModel>(_connectedUsers.List.OrderBy(user => user.ConnectionTime));
+
+        public string SystemTrayText
+        {
+            get => _systemTrayText;
+            set => SetProperty(ref _systemTrayText, value);
+        }
 
         public string TitleText
         {
@@ -164,6 +176,12 @@ namespace UdpNatPunchClient
         {
             get => _profilePicture;
             private set => SetProperty(ref _profilePicture, value);
+        }
+
+        public bool IsProfilePictureBytesLoaded
+        {
+            get => _isProfilePictureBytesLoaded;
+            private set => SetProperty(ref _isProfilePictureBytesLoaded, value);
         }
 
         public bool IsConnectedToTracker
@@ -212,10 +230,16 @@ namespace UdpNatPunchClient
             private set => SetProperty(ref _localAddress, value);
         }
 
-        public ConcurrentObservableCollection<MessageModel>? Messages
+        public ConcurrentObservableCollection<BaseMessageModel>? Messages
         {
             get => _messages;
             private set => SetProperty(ref _messages, value);
+        }
+
+        public BaseMessageModel? SelectedMessage
+        {
+            get => _selectedMessage;
+            set => SetProperty(ref _selectedMessage, value);
         }
 
         public int TabIndex
@@ -336,7 +360,7 @@ namespace UdpNatPunchClient
 
             var profilePictureByteArray = Array.Empty<byte>();
             var profilePictureExtension = string.Empty;
-            if (_isProfilePictureBytesLoaded &&
+            if (IsProfilePictureBytesLoaded &&
                 _profilePictureBytes != null &&
                 ProfilePicture != null)
             {
@@ -391,7 +415,7 @@ namespace UdpNatPunchClient
 
                     var profilePictureByteArray = Array.Empty<byte>();
                     var profilePictureExtension = string.Empty;
-                    if (_isProfilePictureBytesLoaded &&
+                    if (IsProfilePictureBytesLoaded &&
                         _profilePictureBytes != null &&
                         ProfilePicture != null)
                     {
@@ -800,26 +824,32 @@ namespace UdpNatPunchClient
             return true;
         }
 
-        private void SelectImageToSend()
+        private async Task SelectImageToSend()
         {
             if (TrySelectFile("Select a picture to send", Constants.ImageFilter, out var path))
             {
-                SendImage(path);
+                await SendImage(path);
             }
         }
 
-        private void SendImageFromFileDrop(FilesDroppedEventArgs? args)
+        private async Task SendImagesFromFileDrop(FilesDroppedEventArgs? args)
         {
-            if (args == null ||
-                args.FilesPath.Length == 0)
+            if (args == null)
             {
                 return;
             }
 
-            SendImage(args.FilesPath[0]);
+            foreach (var imagePath in args.FilesPath)
+            {
+                var imageExtension = Path.GetExtension(imagePath);
+                if (Constants.AllowedImageExtensions.Contains(imageExtension))
+                {
+                    await SendImage(imagePath);
+                }
+            }
         }
 
-        private void SendImage(string path)
+        private async Task SendImage(string path)
         {
             //TODO
         }
@@ -936,6 +966,24 @@ namespace UdpNatPunchClient
             }
         }
 
+        private void ShowPictureFromMessage(MouseEventArgs? e)
+        {
+            if (e == null)
+            {
+                return;
+            }
+
+            switch (e.LeftButton)
+            {
+                case MouseButtonState.Released:
+                    if (SelectedMessage is ImageMessageModel message)
+                    {
+                        ShowImageFullScreen(message.Image);
+                    }
+                    break;
+            }
+        }
+
         private void ShowImageFullScreen(ImageItem? image)
         {
             if (image == null)
@@ -963,7 +1011,19 @@ namespace UdpNatPunchClient
                 return;
             }
 
-            await UpdateProfilePicture(args.FilesPath[0]);
+            var imagePath = args.FilesPath[0];
+            var imageExtension = Path.GetExtension(imagePath);
+            if (Constants.AllowedImageExtensions.Contains(imageExtension))
+            {
+                await UpdateProfilePicture(imagePath);
+            }
+            else
+            {
+                MessageBox.Show($"File {imagePath} has incorrect extension.\nAllowed extensions: {string.Join("; ", Constants.AllowedImageExtensions)}",
+                    "Image load error",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
         }
 
         private async Task UpdateProfilePicture(string path)
@@ -973,7 +1033,7 @@ namespace UdpNatPunchClient
                 if (size == 0)
                 {
                     MessageBox.Show("Selected profile picture is empty!",
-                        "Error",
+                        "Image load error",
                         MessageBoxButton.OK,
                         MessageBoxImage.Error);
 
@@ -983,7 +1043,7 @@ namespace UdpNatPunchClient
                 if (size > Constants.MaxProfilePictureSize)
                 {
                     MessageBox.Show("Selected profile picture is too big. Maximum size: 5 MB",
-                        "Error",
+                        "Image load error",
                         MessageBoxButton.OK,
                         MessageBoxImage.Error);
 
@@ -993,8 +1053,7 @@ namespace UdpNatPunchClient
 
             try
             {
-                ProfilePicture = new ImageItem(
-                    path,
+                ProfilePicture = new ImageItem(path,
                     Constants.ProfilePictureThumbnailSize.Item1,
                     Constants.ProfilePictureThumbnailSize.Item2);
 
@@ -1003,7 +1062,7 @@ namespace UdpNatPunchClient
                     var result = await ProfilePicture.TryGetPictureBytes();
                     if (result.Item1)
                     {
-                        _isProfilePictureBytesLoaded = true;
+                        IsProfilePictureBytesLoaded = true;
                         _profilePictureBytes = result.Item2;
                         _connectedUsers.SendUpdatedProfilePictureToConnectedUsers(_profilePictureBytes, ProfilePicture.FileExtension);
 
@@ -1014,10 +1073,10 @@ namespace UdpNatPunchClient
             catch (Exception)
             {
             }
-
-            _isProfilePictureBytesLoaded = false;
-            MessageBox.Show("Couldn't load profile picture from: " + path,
-                "Error",
+            
+            IsProfilePictureBytesLoaded = false;
+            MessageBox.Show($"Couldn't load profile picture from {path}",
+                "Image load error",
                 MessageBoxButton.OK,
                 MessageBoxImage.Error);
         }

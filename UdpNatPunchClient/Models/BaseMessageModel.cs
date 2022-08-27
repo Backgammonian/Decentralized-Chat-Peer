@@ -1,7 +1,6 @@
 ﻿using System;
 using Microsoft.Toolkit.Mvvm.ComponentModel;
 using Networking.Utils;
-using Networking.Messages;
 
 namespace UdpNatPunchClient.Models
 {
@@ -18,10 +17,10 @@ namespace UdpNatPunchClient.Models
             DeliveryState = DeliveryState.NotDelivered;
         }
 
-        public BaseMessageModel(TextMessageToPeer messageFromOutside)
+        public BaseMessageModel(string authorID, string messageID)
         {
-            MessageID = messageFromOutside.MessageID;
-            AuthorID = messageFromOutside.AuthorID;
+            MessageID = messageID;
+            AuthorID = authorID;
             Time = DateTime.Now;
             Direction = MessageDirection.Incoming;
             DeliveryState = DeliveryState.NotDelivered;
@@ -30,7 +29,7 @@ namespace UdpNatPunchClient.Models
         public BaseMessageModel(MessageDirection direction)
         {
             MessageID = RandomGenerator.GetRandomString(20);
-            AuthorID = RandomGenerator.GetRandomString(40);
+            AuthorID = RandomGenerator.GetRandomString(40); //really not important in this case
             Time = DateTime.Now;
             Direction = direction;
             DeliveryState = DeliveryState.NotDelivered;

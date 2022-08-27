@@ -6,11 +6,8 @@
     <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
     <Nullable>enable</Nullable>
+    <ApplicationIcon>peer_icon.ico</ApplicationIcon>
   </PropertyGroup>
-
-  <ItemGroup>
-    <None Remove="Icon\peer_icon.ico" />
-  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Crc32.net" Version="1.2.0" />
@@ -25,12 +22,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\PlaceholderTextBoxControl\PlaceholderTextBoxControl.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Resource Include="Icon\peer_icon.ico">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
   </ItemGroup>
 
 </Project>

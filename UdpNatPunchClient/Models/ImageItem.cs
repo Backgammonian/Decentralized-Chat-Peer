@@ -30,7 +30,7 @@ namespace UdpNatPunchClient.Models
         {
             OriginalFilePath = path;
             FileName = RandomGenerator.GetRandomString(25);
-            FileExtension = Path.GetExtension(OriginalFilePath);
+            FileExtension = Path.GetExtension(OriginalFilePath).ToLower();
             PreviewPictureWidth = previewWidth <= 0 ? Constants.ProfilePictureThumbnailSize.Item1 : previewWidth;
             PreviewPictureHeight = previewHeight <= 0 ? Constants.ProfilePictureThumbnailSize.Item2 : previewHeight;
             IsLoaded = false;
@@ -270,8 +270,8 @@ namespace UdpNatPunchClient.Models
 
                 PreviewPictureStream = File.Open(PreviewPicturePath, FileMode.Open, FileAccess.Read, FileShare.Read);
                 PictureStream = stream;
-
                 IsLoaded = true;
+
                 return true;
             }
             catch (Exception)
@@ -299,6 +299,7 @@ namespace UdpNatPunchClient.Models
                     }
 
                     IsLoaded = true;
+
                     return true;
                 }
                 else
@@ -331,6 +332,7 @@ namespace UdpNatPunchClient.Models
                     }
 
                     IsLoaded = true;
+
                     return true;
                 }
                 else
@@ -367,8 +369,8 @@ namespace UdpNatPunchClient.Models
                 {
                     PreviewPictureStream = File.Open(PreviewPicturePath, FileMode.Open, FileAccess.Read, FileShare.Read);
                     PictureStream = stream;
-
                     IsLoaded = true;
+
                     return (true, result.Item2);
                 }
                 else

@@ -15,7 +15,6 @@
         Title="{Binding TitleText}"
         Height="600"
         Width="750"
-        Icon="/Icon/peer_icon.ico"
         ShowInTaskbar="{Binding ShowInTaskbar}"
         WindowState="{Binding WindowState}">
     <Window.Resources>
@@ -25,7 +24,9 @@
         <local:MainWindowViewModel/>
     </Window.DataContext>
     <Grid>
-        <tray:NotifyIconWrapper NotifyRequest="{Binding NotifyRequest}">
+        <tray:NotifyIconWrapper 
+            NotifyRequest="{Binding NotifyRequest}"
+            Text="{Binding SystemTrayText}">
             <bh:Interaction.Triggers>
                 <bh:EventTrigger EventName="OpenSelected">
                     <bh:InvokeCommandAction Command="{Binding NotifyIconOpenCommand}"/>
@@ -100,22 +101,13 @@
                                 dropFiles:DropFilesBehavior.FilesDropCommand="{Binding GetNewProfilePictureFromDropCommand}">
                                 <Grid>
                                     <Image
-                                        Style="{StaticResource ProfilePictureStyle}"
+                                        Style="{StaticResource BaseImageStyle}"
                                         gif:AnimationBehavior.SourceStream="{Binding ProfilePicture.PreviewPictureStream}"
                                         MouseBehaviours:MouseBehaviour.MouseUpCommand="{Binding ShowOwnProfilePictureCommand}"/>
                                     <TextBlock
-                                        Style="{StaticResource BaseTextBlock}"
+                                        Style="{StaticResource ImageExtensionTextBlock}"
                                         Text="{Binding ProfilePicture.FileExtension}"
-                                        Margin="4"
-                                        Padding="2"
-                                        HorizontalAlignment="Right"
-                                        VerticalAlignment="Bottom"
-                                        Foreground="White"
-                                        FontSize="12">
-                                        <TextBlock.Background>
-                                            <SolidColorBrush Opacity="0.7" Color="Black"/>
-                                        </TextBlock.Background>
-                                    </TextBlock>
+                                        Visibility="{Binding IsProfilePictureBytesLoaded, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                                 </Grid>
                             </Border>
                             <Button
@@ -233,7 +225,7 @@
                                                 <Border
                                                     Style="{StaticResource PeerPictureBorderStyle}">
                                                     <Image
-                                                        Style="{StaticResource ProfilePictureStyle}"
+                                                        Style="{StaticResource BaseImageStyle}"
                                                         gif:AnimationBehavior.SourceStream="{Binding Picture.PreviewPictureStream}"
                                                         MouseBehaviours:MouseBehaviour.MouseUpCommand="{Binding DataContext.ShowPeerProfilePictureCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"/>
                                                 </Border>
@@ -274,7 +266,8 @@
                                 Grid.Row="1"
                                 ScrollViewer.CanContentScroll="False"
                                 HorizontalContentAlignment="Stretch"
-                                ItemsSource="{Binding Messages.AsObservable}">
+                                ItemsSource="{Binding Messages.AsObservable}"
+                                SelectedItem="{Binding SelectedMessage}">
                                 <ListBox.Resources>
                                     <DataTemplate
                                         DataType="{x:Type models:MessageModel}">
@@ -282,24 +275,51 @@
                                             Margin="5"
                                             HorizontalAlignment="{Binding Direction, Converter={StaticResource MessageDirectionAlignmentConverter}}"
                                             Background="{Binding Direction, Converter={StaticResource MessageDirectionColorConverter}}">
-                                            <TextBlock
-                                                Style="{StaticResource MessageDateTextBlock}"
-                                                Text="{Binding Time, Converter={StaticResource DateTimeConverter}}"/>
                                             <TextBox
                                                 Style="{StaticResource IncomingMessageTextBox}"
                                                 Background="{Binding Direction, Converter={StaticResource MessageDirectionColorConverter}}"
                                                 Text="{Binding Content}"/>
-                                            <TextBlock
-                                                Style="{StaticResource MessageDeliveryStateTextBlock}"
-                                                Text="{Binding DeliveryState, Converter={StaticResource DeliveryStateConverter}}"
-                                                Visibility="{Binding Direction, Converter={StaticResource MessageDirectionToVisibilityConverter}}"/>
+                                            <StackPanel
+                                                Margin="2"
+                                                Orientation="Horizontal"
+                                                HorizontalAlignment="{Binding Direction, Converter={StaticResource MessageDirectionAlignmentConverter}}">
+                                                <TextBlock
+                                                    Style="{StaticResource MessageDateTextBlock}"
+                                                    Text="{Binding Time, Converter={StaticResource DateTimeConverter}}"/>
+                                                <TextBlock
+                                                    Style="{StaticResource MessageDeliveryStateTextBlock}"
+                                                    Text="{Binding DeliveryState, Converter={StaticResource DeliveryStateConverter}}"
+                                                    Visibility="{Binding Direction, Converter={StaticResource MessageDirectionToVisibilityConverter}}"/>
+                                            </StackPanel>
                                         </StackPanel>
                                     </DataTemplate>
                                     <DataTemplate
                                         DataType="{x:Type models:ImageMessageModel}">
                                         <StackPanel
-                                            Margin="5">
-                                            
+                                            Margin="5"
+                                            HorizontalAlignment="{Binding Direction, Converter={StaticResource MessageDirectionAlignmentConverter}}">
+                                            <Grid>
+                                                <Image
+                                                    Style="{StaticResource BaseImageStyle}"
+                                                    gif:AnimationBehavior.SourceStream="{Binding Image.PreviewPictureStream}"
+                                                    MouseBehaviours:MouseBehaviour.MouseUpCommand="{Binding DataContext.ShowPictureFromMessageCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"/>
+                                                <TextBlock
+                                                    Style="{StaticResource ImageExtensionTextBlock}"
+                                                    Text="{Binding Image.FileExtension}"
+                                                    Visibility="{Binding Image.IsLoaded, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                            </Grid>
+                                            <StackPanel
+                                                Margin="2"
+                                                Orientation="Horizontal"
+                                                HorizontalAlignment="{Binding Direction, Converter={StaticResource MessageDirectionAlignmentConverter}}">
+                                                <TextBlock
+                                                    Style="{StaticResource MessageDateTextBlock}"
+                                                    Text="{Binding Time, Converter={StaticResource DateTimeConverter}}"/>
+                                                <TextBlock
+                                                    Style="{StaticResource MessageDeliveryStateTextBlock}"
+                                                    Text="{Binding DeliveryState, Converter={StaticResource DeliveryStateConverter}}"
+                                                    Visibility="{Binding Direction, Converter={StaticResource MessageDirectionToVisibilityConverter}}"/>
+                                            </StackPanel>
                                         </StackPanel>
                                     </DataTemplate>
                                 </ListBox.Resources>
@@ -365,7 +385,7 @@
                                     Style="{StaticResource MessageTextBox}"
                                     Text="{Binding CurrentMessage, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                     Placeholder="{Binding CurrentPlaceholder}"
-                                    dropFiles:DropFilesBehavior.FilesDropCommand="{Binding SendImageFromDropCommand}"
+                                    dropFiles:DropFilesBehavior.FilesDropCommand="{Binding SendImagesFromDropCommand}"
                                     ScrollViewer.CanContentScroll="false"
                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                                     ScrollViewer.VerticalScrollBarVisibility="Auto"/>
