@@ -11,17 +11,17 @@ namespace UdpNatPunchClient.Models
     public abstract class PeerModel : ObservableObject
     {
         protected readonly EncryptedPeer _peer;
-        protected readonly ConcurrentObservableCollection<MessageModel> _undeliveredMessages;
-        protected readonly ConcurrentObservableCollection<MessageModel> _unreadMessages;
-        protected readonly ConcurrentObservableCollection<MessageModel> _incomingMessages;
+        protected readonly ConcurrentObservableCollection<BaseMessageModel> _undeliveredMessages;
+        protected readonly ConcurrentObservableCollection<BaseMessageModel> _unreadMessages;
+        protected readonly ConcurrentObservableCollection<BaseMessageModel> _incomingMessages;
         protected bool _hasNewMessages;
 
         public PeerModel(EncryptedPeer peer)
         {
             _peer = peer;
-            _undeliveredMessages = new ConcurrentObservableCollection<MessageModel>();
-            _unreadMessages = new ConcurrentObservableCollection<MessageModel>();
-            _incomingMessages = new ConcurrentObservableCollection<MessageModel>();
+            _undeliveredMessages = new ConcurrentObservableCollection<BaseMessageModel>();
+            _unreadMessages = new ConcurrentObservableCollection<BaseMessageModel>();
+            _incomingMessages = new ConcurrentObservableCollection<BaseMessageModel>();
             Messages = new ConcurrentObservableCollection<BaseMessageModel>();
             EndPoint = _peer.EndPoint.ToString();
         }
@@ -115,13 +115,13 @@ namespace UdpNatPunchClient.Models
             return message;
         }
 
-        public virtual void SendReceiptNotification(MessageModel message)
+        public virtual void SendReceiptNotification(BaseMessageModel message)
         {
             var receiptNotification = new MessageReceiptNotification(message.MessageID);
             Send(receiptNotification);
         }
 
-        public virtual void SendReadNotification(MessageModel message)
+        public virtual void SendReadNotification(BaseMessageModel message)
         {
             var readNotification = new MessageReadNotification(message.MessageID);
             Send(readNotification);

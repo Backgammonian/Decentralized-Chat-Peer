@@ -93,9 +93,15 @@ namespace UdpNatPunchClient.Models
             }
         }
 
-        public static ImageItem? TrySaveByteArrayAsImage(byte[] pictureBytes, string extension)
+        public static ImageItem? TrySaveByteArrayAsImage(byte[] pictureBytes, string extension, int width, int height)
         {
             CreateFolders();
+
+            if (width <= 0 ||
+                height <= 0)
+            {
+                return null;
+            }
 
             try
             {
@@ -105,8 +111,8 @@ namespace UdpNatPunchClient.Models
 
                 var imageItem = new ImageItem(
                     newFilePath,
-                    Constants.ProfilePictureThumbnailSize.Item1,
-                    Constants.ProfilePictureThumbnailSize.Item2);
+                    width,
+                    height);
 
                 return imageItem;
             }

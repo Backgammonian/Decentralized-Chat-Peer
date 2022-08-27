@@ -501,7 +501,56 @@ namespace UdpNatPunchClient
                         if (WindowState == WindowState.Minimized ||
                             TabIndex != _chatTabIndex)
                         {
-                            Notify("New message", string.Format("Incoming message from {0} ({1})", author.Nickname, author.ID), 1500, System.Windows.Forms.ToolTipIcon.Info);
+                            Notify("New message!", string.Format("Incoming message from {0} ({1})", author.Nickname, author.ID), 1500, System.Windows.Forms.ToolTipIcon.Info);
+                        }
+                    }
+                    break;
+
+                case NetworkMessageType.ImageMessage:
+                    if (author == null)
+                    {
+                        return;
+                    }
+
+                    var imageMessageFromPeer = JsonConvert.DeserializeObject<ImageMessageToPeer>(json);
+                    if (imageMessageFromPeer == null)
+                    {
+                        return;
+                    }
+
+                    var incomingPicture = ImageItem.TrySaveByteArrayAsImage(
+                        imageMessageFromPeer.PictureBytes,
+                        imageMessageFromPeer.PictureExtension,
+                        Constants.ImageMessageThumbnailSize.Item1,
+                        Constants.ImageMessageThumbnailSize.Item2);
+
+                    if (incomingPicture == null ||
+                        !incomingPicture.TryLoadImage())
+                    {
+                        return;
+                    }
+
+                    var receivedImageMessage = author.AddIncomingMessage(imageMessageFromPeer, incomingPicture);
+                    if (receivedImageMessage == null)
+                    {
+                        return;
+                    }
+
+                    if (SelectedPeer == author)
+                    {
+                        author.DismissNewMessagesSignal();
+                        author.SendReadNotification(receivedImageMessage);
+
+                        ScrollMessagesToEnd();
+                    }
+                    else
+                    {
+                        author.SendReceiptNotification(receivedImageMessage);
+
+                        if (WindowState == WindowState.Minimized ||
+                            TabIndex != _chatTabIndex)
+                        {
+                            Notify("New picture!", string.Format("Incoming picture from {0} ({1})", author.Nickname, author.ID), 1500, System.Windows.Forms.ToolTipIcon.Info);
                         }
                     }
                     break;
@@ -771,35 +820,6 @@ namespace UdpNatPunchClient
             _client.ConnectToTracker(address);
         }
 
-        private void SendMessage()
-        {
-            if (SelectedPeer is UserModel user)
-            {
-                user.SendTextMessage(new MessageModel(ID, CurrentMessage));
-            }
-            else
-            if (SelectedPeer is TrackerModel tracker)
-            {
-                if (!TryParseCommand(CurrentMessage, out var command, out var argument))
-                {
-                    if (command == "help")
-                    {
-                        tracker.PrintHelp();
-                    }
-                    else
-                    {
-                        tracker.SendCommandMessage(command.ToLower(), argument);
-                    }
-                }
-                else
-                {
-                    tracker.PrintSupport(CurrentMessage);
-                }
-            }
-            
-            CurrentMessage = string.Empty;
-        }
-
         private bool TryParseCommand(string input, out string command, out string argument)
         {
             command = string.Empty;
@@ -828,6 +848,29 @@ namespace UdpNatPunchClient
         {
             if (TrySelectFile("Select a picture to send", Constants.ImageFilter, out var path))
             {
+                if (TryGetFileSize(path, out var size))
+                {
+                    if (size == 0)
+                    {
+                        MessageBox.Show($"Picture {Path.GetFileName(path)} is empty!",
+                            "Image load error",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Error);
+
+                        return;
+                    }
+                    else
+                    if (size > Constants.MaxPictureSize)
+                    {
+                        MessageBox.Show($"Picture {Path.GetFileName(path)} is too big. Maximum size: 20 MB",
+                            "Image load error",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Error);
+
+                        return;
+                    }
+                }
+
                 await SendImage(path);
             }
         }
@@ -844,6 +887,29 @@ namespace UdpNatPunchClient
                 var imageExtension = Path.GetExtension(imagePath);
                 if (Constants.AllowedImageExtensions.Contains(imageExtension))
                 {
+                    if (TryGetFileSize(imagePath, out var size))
+                    {
+                        if (size == 0)
+                        {
+                            MessageBox.Show($"Picture {Path.GetFileName(imagePath)} is empty!",
+                                "Picture load error",
+                                MessageBoxButton.OK,
+                                MessageBoxImage.Error);
+
+                            break;
+                        }
+                        else
+                        if (size > Constants.MaxPictureSize)
+                        {
+                            MessageBox.Show($"Picture {Path.GetFileName(imagePath)} is too big. Maximum size: 20 MB",
+                                "Picture load error",
+                                MessageBoxButton.OK,
+                                MessageBoxImage.Error);
+
+                            break;
+                        }
+                    }
+
                     await SendImage(imagePath);
                 }
             }
@@ -851,7 +917,54 @@ namespace UdpNatPunchClient
 
         private async Task SendImage(string path)
         {
-            //TODO
+            if (SelectedPeer is UserModel user)
+            {
+                var image = new ImageItem(path,
+                    Constants.ImageMessageThumbnailSize.Item1,
+                    Constants.ImageMessageThumbnailSize.Item2);
+                if (!(await image.TryLoadImageAsync() &&
+                    await user.TrySendImageMessage(new ImageMessageModel(ID, image))))
+                {
+                    MessageBox.Show($"Can't send picture {Path.GetFileName(path)}",
+                        "Picture sending error",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+                }
+            }
+            else
+            if (SelectedPeer is TrackerModel tracker)
+            {
+                tracker.PrintInfo("You can't send image to the tracker.");
+            }
+        }
+
+        private void SendMessage()
+        {
+            if (SelectedPeer is UserModel user)
+            {
+                user.SendTextMessage(new MessageModel(ID, CurrentMessage));
+            }
+            else
+            if (SelectedPeer is TrackerModel tracker)
+            {
+                if (!TryParseCommand(CurrentMessage, out var command, out var argument))
+                {
+                    if (command == "help")
+                    {
+                        tracker.PrintHelp();
+                    }
+                    else
+                    {
+                        tracker.SendCommandMessage(command.ToLower(), argument);
+                    }
+                }
+                else
+                {
+                    tracker.PrintSupport(CurrentMessage);
+                }
+            }
+
+            CurrentMessage = string.Empty;
         }
 
         private void PutAsciiArt(AsciiArtsType artType)

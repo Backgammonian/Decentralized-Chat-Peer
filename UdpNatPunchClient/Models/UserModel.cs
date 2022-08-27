@@ -1,4 +1,5 @@
-﻿using Networking;
+﻿using System.Threading.Tasks;
+using Networking;
 using Networking.Messages;
 
 namespace UdpNatPunchClient.Models
@@ -41,14 +42,18 @@ namespace UdpNatPunchClient.Models
                 return false;
             }
 
-            var newPicture = ImageItem.TrySaveByteArrayAsImage(pictureByteArray, pictureExtension);
-            if (newPicture != null)
+            var newPicture = ImageItem.TrySaveByteArrayAsImage(
+                pictureByteArray,
+                pictureExtension,
+                Constants.ProfilePictureThumbnailSize.Item1,
+                Constants.ProfilePictureThumbnailSize.Item2);
+
+            if (newPicture != null &&
+                newPicture.TryLoadImage())
             {
                 Picture = newPicture;
-                if (Picture.TryLoadImage())
-                {
-                    return true;
-                }
+
+                return true;
             }
 
             return false;
@@ -64,6 +69,38 @@ namespace UdpNatPunchClient.Models
         {
             var updateMessage = new UpdatedProfilePictureForPeerMessage(pictureByteArray, pictureExtension);
             Send(updateMessage);
+        }
+
+        public async Task<bool> TrySendImageMessage(ImageMessageModel message)
+        {
+            var result = await message.Image.TryGetPictureBytes();
+            if (result.Item1)
+            {
+                Messages.Add(message);
+                _undeliveredMessages.Add(message);
+                _unreadMessages.Add(message);
+
+                var messageToPeer = new ImageMessageToPeer(message.AuthorID,
+                    message.MessageID,
+                    result.Item2,
+                    message.Image.FileExtension.ToLower());
+                Send(messageToPeer);
+
+                return true;
+            }
+
+            return false;
+        }
+
+        public ImageMessageModel? AddIncomingMessage(ImageMessageToPeer imageMessageFromPeer, ImageItem image)
+        {
+            var message = new ImageMessageModel(imageMessageFromPeer, image);
+            Messages.Add(message);
+            _incomingMessages.Add(message);
+
+            HasNewMessages = true;
+
+            return message;
         }
     }
 }
