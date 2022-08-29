@@ -38,7 +38,8 @@ namespace Networking
             Tracker = null;
         }
 
-        public event EventHandler<NetEventArgs>? MessageFromPeerReceived;
+        public delegate Task AsyncEventHandler<TEventArgs>(object? sender, TEventArgs e);
+        public event AsyncEventHandler<NetEventArgs>? MessageFromPeerReceived;
         public event EventHandler<EncryptedPeerEventArgs>? PeerAdded;
         public event EventHandler<EncryptedPeerEventArgs>? PeerConnected;
         public event EventHandler<EncryptedPeerEventArgs>? PeerRemoved;

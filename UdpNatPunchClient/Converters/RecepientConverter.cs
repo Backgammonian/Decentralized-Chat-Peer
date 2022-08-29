@@ -14,13 +14,13 @@ namespace Converters
             if (recepient is UserModel)
             {
                 var user = (UserModel)recepient;
-                return user.ID + ", " + user.EndPoint;
+                return $"Peer {user.ID} ({user.EndPoint})";
             }
             else
             if (recepient is TrackerModel)
             {
                 var tracker = (TrackerModel)recepient;
-                return "Tracker, " + tracker.EndPoint;
+                return $"Tracker ({tracker.EndPoint})";
             }
 
             return "---";

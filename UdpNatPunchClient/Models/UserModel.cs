@@ -6,7 +6,7 @@ namespace UdpNatPunchClient.Models
 {
     public class UserModel : PeerModel
     {
-        private string _nickname = string.Empty;
+        private string _nickname = "Default nickname";
         private ImageItem? _picture;
 
         public UserModel(EncryptedPeer peer, string id, string nickname) : base(peer)
@@ -34,7 +34,7 @@ namespace UdpNatPunchClient.Models
             Nickname = newNickname;
         }
 
-        public bool TrySetUpdatedPicture(byte[] pictureByteArray, string pictureExtension)
+        public async Task<bool> TrySetUpdatedPicture(byte[] pictureByteArray, string pictureExtension)
         {
             if (pictureByteArray.Length == 0 ||
                 pictureExtension.Length == 0)
@@ -42,14 +42,13 @@ namespace UdpNatPunchClient.Models
                 return false;
             }
 
-            var newPicture = ImageItem.TrySaveByteArrayAsImage(
-                pictureByteArray,
+            var newPicture = await ImageItem.TrySaveByteArrayAsImage(pictureByteArray,
                 pictureExtension,
                 Constants.ProfilePictureThumbnailSize.Item1,
                 Constants.ProfilePictureThumbnailSize.Item2);
 
             if (newPicture != null &&
-                newPicture.TryLoadImage())
+                await newPicture.TryLoadImage())
             {
                 Picture = newPicture;
 

@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Linq;
+using System.Threading.Tasks;
 using Networking;
 using Networking.Messages;
 
@@ -42,28 +43,28 @@ namespace UdpNatPunchClient.Models
             return _users.ContainsKey(id);
         }
 
-        public void Add(string id, string nickname, byte[] profilePictureArray, string profilePictureExtension, EncryptedPeer peer)
+        public async Task Add(string id, string nickname, byte[] profilePictureArray, string profilePictureExtension, EncryptedPeer peer)
         {
             if (!Has(id))
             {
                 var user = new UserModel(peer, id, nickname);
 
-                if (_users.TryAdd(id, user))
+                if (_users.TryAdd(user.ID, user))
                 {
-                    user.TrySetUpdatedPicture(profilePictureArray, profilePictureExtension);
+                    await user.TrySetUpdatedPicture(profilePictureArray, profilePictureExtension);
                     UserAdded?.Invoke(this, new UserUpdatedEventArgs(user));
                 }
             }
         }
 
-        public void Add(IntroducePeerToPeerMessage message, EncryptedPeer peer)
+        public async Task Add(IntroducePeerToPeerMessage message, EncryptedPeer peer)
         {
-            Add(message.ID, message.Nickname, message.PictureByteArray, message.PictureExtension, peer);
+            await Add(message.ID, message.Nickname, message.PictureByteArray, message.PictureExtension, peer);
         }
 
-        public void Add(IntroducePeerToPeerResponse message, EncryptedPeer peer)
+        public async Task Add(IntroducePeerToPeerResponse message, EncryptedPeer peer)
         {
-            Add(message.ID, message.Nickname, message.PictureByteArray, message.PictureExtension, peer);
+            await Add(message.ID, message.Nickname, message.PictureByteArray, message.PictureExtension, peer);
         }
 
         public void Remove(string id)

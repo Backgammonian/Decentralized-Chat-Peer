@@ -14,6 +14,8 @@ namespace UdpNatPunchClient.Models
     {
         public const string ImagesFolderName = "LocalImages";
         public const string LoadedImagesFolderName = "LoadedImages";
+        private const int _defaultPreviewPictureWidth = 100;
+        private const int _defaultPreviewPictureHeight = 100;
 
         private string _picturePath = string.Empty;
         private string _previewPicturePath = string.Empty;
@@ -31,8 +33,8 @@ namespace UdpNatPunchClient.Models
             OriginalFilePath = path;
             FileName = RandomGenerator.GetRandomString(25);
             FileExtension = Path.GetExtension(OriginalFilePath).ToLower();
-            PreviewPictureWidth = previewWidth <= 0 ? Constants.ProfilePictureThumbnailSize.Item1 : previewWidth;
-            PreviewPictureHeight = previewHeight <= 0 ? Constants.ProfilePictureThumbnailSize.Item2 : previewHeight;
+            PreviewPictureWidth = previewWidth <= 0 ? _defaultPreviewPictureWidth : previewWidth;
+            PreviewPictureHeight = previewHeight <= 0 ? _defaultPreviewPictureHeight : previewHeight;
             IsLoaded = false;
         }
 
@@ -93,7 +95,7 @@ namespace UdpNatPunchClient.Models
             }
         }
 
-        public static ImageItem? TrySaveByteArrayAsImage(byte[] pictureBytes, string extension, int width, int height)
+        public static async Task<ImageItem?> TrySaveByteArrayAsImage(byte[] pictureBytes, string extension, int width, int height)
         {
             CreateFolders();
 
@@ -106,36 +108,13 @@ namespace UdpNatPunchClient.Models
             try
             {
                 var newName = RandomGenerator.GetRandomString(25);
-                var newFilePath = Path.GetFullPath(LoadedImagesFolderName + "\\" + newName + extension);
-                File.WriteAllBytes(newFilePath, pictureBytes);
+                var newFilePath = Path.GetFullPath(LoadedImagesFolderName + "\\loaded_" + newName + extension);
+                await File.WriteAllBytesAsync(newFilePath, pictureBytes);
 
                 var imageItem = new ImageItem(
                     newFilePath,
                     width,
                     height);
-
-                return imageItem;
-            }
-            catch (Exception)
-            {
-                return null;
-            }
-        }
-
-        public static async Task<ImageItem?> TrySaveByteArrayAsImageAsync(byte[] pictureBytes, string extension)
-        {
-            CreateFolders();
-
-            try
-            {
-                var newName = RandomGenerator.GetRandomString(25);
-                var newFilePath = Path.GetFullPath(LoadedImagesFolderName + "\\" + newName + extension);
-                await File.WriteAllBytesAsync(newFilePath, pictureBytes);
-
-                var imageItem = new ImageItem(
-                    newFilePath,
-                    Constants.ProfilePictureThumbnailSize.Item1,
-                    Constants.ProfilePictureThumbnailSize.Item2);
 
                 return imageItem;
             }
@@ -183,7 +162,7 @@ namespace UdpNatPunchClient.Models
             }
         }
 
-        public bool TryLoadImage()
+        public async Task<bool> TryLoadImage()
         {
             CreateFolders();
             if (!TryCopyImage())
@@ -207,39 +186,7 @@ namespace UdpNatPunchClient.Models
 
             if (IsAnimation)
             {
-                return TryLoadAsAnimation();
-            }
-            else
-            {
-                return TryLoadAsPicture();
-            }
-        }
-
-        public async Task<bool> TryLoadImageAsync()
-        {
-            CreateFolders();
-            if (!TryCopyImage())
-            {
-                return false;
-            }
-
-            switch (FileExtension)
-            {
-                case ".jpg":
-                case ".jpeg":
-                case ".png":
-                case ".bmp":
-                case ".tiff":
-                case ".gif":
-                    break;
-
-                default:
-                    return false;
-            }
-
-            if (IsAnimation)
-            {
-                return await TryLoadAsAnimationAsync();
+                return await TryLoadAsAnimation();
             }
             else
             {
@@ -286,40 +233,7 @@ namespace UdpNatPunchClient.Models
             }
         }
 
-        private bool TryLoadAsAnimation()
-        {
-            try
-            {
-                var stream = File.Open(PicturePath, FileMode.Open, FileAccess.Read, FileShare.Read);
-                var result = GIFExtensions.TryGetResizedFramesFromGIF(stream, PreviewPictureWidth, PreviewPictureHeight);
-
-                if (result.Item1 &&
-                    GIFExtensions.TryCreateGIF(PreviewPicturePath, result.Item2))
-                {
-                    PreviewPictureStream = File.Open(PreviewPicturePath, FileMode.Open, FileAccess.Read, FileShare.Read);
-                    PictureStream = stream;
-
-                    foreach (var frame in result.Item2)
-                    {
-                        frame.Image.Dispose();
-                    }
-
-                    IsLoaded = true;
-
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-            catch (Exception)
-            {
-                return false;
-            }
-        }
-
-        private async Task<bool> TryLoadAsAnimationAsync()
+        private async Task<bool> TryLoadAsAnimation()
         {
             try
             {

@@ -37,9 +37,9 @@ namespace UdpNatPunchClient.Models
         public void SendCommandMessage(string command, string argument)
         {
             var commandMessage = new CommandToTrackerMessage(command, argument);
-            var message = new MessageModel(string.Format("/{0} {1}", command, argument), MessageDirection.Outgoing);
+            var message = new MessageModel(string.Format("{0} {1}", command, argument), MessageDirection.Outgoing);
 
-            _commandsAndMessagesAccordance.Add(commandMessage.Command, message);
+            _commandsAndMessagesAccordance.Add(commandMessage.CommandID, message);
             Messages.Add(message);
 
             Send(commandMessage);
@@ -52,16 +52,16 @@ namespace UdpNatPunchClient.Models
 
         public void PrintSupport(string currentMessage)
         {
-            PrintInfo(string.Format("Not valid command input: {0}\nPrint '/help' (without quotes) to get list of commands", currentMessage));
+            PrintInfo(string.Format("Not valid command input: {0}\nPrint 'help' (without quotes) to get list of commands", currentMessage));
         }
 
         public void PrintHelp()
         {
             var help = "List of commands:\n";
-            help += "/connect [ID] - establish connection to peer with specified ID\n";
-            help += "/connect [Nickname] - get list of users with such nickname\n";
-            help += "/ping - get pong from tracker\n";
-            help += "/time - get tracker's current time";
+            help += "connect [ID] - establish connection to peer with specified ID\n";
+            help += "connect [Nickname] - get list of users with such nickname\n";
+            help += "ping - get pong from tracker\n";
+            help += "time - get tracker's current time";
 
             PrintInfo(help);
         }
@@ -69,10 +69,10 @@ namespace UdpNatPunchClient.Models
         public void PrintListOfUsers(UserInfoFromTracker[] users)
         {
             var i = 1;
-            var response = "Response from tracker:\n";
+            var response = "Response from tracker:";
             foreach (var user in users)
             {
-                response += $"{i}. Nickname: '{user.Nickname}', ID: {user.ID}\n";
+                response += $"\n{i}. Nickname: '{user.Nickname}', ID: {user.ID}";
                 i += 1;
             }
 

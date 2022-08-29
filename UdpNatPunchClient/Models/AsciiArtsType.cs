@@ -2,6 +2,12 @@
 {
     public enum AsciiArtsType
     {
-        Goose, Shrek, MegamindAsking, Doge, Facepalm, Jerma, Shishka
+        Goose,
+        Shrek,
+        MegamindAsking,
+        Doge,
+        Facepalm,
+        Jerma,
+        Shishka
     }
 }
