@@ -11,6 +11,7 @@
         xmlns:tray="clr-namespace:SystemTrayApp.WPF"
         xmlns:dropFiles="clr-namespace:DropFiles"
         xmlns:gif="clr-namespace:XamlAnimatedGif;assembly=XamlAnimatedGif"
+        xmlns:extensions="clr-namespace:Extensions"
         mc:Ignorable="d"
         Title="{Binding TitleText}"
         Height="600"
@@ -117,6 +118,9 @@
                                     Style="{StaticResource BaseTextBlock}"
                                     Text="Select new profile picture..."/>
                             </Button>
+                            <TextBlock
+                                Style="{StaticResource MessageDateTextBlock}"
+                                Text="{Binding ProfilePictureLoadingStatus, Converter={StaticResource ProfilePictureLoadingStatusConverter}}"/>
                         </StackPanel>
                         <Button
                             Grid.Row="3"
@@ -261,13 +265,14 @@
                             <TextBlock
                                 Grid.Row="0"
                                 Style="{StaticResource BaseTextBlock}"
-                                Text="{Binding SelectedPeer, Converter={StaticResource RecepientConverter}, StringFormat={}Now you are texting to: {0}}"/>
+                                Text="{Binding SelectedPeer, Converter={StaticResource RecepientConverter}}"/>
                             <ListBox
                                 Grid.Row="1"
                                 ScrollViewer.CanContentScroll="False"
                                 HorizontalContentAlignment="Stretch"
                                 ItemsSource="{Binding Messages.AsObservable}"
-                                SelectedItem="{Binding SelectedMessage}">
+                                SelectedItem="{Binding SelectedMessage}"
+                                extensions:ListBoxExtensions.AutoScrollToEnd="True">
                                 <ListBox.Resources>
                                     <DataTemplate
                                         DataType="{x:Type models:MessageModel}">
@@ -278,7 +283,7 @@
                                             <TextBox
                                                 Style="{StaticResource IncomingMessageTextBox}"
                                                 Background="{Binding Direction, Converter={StaticResource MessageDirectionColorConverter}}"
-                                                Text="{Binding Content}"/>
+                                                Text="{Binding Content, Mode=OneWay}"/>
                                             <StackPanel
                                                 Margin="2"
                                                 Orientation="Horizontal"
@@ -333,7 +338,7 @@
                                 <Button
                                     Grid.Column="0"
                                     Style="{StaticResource BaseButton}"
-                                    IsEnabled="{Binding CanSendMessage}"
+                                    IsEnabled="{Binding CanSendImage}"
                                     Command="{Binding SendImageCommand}">
                                     <TextBlock
                                         Style="{StaticResource BaseTextBlock}"
