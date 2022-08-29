@@ -30,6 +30,12 @@ namespace UdpNatPunchClient.Models
             {
                 return _users.Values.First(user => user.PeerID == peer.Id);
             }
+            catch (InvalidOperationException)
+            {
+                Debug.WriteLine("(GetUserByPeer) Unknown user");
+
+                return null;
+            }
             catch (Exception e)
             {
                 Debug.WriteLine(e);

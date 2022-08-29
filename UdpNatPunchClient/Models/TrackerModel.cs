@@ -9,12 +9,12 @@ namespace UdpNatPunchClient.Models
 {
     public class TrackerModel : PeerModel
     {
-        //commandID, message
-        private readonly Dictionary<string, MessageModel> _commandsAndMessagesAccordance;
+        //commandID, messageID
+        private readonly Dictionary<string, string> _commandsAndMessagesAccordance;
 
         public TrackerModel(EncryptedPeer peer) : base(peer)
         {
-            _commandsAndMessagesAccordance = new Dictionary<string, MessageModel>();
+            _commandsAndMessagesAccordance = new Dictionary<string, string>();
         }
 
         public override void SendTextMessage(MessageModel message)
@@ -39,7 +39,7 @@ namespace UdpNatPunchClient.Models
             var commandMessage = new CommandToTrackerMessage(command, argument);
             var message = new MessageModel(string.Format("{0} {1}", command, argument), MessageDirection.Outgoing);
 
-            _commandsAndMessagesAccordance.Add(commandMessage.CommandID, message);
+            _commandsAndMessagesAccordance.Add(commandMessage.CommandID, message.MessageID);
             Messages.Add(message);
 
             Send(commandMessage);
@@ -88,7 +88,7 @@ namespace UdpNatPunchClient.Models
 
             try
             {
-                var messageID = _commandsAndMessagesAccordance[commandID].MessageID;
+                var messageID = _commandsAndMessagesAccordance[commandID];
 
                 var message = Messages.First(message => message.MessageID == messageID);
                 message.MarkAsReadAndDelivered();
