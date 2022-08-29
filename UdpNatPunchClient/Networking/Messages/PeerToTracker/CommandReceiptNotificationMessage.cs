@@ -8,6 +8,6 @@
             CommandID = commandID;
         }
 
-        public string CommandID { get; }
+        public string CommandID { get; set; }
     }
 }

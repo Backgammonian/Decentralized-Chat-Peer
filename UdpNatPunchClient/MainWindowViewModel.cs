@@ -468,6 +468,7 @@ namespace UdpNatPunchClient
                     }
 
                     Debug.WriteLine("Updated nickname: " + updatedInfoMessage.UpdatedNickname);
+
                     author.SetUpdatedPersonalInfo(updatedInfoMessage.UpdatedNickname);
                     break;
 
@@ -483,7 +484,13 @@ namespace UdpNatPunchClient
                         return;
                     }
 
-                    await author.TrySetUpdatedPicture(updatedPictureMessage.UpdatedPictureArray, updatedPictureMessage.UpdatedPictureExtension);
+                    Debug.WriteLine($"Updated profile picture array is null: {updatedPictureMessage.UpdatedPictureArray == null}");
+                    Debug.WriteLine($"Updated profile picture array length: {(updatedPictureMessage.UpdatedPictureArray == null ? 0 : updatedPictureMessage.UpdatedPictureArray.Length)}");
+
+                    if (updatedPictureMessage.UpdatedPictureArray != null)
+                    {
+                        await author.TrySetUpdatedPicture(updatedPictureMessage.UpdatedPictureArray, updatedPictureMessage.UpdatedPictureExtension);
+                    }
                     break;
 
                 case NetworkMessageType.TextMessage:
@@ -698,7 +705,7 @@ namespace UdpNatPunchClient
                         return;
                     }
 
-                    _tracker?.PrintInfo(string.Format("Unrecognized command: '{0} {1}'", commandErrorMessage.WrongCommand, commandErrorMessage.Argument));
+                    _tracker?.PrintInfo($"Unrecognized command: '{commandErrorMessage.WrongCommand} {commandErrorMessage.Argument}'");
 
                     if (WindowState == WindowState.Minimized ||
                         TabIndex != _chatTabIndex)
@@ -716,6 +723,7 @@ namespace UdpNatPunchClient
 
                     if (IPEndPoint.TryParse(userConnectionResponseMessage.EndPointString, out var peerEndPoint))
                     {
+                        _tracker?.PrintInfo($"Connecting to {userConnectionResponseMessage.ID} ({peerEndPoint})...");
                         _client.ConnectToPeer(peerEndPoint);
                     }
                     break;
@@ -1192,6 +1200,9 @@ namespace UdpNatPunchClient
                         ProfilePictureLoadingStatus = ProfilePictureLoadingStatusType.Completed;
                         IsProfilePictureBytesLoaded = true;
                         _profilePictureBytes = result.Item2;
+
+                        Debug.WriteLine($"(UpdateProfilePicture) Length of array: {_profilePictureBytes.Length}");
+
                         _connectedUsers.SendUpdatedProfilePictureToConnectedUsers(_profilePictureBytes, ProfilePicture.FileExtension);
 
                         return;

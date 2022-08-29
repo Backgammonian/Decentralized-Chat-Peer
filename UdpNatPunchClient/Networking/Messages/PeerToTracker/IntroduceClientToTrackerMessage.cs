@@ -9,7 +9,7 @@
             Nickname = nickname;
         }
 
-        public string ID { get; }
-        public string Nickname { get; }
+        public string ID { get; set; }
+        public string Nickname { get; set; }
     }
 }

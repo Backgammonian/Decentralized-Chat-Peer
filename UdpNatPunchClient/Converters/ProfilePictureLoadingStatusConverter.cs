@@ -20,10 +20,10 @@ namespace Converters
                     return "Loading... 🔄";
 
                 case ProfilePictureLoadingStatusType.ErrorOccurred:
-                    return "Error ❎";
+                    return "Can't load picture ❎";
 
                 case ProfilePictureLoadingStatusType.Completed:
-                    return "Completed ✓";
+                    return "Picture is loaded ✓";
 
                 default:
                     return "---";

@@ -11,9 +11,9 @@
             PictureExtension = pictureExtension;
         }
 
-        public string AuthorID { get; }
-        public string MessageID { get; }
-        public byte[] PictureBytes { get; }
-        public string PictureExtension { get; }
+        public string AuthorID { get; set; }
+        public string MessageID { get; set; }
+        public byte[] PictureBytes { get; set; }
+        public string PictureExtension { get; set; }
     }
 }

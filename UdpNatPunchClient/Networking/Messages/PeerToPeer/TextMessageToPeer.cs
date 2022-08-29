@@ -10,8 +10,8 @@
             AuthorID = authorID;
         }
 
-        public string MessageID { get; }
-        public string Content { get; }
-        public string AuthorID { get; }
+        public string MessageID { get; set; }
+        public string Content { get; set; }
+        public string AuthorID { get; set; }
     }
 }

@@ -12,8 +12,8 @@ namespace Networking.Messages
             SomeArray = someArray;
         }
 
-        public string SomeString { get; }
-        public List<int> SomeList { get; }
-        public double[] SomeArray { get; }
+        public string SomeString { get; set; }
+        public List<int> SomeList { get; set; }
+        public double[] SomeArray { get; set; }
     }
 }

@@ -119,7 +119,7 @@
                                     Text="Select new profile picture..."/>
                             </Button>
                             <TextBlock
-                                Style="{StaticResource MessageDateTextBlock}"
+                                Style="{StaticResource BaseTextBlock}"
                                 Text="{Binding ProfilePictureLoadingStatus, Converter={StaticResource ProfilePictureLoadingStatusConverter}}"/>
                         </StackPanel>
                         <Button

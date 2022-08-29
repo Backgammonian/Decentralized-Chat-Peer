@@ -39,6 +39,9 @@ namespace UdpNatPunchClient.Models
             var commandMessage = new CommandToTrackerMessage(command, argument);
             var message = new MessageModel(string.Format("{0} {1}", command, argument), MessageDirection.Outgoing);
 
+            Debug.WriteLine($"(SendCommandMessage) CommandID: {commandMessage.CommandID}");
+            Debug.WriteLine($"(SendCommandMessage) MessageID: {message.MessageID}");
+
             _commandsAndMessagesAccordance.Add(commandMessage.CommandID, message.MessageID);
             Messages.Add(message);
 
@@ -81,6 +84,8 @@ namespace UdpNatPunchClient.Models
 
         public void MarkCommandAsReadAndDelivered(string commandID)
         {
+            Debug.WriteLine($"(MarkCommandAsReadAndDelivered) CommandID: {commandID}");
+
             if (!_commandsAndMessagesAccordance.ContainsKey(commandID))
             {
                 return;
@@ -89,6 +94,8 @@ namespace UdpNatPunchClient.Models
             try
             {
                 var messageID = _commandsAndMessagesAccordance[commandID];
+
+                Debug.WriteLine($"(MarkCommandAsReadAndDelivered) MessageID: {messageID}");
 
                 var message = Messages.First(message => message.MessageID == messageID);
                 message.MarkAsReadAndDelivered();

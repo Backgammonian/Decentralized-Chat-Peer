@@ -9,7 +9,7 @@
             Argument = argument;
         }
 
-        public string WrongCommand { get; }
-        public string Argument { get; }
+        public string WrongCommand { get; set; }
+        public string Argument { get; set; }
     }
 }

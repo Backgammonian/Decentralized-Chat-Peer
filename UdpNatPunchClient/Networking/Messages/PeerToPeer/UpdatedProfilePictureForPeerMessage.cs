@@ -9,7 +9,7 @@
             UpdatedPictureExtension = pictureExtension;
         }
 
-        public byte[] UpdatedPictureArray { get; }
-        public string UpdatedPictureExtension { get; }
+        public byte[] UpdatedPictureArray { get; set; }
+        public string UpdatedPictureExtension { get; set; }
     }
 }

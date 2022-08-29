@@ -9,7 +9,7 @@
             EndPointString = endPointString;
         }
 
-        public string ID { get; }
-        public string EndPointString { get; }
+        public string ID { get; set; }
+        public string EndPointString { get; set; }
     }
 }

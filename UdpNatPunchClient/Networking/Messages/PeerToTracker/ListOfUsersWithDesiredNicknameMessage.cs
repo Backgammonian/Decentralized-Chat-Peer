@@ -8,8 +8,8 @@
             ID = id;
         }
 
-        public string Nickname { get; private set; }
-        public string ID { get; private set; }
+        public string Nickname { get; set; }
+        public string ID { get; set; }
     }
 
     public class ListOfUsersWithDesiredNicknameMessage : BaseMessage
@@ -20,6 +20,6 @@
             Users = users;
         }
 
-        public UserInfoFromTracker[] Users { get; }
+        public UserInfoFromTracker[] Users { get; set; }
     }
 }

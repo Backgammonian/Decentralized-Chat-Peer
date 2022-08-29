@@ -8,6 +8,6 @@
             EndPointString = endPointString;
         }
 
-        public string EndPointString { get; }
+        public string EndPointString { get; set; }
     }
 }

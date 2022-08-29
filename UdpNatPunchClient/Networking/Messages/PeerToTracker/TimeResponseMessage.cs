@@ -10,6 +10,6 @@ namespace Networking.Messages
             Time = DateTime.Now;
         }
 
-        public DateTime Time { get; }
+        public DateTime Time { get; set; }
     }
 }

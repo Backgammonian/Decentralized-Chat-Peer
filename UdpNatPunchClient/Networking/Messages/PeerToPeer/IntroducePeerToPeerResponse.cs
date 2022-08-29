@@ -11,9 +11,9 @@
             PictureExtension = pictureExtension;
         }
 
-        public string ID { get; }
-        public string Nickname { get; }
-        public byte[] PictureByteArray { get; }
-        public string PictureExtension { get; }
+        public string ID { get; set; }
+        public string Nickname { get; set; }
+        public byte[] PictureByteArray { get; set; }
+        public string PictureExtension { get; set; }
     }
 }

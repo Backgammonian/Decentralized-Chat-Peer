@@ -8,6 +8,6 @@
             Ping = ping;
         }
 
-        public int Ping { get; }
+        public int Ping { get; set; }
     }
 }

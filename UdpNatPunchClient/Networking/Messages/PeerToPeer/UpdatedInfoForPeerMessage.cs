@@ -8,6 +8,6 @@
             UpdatedNickname = nickname;
         }
 
-        public string UpdatedNickname { get; }
+        public string UpdatedNickname { get; set; }
     }
 }

@@ -8,6 +8,6 @@
             NewNickname = newNickname;
         }
 
-        public string NewNickname { get; }
+        public string NewNickname { get; set; }
     }
 }

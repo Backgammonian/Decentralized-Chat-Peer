@@ -12,8 +12,8 @@ namespace Networking.Messages
             Argument = argument;
         }
 
-        public string CommandID { get; }
-        public string Command { get; }
-        public string Argument { get; }
+        public string CommandID { get; set; }
+        public string Command { get; set; }
+        public string Argument { get; set; }
     }
 }

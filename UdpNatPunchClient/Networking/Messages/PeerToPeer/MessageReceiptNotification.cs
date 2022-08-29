@@ -8,6 +8,6 @@
             MessageID = messageID;
         }
 
-        public string MessageID { get; }
+        public string MessageID { get; set; }
     }
 }

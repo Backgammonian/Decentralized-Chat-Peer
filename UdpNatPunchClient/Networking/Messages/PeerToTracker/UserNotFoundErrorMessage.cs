@@ -8,6 +8,6 @@
             UserInfo = userInfo;
         }
 
-        public string UserInfo { get; }
+        public string UserInfo { get; set; }
     }
 }
