@@ -61,6 +61,8 @@ namespace UdpNatPunchClient
         private bool _isProfilePictureBytesLoaded = false;
         private BaseMessageModel? _selectedMessage;
         private string _systemTrayText = string.Empty;
+        private int _numberOfSendingImages;
+        private bool _sendingAnyImages;
 
         public MainWindowViewModel()
         {
@@ -117,6 +119,8 @@ namespace UdpNatPunchClient
             _nicknameUpdateTimer = new DispatcherTimer();
             _nicknameUpdateTimer.Interval = new TimeSpan(0, 0, 1);
             _nicknameUpdateTimer.Tick += OnNcknameUpdateTimerTick;
+
+            NumberOfSendingImages = 0;
         }
 
         public ICommand ConnectToTrackerCommand { get; }
@@ -135,6 +139,7 @@ namespace UdpNatPunchClient
         public ObservableCollection<AsciiArtsType> TextArts { get; }
         public string TrackerAddress => _tracker == null ? "---" : _tracker.EndPoint;
         public ObservableCollection<UserModel> ConnectedUsers => new ObservableCollection<UserModel>(_connectedUsers.List.OrderBy(user => user.ConnectionTime));
+        public bool SendingAnyImages => NumberOfSendingImages > 0;
 
         public string SystemTrayText
         {
@@ -308,6 +313,16 @@ namespace UdpNatPunchClient
                     Messages = null;
                     CurrentPlaceholder = _noMessagePlaceholder;
                 }
+            }
+        }
+
+        public int NumberOfSendingImages
+        {
+            get => _numberOfSendingImages;
+            private set
+            {
+                SetProperty(ref _numberOfSendingImages, value);
+                OnPropertyChanged(nameof(SendingAnyImages));
             }
         }
 
@@ -868,29 +883,28 @@ namespace UdpNatPunchClient
 
         private async Task SelectImageToSend()
         {
-            if (TrySelectFile("Select a picture to send", Constants.ImageFilter, out var path))
+            if (TrySelectFile("Select a picture to send", Constants.ImageFilter, out var path) &&
+                TryGetFileSize(path, out var size))
             {
-                if (TryGetFileSize(path, out var size))
+                if (size == 0)
                 {
-                    if (size == 0)
-                    {
-                        MessageBox.Show($"Picture {Path.GetFileName(path)} is empty!",
-                            "Image load error",
-                            MessageBoxButton.OK,
-                            MessageBoxImage.Error);
+                    MessageBox.Show($"Picture {Path.GetFileName(path)} is empty!",
+                        "Image load error",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
 
-                        return;
-                    }
-                    else
-                    if (size > Constants.MaxPictureSize)
-                    {
-                        MessageBox.Show($"Picture {Path.GetFileName(path)} is too big. Maximum size: 20 MB",
-                            "Image load error",
-                            MessageBoxButton.OK,
-                            MessageBoxImage.Error);
+                    return;
+                }
+                else
+                if (size > Constants.MaxPictureSize)
+                {
+                    var bytesConverter = new Converters.BytesToMegabytesConverter();
+                    MessageBox.Show($"Picture {Path.GetFileName(path)} is too big. Maximum size: {bytesConverter.ConvertSize(Constants.MaxProfilePictureSize)}, size of selected image: {bytesConverter.ConvertSize(size)}",
+                        "Image load error",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
 
-                        return;
-                    }
+                    return;
                 }
 
                 await SendImage(path);
@@ -907,29 +921,28 @@ namespace UdpNatPunchClient
             foreach (var imagePath in args.FilesPath)
             {
                 var imageExtension = Path.GetExtension(imagePath);
-                if (Constants.AllowedImageExtensions.Contains(imageExtension))
+                if (Constants.AllowedImageExtensions.Contains(imageExtension) &&
+                    TryGetFileSize(imagePath, out var size))
                 {
-                    if (TryGetFileSize(imagePath, out var size))
+                    if (size == 0)
                     {
-                        if (size == 0)
-                        {
-                            MessageBox.Show($"Picture {Path.GetFileName(imagePath)} is empty!",
-                                "Picture load error",
-                                MessageBoxButton.OK,
-                                MessageBoxImage.Error);
+                        MessageBox.Show($"Picture {Path.GetFileName(imagePath)} is empty!",
+                            "Picture load error",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Error);
 
-                            break;
-                        }
-                        else
-                        if (size > Constants.MaxPictureSize)
-                        {
-                            MessageBox.Show($"Picture {Path.GetFileName(imagePath)} is too big. Maximum size: 20 MB",
-                                "Picture load error",
-                                MessageBoxButton.OK,
-                                MessageBoxImage.Error);
+                        break;
+                    }
+                    else
+                    if (size > Constants.MaxPictureSize)
+                    {
+                        var bytesConverter = new Converters.BytesToMegabytesConverter();
+                        MessageBox.Show($"Picture {Path.GetFileName(imagePath)} is too big. Maximum size: {bytesConverter.ConvertSize(Constants.MaxPictureSize)}, size of selected image: {bytesConverter.ConvertSize(size)}",
+                            "Picture load error",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Error);
 
-                            break;
-                        }
+                        break;
                     }
 
                     await SendImage(imagePath);
@@ -941,17 +954,26 @@ namespace UdpNatPunchClient
         {
             if (SelectedPeer is UserModel user)
             {
+                NumberOfSendingImages += 1;
+
                 var image = new ImageItem(path,
                     Constants.ImageMessageThumbnailSize.Item1,
                     Constants.ImageMessageThumbnailSize.Item2);
-                if (!(await image.TryLoadImage() &&
-                    await user.TrySendImageMessage(new ImageMessageModel(ID, image))))
+
+                if (await image.TryLoadImage() &&
+                    await user.TrySendImageMessage(new ImageMessageModel(ID, image)))
+                {
+                   
+                }
+                else
                 {
                     MessageBox.Show($"Can't send picture {Path.GetFileName(path)}",
                         "Picture sending error",
                         MessageBoxButton.OK,
                         MessageBoxImage.Error);
                 }
+
+                NumberOfSendingImages -= 1;
             }
             else
             if (SelectedPeer is TrackerModel tracker)
@@ -1055,7 +1077,7 @@ namespace UdpNatPunchClient
         {
             try
             {
-                using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
                 size = stream.Length;
 
                 return true;
@@ -1163,7 +1185,7 @@ namespace UdpNatPunchClient
 
         private async Task UpdateProfilePicture(string path)
         {
-            if (TryGetFileSize(path, out var size))
+            if (TryGetFileSize(path, out long size))
             {
                 if (size == 0)
                 {
@@ -1176,12 +1198,17 @@ namespace UdpNatPunchClient
                 else
                 if (size > Constants.MaxProfilePictureSize)
                 {
-                    MessageBox.Show("Selected profile picture is too big. Maximum size: 5 MB",
+                    var bytesConverter = new Converters.BytesToMegabytesConverter();
+                    MessageBox.Show($"Selected profile picture is too big. Maximum size: {bytesConverter.ConvertSize(Constants.MaxProfilePictureSize)}, size of selected image: {bytesConverter.ConvertSize(size)}",
                         "Image load error",
                         MessageBoxButton.OK,
                         MessageBoxImage.Error);
                     return;
                 }
+            }
+            else
+            {
+                return;
             }
 
             ProfilePictureLoadingStatus = ProfilePictureLoadingStatusType.Loading;

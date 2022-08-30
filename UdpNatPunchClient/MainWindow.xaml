@@ -120,6 +120,7 @@
                             </Button>
                             <TextBlock
                                 Style="{StaticResource BaseTextBlock}"
+                                FontSize="12"
                                 Text="{Binding ProfilePictureLoadingStatus, Converter={StaticResource ProfilePictureLoadingStatusConverter}}"/>
                         </StackPanel>
                         <Button
@@ -344,6 +345,11 @@
                                         Style="{StaticResource BaseTextBlock}"
                                         Text="Send image..."/>
                                 </Button>
+                                <TextBlock
+                                    Grid.Column="1"
+                                    Style="{StaticResource BaseTextBlock}"
+                                    Text="{Binding NumberOfSendingImages, StringFormat={}Number of sending images: {0}}"
+                                    Visibility="{Binding SendingAnyImages, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                             </Grid>
                             <Grid
                                 Grid.Row="3">
