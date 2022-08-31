@@ -1255,7 +1255,7 @@ namespace UdpNatPunchClient
             {
                 ProfilePictureLoadingStatus = ProfilePictureLoadingStatusType.ErrorOccurred;
 
-                MessageBox.Show($"(1) Couldn't load profile picture from {path}",
+                MessageBox.Show($"Can't load profile picture from {path}",
                     "Image load error",
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
@@ -1278,7 +1278,7 @@ namespace UdpNatPunchClient
                 _profilePictureBytes = null;
                 ProfilePictureLoadingStatus = ProfilePictureLoadingStatusType.ErrorOccurred;
 
-                MessageBox.Show($"(2) Couldn't load profile picture from {path}",
+                MessageBox.Show($"Couldn't load new profile picture properly: {path}",
                     "Image load error",
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
