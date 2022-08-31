@@ -39,6 +39,7 @@ namespace UdpNatPunchClient
         private readonly Users _connectedUsers;
         private readonly DispatcherTimer _nicknameUpdateTimer;
         private readonly DispatcherTimer _localAddressUpdater;
+        private readonly DispatcherTimer _keepAliveTimer;
         private string _titleText = _title;
         private TrackerModel? _tracker;
         private string _nickname = "My nickname";
@@ -118,6 +119,10 @@ namespace UdpNatPunchClient
             _nicknameUpdateTimer.Tick += OnNcknameUpdateTimerTick;
 
             NumberOfSendingImages = 0;
+
+            _keepAliveTimer = new DispatcherTimer();
+            _keepAliveTimer.Interval = new TimeSpan(0, 0, 5);
+            _keepAliveTimer.Tick += OnKeepAliveTimerTick;
         }
 
         public ICommand ConnectToTrackerCommand { get; }
@@ -443,6 +448,10 @@ namespace UdpNatPunchClient
 
             switch (type)
             {
+                case NetworkMessageType.KeepAlive:
+                    Debug.WriteLine($"KeepAliveMessage from peer{source.EndPoint}");
+                    break;
+
                 case NetworkMessageType.IntroducePeerToPeer:
                     var introducePeerToPeerMessage = JsonConvert.DeserializeObject<IntroducePeerToPeerMessage>(json);
                     if (introducePeerToPeerMessage == null)
@@ -654,8 +663,8 @@ namespace UdpNatPunchClient
                 TabIndex == _profileTabIndex &&
                 _tracker != null)
             {
-                Notify($"Tracker {_tracker.EndPoint} is connected",
-                    $"Tracker {_tracker.EndPoint} has responded positively and ready to work! 😂",
+                Notify($"Tracker {_tracker.EndPoint} has connected",
+                    $"Tracker is ready to work! 😊",
                     1500,
                     System.Windows.Forms.ToolTipIcon.Info);
             }
@@ -702,6 +711,10 @@ namespace UdpNatPunchClient
 
             switch (type)
             {
+                case NetworkMessageType.KeepAlive:
+                    Debug.WriteLine($"KeepAliveMessage from tracker {source.EndPoint}");
+                    break;
+
                 case NetworkMessageType.IntroduceClientToTrackerError:
                     MessageBox.Show("Tracker already has user with such ID: " + ID,
                         "Tracker connection error",
@@ -1280,6 +1293,15 @@ namespace UdpNatPunchClient
                 _connectedUsers.SendUpdatedProfilePictureToConnectedUsers(_profilePictureBytes, ProfilePicture.FileExtension);
 
                 Debug.WriteLine($"(UpdateProfilePicture) Length of profile picture array: {_profilePictureBytes.Length}");
+
+                var resetTimer = new DispatcherTimer(DispatcherPriority.Background, Application.Current.Dispatcher);
+                resetTimer.Interval = new TimeSpan(0, 0, 2);
+                resetTimer.Tick += (s, e) =>
+                {
+                    resetTimer.Stop();
+                    ProfilePictureLoadingStatus = ProfilePictureLoadingStatusType.None;
+                };
+                resetTimer.Start();
             }
             else
             {
@@ -1330,6 +1352,12 @@ namespace UdpNatPunchClient
             {
                 _focusOnMessageBox?.Invoke();
             });
+        }
+
+        private void OnKeepAliveTimerTick(object? sender, EventArgs e)
+        {
+            _tracker?.SendKeepAliveMessage();
+            _connectedUsers.SendKeepAliveMessageToConnectedUsers();
         }
     }
 

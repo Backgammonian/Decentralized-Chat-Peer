@@ -4,6 +4,7 @@
     {
         Empty = 0,
         ExampleMessage = 10,
+        KeepAlive,
 
         IntroduceClientToTracker,
         IntroduceClientToTrackerResponse,
