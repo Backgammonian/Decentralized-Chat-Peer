@@ -68,7 +68,7 @@ namespace UdpNatPunchClient.Models
         public void SendUpdatedProfilePicture(byte[] pictureByteArray, string pictureExtension)
         {
             var updateMessage = new UpdatedProfilePictureForPeerMessage(pictureByteArray, pictureExtension);
-            Send(updateMessage);
+            Send(updateMessage, 1);
         }
 
         public async Task<bool> TrySendImageMessage(string authorID, ImageItem image)
@@ -80,16 +80,16 @@ namespace UdpNatPunchClient.Models
             }
 
             var message = new ImageMessageModel(authorID, image);
-            Messages.Add(message);
             _undeliveredMessages.Add(message);
             _unreadMessages.Add(message);
+            Messages.Add(message);
 
             var messageToPeer = new ImageMessageToPeer(message.AuthorID,
                 message.MessageID,
                 bytes,
                 message.Image.FileExtension);
 
-            Send(messageToPeer);
+            Send(messageToPeer, 1);
 
             return true;
         }

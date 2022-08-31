@@ -12,7 +12,6 @@ namespace UdpNatPunchClient.Models
     public class ImageItem : ObservableObject
     {
         private const string _imagesFolderName = "LocalImages";
-        private const string _loadedImagesFolderName = "LoadedImages";
         private const int _defaultPreviewPictureWidth = 100;
         private const int _defaultPreviewPictureHeight = 100;
 
@@ -28,11 +27,6 @@ namespace UdpNatPunchClient.Models
                 if (!Directory.Exists(_imagesFolderName))
                 {
                     Directory.CreateDirectory(_imagesFolderName);
-                }
-
-                if (!Directory.Exists(_loadedImagesFolderName))
-                {
-                    Directory.CreateDirectory(_loadedImagesFolderName);
                 }
             }
             catch (Exception) 
@@ -106,7 +100,7 @@ namespace UdpNatPunchClient.Models
             try
             {
                 var newName = RandomGenerator.GetRandomString(25);
-                var newFilePath = Path.GetFullPath(_loadedImagesFolderName + "\\loaded_" + newName + extension);
+                var newFilePath = Path.GetFullPath(_imagesFolderName + "\\loaded_" + newName + extension);
                 await File.WriteAllBytesAsync(newFilePath, pictureBytes);
 
                 var imageItem = new ImageItem(newFilePath,
