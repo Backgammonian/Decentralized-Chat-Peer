@@ -13,6 +13,7 @@ namespace Converters
 
             switch (status)
             {
+                default:
                 case ProfilePictureLoadingStatusType.None:
                     return string.Empty;
 
@@ -24,9 +25,6 @@ namespace Converters
 
                 case ProfilePictureLoadingStatusType.Completed:
                     return "Picture is loaded ✓";
-
-                default:
-                    return "---";
             }
         }
 
