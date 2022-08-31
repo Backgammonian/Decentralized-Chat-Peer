@@ -13,19 +13,23 @@ namespace Converters
             return number.ToString().Length == 1 ? "0" + number : "" + number;
         }
 
-        public object Convert(object value, Type? targetType, object? parameter, CultureInfo? culture)
+        public string ConvertTime(DateTime time)
         {
-            var dateTime = (DateTime)value;
             return string.Format("{0}:{1}:{2}, {3} {4} {5}",
-                dateTime.Hour,
-                Format(dateTime.Minute),
-                Format(dateTime.Second),
-                dateTime.Day,
-                _monthAbbreviations[dateTime.Month - 1],
-                dateTime.Year);
+                time.Hour,
+                Format(time.Minute),
+                Format(time.Second),
+                time.Day,
+                _monthAbbreviations[time.Month - 1],
+                time.Year);
         }
 
-        public object ConvertBack(object value, Type? targetType, object? parameter, CultureInfo? culture)
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            return ConvertTime((DateTime)value);
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
             return Binding.DoNothing;
         }

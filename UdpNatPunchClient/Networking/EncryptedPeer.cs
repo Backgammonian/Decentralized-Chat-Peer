@@ -266,14 +266,13 @@ namespace Networking
                 var messageReader = new NetDataReader(decompressedMessage);
 
                 if (messageReader.TryGetByte(out byte type) &&
-                    Enum.TryParse(typeof(NetworkMessageType), type + "", out object? networkMessageType) &&
+                    Enum.TryParse(typeof(NetworkMessageType), type.ToString(), out object? networkMessageType) &&
                     networkMessageType != null &&
                     messageReader.TryGetString(out string json) &&
                     messageReader.TryGetULong(out ulong recepientsOutcomingSegmentNumber) &&
                     recepientsOutcomingSegmentNumber == _incomingSegmentNumber)
                 {
                     _incomingSegmentNumber += 1;
-
                     _incomingSegmentNumber = _incomingSegmentNumber == ulong.MaxValue ? 0 : _incomingSegmentNumber;
 
                     BytesDownloaded += incomingDataReader.RawDataSize;

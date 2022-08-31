@@ -16,7 +16,7 @@ namespace UdpNatPunchClient.Models
             Content = messageFromOutside.Content;
         }
 
-        //tracker, incoming and out
+        //tracker, incoming and outgoing
         public MessageModel(string input, MessageDirection direction) : base(direction)
         {
             Content = input;

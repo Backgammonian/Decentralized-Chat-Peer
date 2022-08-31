@@ -7,7 +7,6 @@
         MegamindAsking,
         Doge,
         Facepalm,
-        Jerma,
-        Shishka
+        Jerma
     }
 }

@@ -57,8 +57,9 @@ namespace UdpNatPunchClient.Models
 
                 if (_users.TryAdd(user.ID, user))
                 {
-                    await user.TrySetUpdatedPicture(profilePictureArray, profilePictureExtension);
                     UserAdded?.Invoke(this, new UserUpdatedEventArgs(user));
+
+                    await user.TrySetUpdatedPicture(profilePictureArray, profilePictureExtension);
                 }
             }
         }

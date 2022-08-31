@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -12,21 +11,40 @@ namespace UdpNatPunchClient.Models
 {
     public class ImageItem : ObservableObject
     {
-        public const string ImagesFolderName = "LocalImages";
-        public const string LoadedImagesFolderName = "LoadedImages";
+        private const string _imagesFolderName = "LocalImages";
+        private const string _loadedImagesFolderName = "LoadedImages";
         private const int _defaultPreviewPictureWidth = 100;
         private const int _defaultPreviewPictureHeight = 100;
-
-        private string _picturePath = string.Empty;
-        private string _previewPicturePath = string.Empty;
-        private FileStream? _pictureStream;
-        private FileStream? _previewPictureStream;
-        private bool _isLoaded;
 
         static ImageItem()
         {
             CreateFolders();
         }
+
+        private static void CreateFolders()
+        {
+            try
+            {
+                if (!Directory.Exists(_imagesFolderName))
+                {
+                    Directory.CreateDirectory(_imagesFolderName);
+                }
+
+                if (!Directory.Exists(_loadedImagesFolderName))
+                {
+                    Directory.CreateDirectory(_loadedImagesFolderName);
+                }
+            }
+            catch (Exception) 
+            {
+            }
+        }
+
+        private string _picturePath = string.Empty;
+        private string _previewPicturePath = string.Empty;
+        private Uri? _pictureUri;
+        private Uri? _previewPictureUri;
+        private bool _isLoaded;
 
         public ImageItem(string path, int previewWidth, int previewHeight)
         {
@@ -44,7 +62,6 @@ namespace UdpNatPunchClient.Models
         public int PreviewPictureWidth { get; }
         public int PreviewPictureHeight { get; }
         public bool IsAnimation => FileExtension == ".gif";
-        public long Length => _pictureStream != null ? _pictureStream.Length : 0;
 
         public string PicturePath
         {
@@ -58,16 +75,16 @@ namespace UdpNatPunchClient.Models
             private set => SetProperty(ref _previewPicturePath, value);
         }
 
-        public FileStream? PictureStream
+        public Uri? PictureUri
         {
-            get => _pictureStream;
-            private set => SetProperty(ref _pictureStream, value);
+            get => _pictureUri;
+            private set => SetProperty(ref _pictureUri, value);
         }
 
-        public FileStream? PreviewPictureStream
+        public Uri? PreviewPictureUri
         {
-            get => _previewPictureStream;
-            private set => SetProperty(ref _previewPictureStream, value);
+            get => _previewPictureUri;
+            private set => SetProperty(ref _previewPictureUri, value);
         }
 
         public bool IsLoaded
@@ -76,26 +93,7 @@ namespace UdpNatPunchClient.Models
             private set => SetProperty(ref _isLoaded, value);
         }
 
-        private static void CreateFolders()
-        {
-            try
-            {
-                if (!Directory.Exists(ImagesFolderName))
-                {
-                    Directory.CreateDirectory(ImagesFolderName);
-                }
-
-                if (!Directory.Exists(LoadedImagesFolderName))
-                {
-                    Directory.CreateDirectory(LoadedImagesFolderName);
-                }
-            }
-            catch (Exception)
-            {
-            }
-        }
-
-        public static async Task<ImageItem?> TrySaveByteArrayAsImage(byte[] pictureBytes, string extension, int width, int height)
+        public static async Task<ImageItem?> SaveByteArrayAsImage(byte[] pictureBytes, string extension, int width, int height)
         {
             CreateFolders();
 
@@ -108,11 +106,10 @@ namespace UdpNatPunchClient.Models
             try
             {
                 var newName = RandomGenerator.GetRandomString(25);
-                var newFilePath = Path.GetFullPath(LoadedImagesFolderName + "\\loaded_" + newName + extension);
+                var newFilePath = Path.GetFullPath(_loadedImagesFolderName + "\\loaded_" + newName + extension);
                 await File.WriteAllBytesAsync(newFilePath, pictureBytes);
 
-                var imageItem = new ImageItem(
-                    newFilePath,
+                var imageItem = new ImageItem(newFilePath,
                     width,
                     height);
 
@@ -124,25 +121,20 @@ namespace UdpNatPunchClient.Models
             }
         }
 
-        public async Task<(bool, byte[])> TryGetPictureBytes()
+        public async Task<byte[]?> GetPictureBytes()
         {
+            if (PictureUri == null)
+            {
+                return null;
+            }
+
             try
             {
-                if (_pictureStream != null)
-                {
-                    var bytes = await File.ReadAllBytesAsync(_pictureStream.Name);
-
-                    return (true, bytes);
-                }
-                else
-                {
-                    return (false, Array.Empty<byte>());
-                }
-                
+                return await File.ReadAllBytesAsync(PictureUri.OriginalString);
             }
             catch (Exception)
             {
-                return (false, Array.Empty<byte>());
+                return null;
             }
         }
 
@@ -150,8 +142,8 @@ namespace UdpNatPunchClient.Models
         {
             try
             {
-                PicturePath = Path.GetFullPath(ImagesFolderName + "\\" + FileName + FileExtension);
-                PreviewPicturePath = Path.GetFullPath(ImagesFolderName + "\\" + FileName + "_preview" + FileExtension);
+                PicturePath = Path.GetFullPath(_imagesFolderName + "\\" + FileName + FileExtension);
+                PreviewPicturePath = Path.GetFullPath(_imagesFolderName + "\\" + FileName + "_preview" + FileExtension);
                 File.Copy(OriginalFilePath, PicturePath);
 
                 return true;
@@ -170,27 +162,20 @@ namespace UdpNatPunchClient.Models
                 return false;
             }
 
-            switch (FileExtension)
+            if (Constants.AllowedImageExtensions.Contains(FileExtension))
             {
-                case ".jpg":
-                case ".jpeg":
-                case ".png":
-                case ".bmp":
-                case ".tiff":
-                case ".gif":
-                    break;
-
-                default:
-                    return false;
-            }
-
-            if (IsAnimation)
-            {
-                return await TryLoadAsAnimation();
+                if (IsAnimation)
+                {
+                    return await TryLoadAsAnimation();
+                }
+                else
+                {
+                    return TryLoadAsPicture();
+                }
             }
             else
             {
-                return TryLoadAsPicture();
+                return false;
             }
         }
 
@@ -198,31 +183,31 @@ namespace UdpNatPunchClient.Models
         {
             try
             {
-                var stream = File.Open(PicturePath, FileMode.Open, FileAccess.Read, FileShare.Read);
-                using var previewBitmap = new Bitmap(stream).ResizeImageWithPreservedAspectRatio(PreviewPictureWidth, PreviewPictureHeight);
+                using var pictureBitmap = new Bitmap(PicturePath);
+                using var previewPictureBitmap = pictureBitmap.ResizeImageWithPreservedAspectRatio(PreviewPictureWidth, PreviewPictureHeight);
 
                 switch (FileExtension)
                 {
                     case ".jpg":
                     case ".jpeg":
-                        previewBitmap.Save(PreviewPicturePath, ImageFormat.Jpeg);
+                        previewPictureBitmap.Save(PreviewPicturePath, ImageFormat.Jpeg);
                         break;
 
                     case ".png":
-                        previewBitmap.Save(PreviewPicturePath, ImageFormat.Png);
+                        previewPictureBitmap.Save(PreviewPicturePath, ImageFormat.Png);
                         break;
 
                     case ".bmp":
-                        previewBitmap.Save(PreviewPicturePath, ImageFormat.Bmp);
+                        previewPictureBitmap.Save(PreviewPicturePath, ImageFormat.Bmp);
                         break;
 
                     case ".tiff":
-                        previewBitmap.Save(PreviewPicturePath, ImageFormat.Tiff);
+                        previewPictureBitmap.Save(PreviewPicturePath, ImageFormat.Tiff);
                         break;
                 }
 
-                PreviewPictureStream = File.Open(PreviewPicturePath, FileMode.Open, FileAccess.Read, FileShare.Read);
-                PictureStream = stream;
+                PreviewPictureUri = new Uri(PreviewPicturePath, UriKind.Absolute);
+                PictureUri = new Uri(PicturePath, UriKind.Absolute);
                 IsLoaded = true;
 
                 return true;
@@ -235,73 +220,27 @@ namespace UdpNatPunchClient.Models
 
         private async Task<bool> TryLoadAsAnimation()
         {
-            try
-            {
-                var stream = File.Open(PicturePath, FileMode.Open, FileAccess.Read, FileShare.Read);
-                var result = await GIFExtensions.TryGetResizedFramesFromGIFAsync(stream,  PreviewPictureWidth, PreviewPictureHeight);
-
-                if (result.Item1 &&
-                    await GIFExtensions.TryCreateGIFAsync(PreviewPicturePath, result.Item2))
-                {
-                    PreviewPictureStream = File.Open(PreviewPicturePath, FileMode.Open, FileAccess.Read, FileShare.Read);
-                    PictureStream = stream;
-
-                    foreach (var frame in result.Item2)
-                    {
-                        frame.Image.Dispose();
-                    }
-
-                    IsLoaded = true;
-
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-            catch (Exception)
+            var frames = await GIFExtensions.TryGetResizedFramesFromGIFAsync(PicturePath,  PreviewPictureWidth, PreviewPictureHeight);
+            if (frames == null)
             {
                 return false;
             }
-        }
 
-        public async Task<(bool, List<Frame>)> TryLoadAsAnimationAndGetFrames()
-        {
-            CreateFolders();
-            if (!TryCopyImage())
+            if (await GIFExtensions.TryCreateGIFAsync(PreviewPicturePath, frames))
             {
-                return (false, new List<Frame>());
-            }
-
-            if (!IsAnimation)
-            {
-                return (false, new List<Frame>());
-            }
-
-            try
-            {
-                var stream = File.Open(PicturePath, FileMode.Open, FileAccess.Read, FileShare.Read);
-                var result = await GIFExtensions.TryGetResizedFramesFromGIFAsync(stream, PreviewPictureWidth, PreviewPictureHeight);
-
-                if (result.Item1 &&
-                    await GIFExtensions.TryCreateGIFAsync(PreviewPicturePath, result.Item2))
+                foreach (var frame in frames)
                 {
-                    PreviewPictureStream = File.Open(PreviewPicturePath, FileMode.Open, FileAccess.Read, FileShare.Read);
-                    PictureStream = stream;
-                    IsLoaded = true;
+                    frame.Image.Dispose();
+                }
 
-                    return (true, result.Item2);
-                }
-                else
-                {
-                    return (false, new List<Frame>());
-                }
+                PreviewPictureUri = new Uri(PreviewPicturePath, UriKind.Absolute);
+                PictureUri = new Uri(PicturePath, UriKind.Absolute);
+                IsLoaded = true;
+
+                return true;
             }
-            catch (Exception)
-            {
-                return (false, new List<Frame>());
-            }
+
+            return false;
         }
     }
 }

@@ -34,15 +34,16 @@ namespace UdpNatPunchClient.Models
             Nickname = newNickname;
         }
 
-        public async Task<bool> TrySetUpdatedPicture(byte[] pictureByteArray, string pictureExtension)
+        public async Task<bool> TrySetUpdatedPicture(byte[]? pictureByteArray, string pictureExtension)
         {
-            if (pictureByteArray.Length == 0 ||
+            if (pictureByteArray == null ||
+                pictureByteArray.Length == 0 ||
                 pictureExtension.Length == 0)
             {
                 return false;
             }
 
-            var newPicture = await ImageItem.TrySaveByteArrayAsImage(pictureByteArray,
+            var newPicture = await ImageItem.SaveByteArrayAsImage(pictureByteArray,
                 pictureExtension,
                 Constants.ProfilePictureThumbnailSize.Item1,
                 Constants.ProfilePictureThumbnailSize.Item2);
@@ -70,25 +71,27 @@ namespace UdpNatPunchClient.Models
             Send(updateMessage);
         }
 
-        public async Task<bool> TrySendImageMessage(ImageMessageModel message)
+        public async Task<bool> TrySendImageMessage(string authorID, ImageItem image)
         {
-            var result = await message.Image.TryGetPictureBytes();
-            if (result.Item1)
+            var bytes = await image.GetPictureBytes();
+            if (bytes == null)
             {
-                Messages.Add(message);
-                _undeliveredMessages.Add(message);
-                _unreadMessages.Add(message);
-
-                var messageToPeer = new ImageMessageToPeer(message.AuthorID,
-                    message.MessageID,
-                    result.Item2,
-                    message.Image.FileExtension.ToLower());
-                Send(messageToPeer);
-
-                return true;
+                return false;
             }
 
-            return false;
+            var message = new ImageMessageModel(authorID, image);
+            Messages.Add(message);
+            _undeliveredMessages.Add(message);
+            _unreadMessages.Add(message);
+
+            var messageToPeer = new ImageMessageToPeer(message.AuthorID,
+                message.MessageID,
+                bytes,
+                message.Image.FileExtension);
+
+            Send(messageToPeer);
+
+            return true;
         }
 
         public ImageMessageModel? AddIncomingMessage(ImageMessageToPeer imageMessageFromPeer, ImageItem image)

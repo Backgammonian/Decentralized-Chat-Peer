@@ -56,7 +56,10 @@ namespace Extensions
             using var gr = Graphics.FromImage(bitmap);
             gr.Clear(Color.FromArgb(0, 0, 0, 0));
             gr.InterpolationMode = InterpolationMode.HighQualityBicubic;
-            gr.DrawImage(image, new Rectangle(destX, destY, destWidth, destHeight), new Rectangle(sourceX, sourceY, sourceWidth, sourceHeight), GraphicsUnit.Pixel);
+            gr.DrawImage(image,
+                new Rectangle(destX, destY, destWidth, destHeight),
+                new Rectangle(sourceX, sourceY, sourceWidth, sourceHeight),
+                GraphicsUnit.Pixel);
 
             return bitmap;
         }
