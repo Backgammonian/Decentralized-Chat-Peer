@@ -43,6 +43,15 @@ namespace UdpNatPunchClient.Models
             _peer.SendEncrypted(baseMessage);
         }
 
+        protected virtual void Send(BaseMessage baseMessage, byte channel)
+        {
+            if (channel >= 0 &&
+                channel < NetworkingConstants.ChannelsCount)
+            {
+                _peer.SendEncrypted(baseMessage, channel);
+            }
+        }
+
         public virtual void Disconnect()
         {
             _peer.Disconnect();

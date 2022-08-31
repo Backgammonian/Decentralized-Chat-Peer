@@ -42,7 +42,7 @@ namespace UdpNatPunchClient
         private string _titleText = _title;
         private TrackerModel? _tracker;
         private string _nickname = "My nickname";
-        private bool _isNicknameUpdated;
+        private NicknameUpdateState _nicknameUpdateState;
         private ImageItem? _profilePicture;
         private ProfilePictureLoadingStatusType _profilePictureLoadingStatus;
         private bool _isConnectedToTracker;
@@ -111,7 +111,7 @@ namespace UdpNatPunchClient
             LocalEndPoint = new IPEndPoint(new LocalAddressResolver().GetLocalAddress(), _client.LocalPort);
             _localAddressUpdater.Start();
 
-            IsNicknameUpdated = false;
+            NicknameUpdateState = NicknameUpdateState.None;
             ProfilePictureLoadingStatus = ProfilePictureLoadingStatusType.None;
             _nicknameUpdateTimer = new DispatcherTimer();
             _nicknameUpdateTimer.Interval = new TimeSpan(0, 0, 1);
@@ -166,16 +166,16 @@ namespace UdpNatPunchClient
                         SetProperty(ref _nickname, value);
                     }
 
-                    IsNicknameUpdated = true;
+                    NicknameUpdateState = NicknameUpdateState.Changing;
                     RestartNicknameUpdateTimerTick();
                 }
             }
         }
 
-        public bool IsNicknameUpdated
+        public NicknameUpdateState NicknameUpdateState
         {
-            get => _isNicknameUpdated;
-            private set => SetProperty(ref _isNicknameUpdated, value);
+            get => _nicknameUpdateState;
+            private set => SetProperty(ref _nicknameUpdateState, value);
         }
 
         public ImageItem? ProfilePicture
@@ -340,10 +340,19 @@ namespace UdpNatPunchClient
         private void OnNcknameUpdateTimerTick(object? sender, EventArgs e)
         {
             _nicknameUpdateTimer.Stop();
-            IsNicknameUpdated = false;
+            NicknameUpdateState = NicknameUpdateState.Updated;
 
             _tracker?.SendUpdatedPersonalInfo(Nickname);
             _connectedUsers.SendUpdatedInfoToConnectedUsers(Nickname);
+
+            var resetTimer = new DispatcherTimer(DispatcherPriority.Background, Application.Current.Dispatcher);
+            resetTimer.Interval = new TimeSpan(0, 0, 1);
+            resetTimer.Tick += (s, e) =>
+            {
+                resetTimer.Stop();
+                NicknameUpdateState = NicknameUpdateState.None;
+            };
+            resetTimer.Start();
         }
 
         private void OnLocalAddressUpdaterTick(object? sender, EventArgs e)
@@ -1255,7 +1264,7 @@ namespace UdpNatPunchClient
             {
                 ProfilePictureLoadingStatus = ProfilePictureLoadingStatusType.ErrorOccurred;
 
-                MessageBox.Show($"(1) Couldn't load profile picture from {path}",
+                MessageBox.Show($"Can't load profile picture from {path}",
                     "Image load error",
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
@@ -1278,7 +1287,7 @@ namespace UdpNatPunchClient
                 _profilePictureBytes = null;
                 ProfilePictureLoadingStatus = ProfilePictureLoadingStatusType.ErrorOccurred;
 
-                MessageBox.Show($"(2) Couldn't load profile picture from {path}",
+                MessageBox.Show($"Couldn't load new profile picture properly: {path}",
                     "Image load error",
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);

@@ -12,6 +12,7 @@
     <converters:RecepientConverter x:Key="RecepientConverter"/>
     <converters:AddressConverter x:Key="AddressConverter"/>
     <converters:ProfilePictureLoadingStatusConverter x:Key="ProfilePictureLoadingStatusConverter"/>
+    <converters:NicknameUpdateStateConverter x:Key="NicknameUpdateStateConverter"/>
 
     <Style TargetType="TextBlock" x:Key="BaseTextBlock">
         <Setter Property="FontSize" Value="14"/>

@@ -88,8 +88,7 @@
                             <TextBlock
                                 Style="{StaticResource TitleTextBlock}"
                                 FontWeight="Bold"
-                                Text="✓"
-                                Visibility="{Binding IsNicknameUpdated, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                Text="{Binding NicknameUpdateState, Converter={StaticResource NicknameUpdateStateConverter}}"/>
                         </StackPanel>
                         <StackPanel
                             Grid.Row="2"
@@ -120,7 +119,7 @@
                             </Button>
                             <TextBlock
                                 Style="{StaticResource BaseTextBlock}"
-                                FontSize="12"
+                                TextDecorations="Underline"
                                 Text="{Binding ProfilePictureLoadingStatus, Converter={StaticResource ProfilePictureLoadingStatusConverter}}"/>
                         </StackPanel>
                         <Button
@@ -350,7 +349,7 @@
                                 <TextBlock
                                     Grid.Column="1"
                                     Style="{StaticResource BaseTextBlock}"
-                                    Text="{Binding NumberOfSendingImages, StringFormat={}Number of sending images: {0}}"
+                                    Text="{Binding NumberOfSendingImages, StringFormat={}Sending {0} image(s)}"
                                     Visibility="{Binding SendingAnyImages, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                             </Grid>
                             <Grid
