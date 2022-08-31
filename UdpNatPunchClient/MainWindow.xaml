@@ -6,12 +6,12 @@
         xmlns:local="clr-namespace:UdpNatPunchClient"
         xmlns:models="clr-namespace:UdpNatPunchClient.Models"
         xmlns:custom="clr-namespace:PlaceholderTextBoxControl;assembly=PlaceholderTextBoxControl"
-        xmlns:MouseBehaviours="clr-namespace:Lovatts.MouseBehaviours"
-        xmlns:bh="http://schemas.microsoft.com/xaml/behaviors"
+        xmlns:mouseBehaviours="clr-namespace:Lovatts.MouseBehaviours"
+        xmlns:xamlBehaviors="http://schemas.microsoft.com/xaml/behaviors"
         xmlns:tray="clr-namespace:SystemTrayApp.WPF"
         xmlns:dropFiles="clr-namespace:DropFiles"
-        xmlns:gif="clr-namespace:XamlAnimatedGif;assembly=XamlAnimatedGif"
         xmlns:extensions="clr-namespace:Extensions"
+        xmlns:myBehaviours="clr-namespace:MyBehaviours"
         mc:Ignorable="d"
         Title="{Binding TitleText}"
         Height="600"
@@ -28,14 +28,14 @@
         <tray:NotifyIconWrapper 
             NotifyRequest="{Binding NotifyRequest}"
             Text="{Binding SystemTrayText}">
-            <bh:Interaction.Triggers>
-                <bh:EventTrigger EventName="OpenSelected">
-                    <bh:InvokeCommandAction Command="{Binding NotifyIconOpenCommand}"/>
-                </bh:EventTrigger>
-                <bh:EventTrigger EventName="ExitSelected">
-                    <bh:InvokeCommandAction Command="{Binding NotifyIconExitCommand}"/>
-                </bh:EventTrigger>
-            </bh:Interaction.Triggers>
+            <xamlBehaviors:Interaction.Triggers>
+                <xamlBehaviors:EventTrigger EventName="OpenSelected">
+                    <xamlBehaviors:InvokeCommandAction Command="{Binding NotifyIconOpenCommand}"/>
+                </xamlBehaviors:EventTrigger>
+                <xamlBehaviors:EventTrigger EventName="ExitSelected">
+                    <xamlBehaviors:InvokeCommandAction Command="{Binding NotifyIconExitCommand}"/>
+                </xamlBehaviors:EventTrigger>
+            </xamlBehaviors:Interaction.Triggers>
         </tray:NotifyIconWrapper>
         <TabControl
             SelectedIndex="{Binding TabIndex}">
@@ -55,7 +55,7 @@
                         <Grid.RowDefinitions>
                             <RowDefinition Height="30"/>
                             <RowDefinition Height="30"/>
-                            <RowDefinition Height="280"/>
+                            <RowDefinition Height="300"/>
                             <RowDefinition Height="30"/>
                             <RowDefinition Height="30"/>
                             <RowDefinition Height="30"/>
@@ -101,14 +101,14 @@
                                 Style="{StaticResource ProfilePictureBorderStyle}"
                                 dropFiles:DropFilesBehavior.FilesDropCommand="{Binding GetNewProfilePictureFromDropCommand}">
                                 <Grid>
-                                    <Image
-                                        Style="{StaticResource BaseImageStyle}"
-                                        gif:AnimationBehavior.SourceStream="{Binding ProfilePicture.PreviewPictureStream}"
-                                        MouseBehaviours:MouseBehaviour.MouseUpCommand="{Binding ShowOwnProfilePictureCommand}"/>
+                                    <MediaElement
+                                        Style="{StaticResource BaseMediaElementStyle}"
+                                        myBehaviours:MediaElementBehaviours.IsAnimated="True"
+                                        Source="{Binding ProfilePicture.PreviewPictureUri}"
+                                        mouseBehaviours:MouseBehaviour.MouseUpCommand="{Binding ShowOwnProfilePictureCommand}"/>
                                     <TextBlock
                                         Style="{StaticResource ImageExtensionTextBlock}"
-                                        Text="{Binding ProfilePicture.FileExtension}"
-                                        Visibility="{Binding IsProfilePictureBytesLoaded, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                        Text="{Binding ProfilePicture.FileExtension}"/>
                                 </Grid>
                             </Border>
                             <Button
@@ -229,10 +229,11 @@
                                                 Orientation="Horizontal">
                                                 <Border
                                                     Style="{StaticResource PeerPictureBorderStyle}">
-                                                    <Image
-                                                        Style="{StaticResource BaseImageStyle}"
-                                                        gif:AnimationBehavior.SourceStream="{Binding Picture.PreviewPictureStream}"
-                                                        MouseBehaviours:MouseBehaviour.MouseUpCommand="{Binding DataContext.ShowPeerProfilePictureCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"/>
+                                                    <MediaElement
+                                                        Style="{StaticResource BaseMediaElementStyle}"
+                                                        myBehaviours:MediaElementBehaviours.IsAnimated="True"
+                                                        Source="{Binding Picture.PreviewPictureUri}"
+                                                        mouseBehaviours:MouseBehaviour.MouseUpCommand="{Binding DataContext.ShowPeerProfilePictureCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"/>
                                                 </Border>
                                                 <StackPanel>
                                                     <TextBlock
@@ -273,7 +274,7 @@
                                 HorizontalContentAlignment="Stretch"
                                 ItemsSource="{Binding Messages.AsObservable}"
                                 SelectedItem="{Binding SelectedMessage}"
-                                extensions:ListBoxExtensions.AutoScrollToEnd="True">
+                                myBehaviours:ListBoxBehaviours.AutoScrollToEnd="True">
                                 <ListBox.Resources>
                                     <DataTemplate
                                         DataType="{x:Type models:MessageModel}">
@@ -305,10 +306,11 @@
                                             Margin="5"
                                             HorizontalAlignment="{Binding Direction, Converter={StaticResource MessageDirectionAlignmentConverter}}">
                                             <Grid>
-                                                <Image
-                                                    Style="{StaticResource BaseImageStyle}"
-                                                    gif:AnimationBehavior.SourceStream="{Binding Image.PreviewPictureStream}"
-                                                    MouseBehaviours:MouseBehaviour.MouseUpCommand="{Binding DataContext.ShowPictureFromMessageCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"/>
+                                                <MediaElement
+                                                    Style="{StaticResource BaseMediaElementStyle}"
+                                                    myBehaviours:MediaElementBehaviours.IsAnimated="True"
+                                                    Source="{Binding Image.PreviewPictureUri}"
+                                                    mouseBehaviours:MouseBehaviour.MouseUpCommand="{Binding DataContext.ShowPictureFromMessageCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"/>
                                                 <TextBlock
                                                     Style="{StaticResource ImageExtensionTextBlock}"
                                                     Text="{Binding Image.FileExtension}"
@@ -416,12 +418,12 @@
             </TabItem>
         </TabControl>
     </Grid>
-    <bh:Interaction.Triggers>
-        <bh:EventTrigger EventName="Loaded">
-            <bh:InvokeCommandAction Command="{Binding LoadedCommand}"/>
-        </bh:EventTrigger>
-        <bh:EventTrigger EventName="Closing">
-            <bh:InvokeCommandAction Command="{Binding ClosingCommand}" PassEventArgsToCommand="True"/>
-        </bh:EventTrigger>
-    </bh:Interaction.Triggers>
+    <xamlBehaviors:Interaction.Triggers>
+        <xamlBehaviors:EventTrigger EventName="Loaded">
+            <xamlBehaviors:InvokeCommandAction Command="{Binding LoadedCommand}"/>
+        </xamlBehaviors:EventTrigger>
+        <xamlBehaviors:EventTrigger EventName="Closing">
+            <xamlBehaviors:InvokeCommandAction Command="{Binding ClosingCommand}" PassEventArgsToCommand="True"/>
+        </xamlBehaviors:EventTrigger>
+    </xamlBehaviors:Interaction.Triggers>
 </Window>

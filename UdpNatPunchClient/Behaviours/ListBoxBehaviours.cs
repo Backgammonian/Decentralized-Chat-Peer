@@ -2,14 +2,14 @@
 using System.Windows.Controls;
 using System.Collections.Specialized;
 
-namespace Extensions
+namespace MyBehaviours
 {
-    public static class ListBoxExtensions
+    public static class ListBoxBehaviours
     {
         public static readonly DependencyProperty AutoScrollToEndProperty =
-            DependencyProperty.RegisterAttached("AutoScrollToEnd", typeof(bool), typeof(ListBoxExtensions), new UIPropertyMetadata(OnAutoScrollToEndChanged));
+            DependencyProperty.RegisterAttached("AutoScrollToEnd", typeof(bool), typeof(ListBoxBehaviours), new UIPropertyMetadata(OnAutoScrollToEndChanged));
         private static readonly DependencyProperty AutoScrollToEndHandlerProperty =
-            DependencyProperty.RegisterAttached("AutoScrollToEndHandler", typeof(NotifyCollectionChangedEventHandler), typeof(ListBoxExtensions));
+            DependencyProperty.RegisterAttached("AutoScrollToEndHandler", typeof(NotifyCollectionChangedEventHandler), typeof(ListBoxBehaviours));
 
         public static bool GetAutoScrollToEnd(DependencyObject obj) => (bool)obj.GetValue(AutoScrollToEndProperty);
         public static void SetAutoScrollToEnd(DependencyObject obj, bool value) => obj.SetValue(AutoScrollToEndProperty, value);

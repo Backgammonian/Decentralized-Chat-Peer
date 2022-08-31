@@ -16,11 +16,13 @@ namespace InputBox
                     ip != null)
                 {
                     address = ip;
+
                     return true;
                 }
             }
 
             address = null;
+
             return false;
         }
 
@@ -36,6 +38,7 @@ namespace InputBox
                     address != null)
                 {
                     serverAddress = new IPEndPoint(address, 55000);
+
                     return true;
                 }
 
@@ -44,11 +47,13 @@ namespace InputBox
                     endPoint.Port > 1024)
                 {
                     serverAddress = endPoint;
+
                     return true;
                 }
             }
 
             serverAddress = null;
+
             return false;
         }
 
@@ -62,10 +67,12 @@ namespace InputBox
                 inputBox.Answer.IsNotEmpty())
             {
                 id = inputBox.Answer;
+
                 return true;
             }
 
             id = string.Empty;
+
             return false;
         }
     }

@@ -35,8 +35,8 @@
             VerticalAlignment="Center"
             BorderThickness="1"
             BorderBrush="Black">
-            <Image
-                x:Name="DisplayImage"
+            <MediaElement
+                x:Name="_displayImage"
                 Stretch="Uniform"
                 StretchDirection="DownOnly"/>
         </Border>

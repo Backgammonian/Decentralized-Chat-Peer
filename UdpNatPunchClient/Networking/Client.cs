@@ -78,17 +78,18 @@ namespace Networking
                 _peers[peerID].IsSecurityEnabled)
             {
                 peer = _peers[peerID];
+
                 return true;
             }
 
             peer = null;
+
             return false;
         }
 
         public bool IsConnectedToTracker(IPEndPoint trackerAddress)
         {
-            return Tracker != null &&
-                Tracker.EndPoint == trackerAddress;
+            return Tracker != null && Tracker.EndPoint == trackerAddress;
         }
 
         public EncryptedPeer? GetPeerByID(int peerID)
@@ -133,7 +134,7 @@ namespace Networking
             _expectedTracker = trackerAddress;
             _client.Connect(_expectedTracker, "ToChatTracker");
 
-            Debug.WriteLine("Connecting to tracker: {0}", _expectedTracker);
+            Debug.WriteLine("Expecting tracker: {0}", _expectedTracker);
         }
 
         public void StartListening()
@@ -146,10 +147,9 @@ namespace Networking
             {
                 if (_expectedTracker == peer.EndPoint)
                 {
+                    Debug.WriteLine("Expected tracker connected");
+
                     _expectedTracker = null;
-
-                    Debug.WriteLine("Expected tracker: none");
-
                     Tracker = new EncryptedPeer(peer);
                     Tracker.SendPublicKeys();
 

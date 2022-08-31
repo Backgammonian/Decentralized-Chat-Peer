@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -10,23 +9,21 @@ namespace Extensions
 {
     public static class GIFExtensions
     {
-        public static async Task<(bool, List<Frame>)> TryGetResizedFramesFromGIFAsync(FileStream stream, int newWidth, int newHeight)
+        public static async Task<List<Frame>?> TryGetResizedFramesFromGIFAsync(string path, int newWidth, int newHeight)
         {
-            return await Task.Run(() => TryGetResizedFramesFromGIF(stream, newWidth, newHeight));
+            return await Task.Run(() => TryGetResizedFramesFromGIF(path, newWidth, newHeight));
         }
 
-        public static (bool, List<Frame>) TryGetResizedFramesFromGIF(FileStream stream, int newWidth, int newHeight)
+        public static List<Frame>? TryGetResizedFramesFromGIF(string path, int newWidth, int newHeight)
         {
-            var frames = new List<Frame>();
-
             try
             {
-                using var image = (Bitmap)Image.FromStream(stream);
+                using var image = new Bitmap(path);
                 var frameCount = image.GetFrameCount(FrameDimension.Time);
 
                 if (frameCount == 0)
                 {
-                    return (false, frames);
+                    return null;
                 }
 
                 //Get the times stored in the gif
@@ -49,6 +46,7 @@ namespace Extensions
                     }
                 }
 
+                var frames = new List<Frame>();
                 for (int i = 0; i < frameCount; i++)
                 {
                     image.SelectActiveFrame(FrameDimension.Time, i);
@@ -57,11 +55,11 @@ namespace Extensions
                     frames.Add(new Frame(resizedFrame, duration));
                 }
 
-                return (true, frames);
+                return frames;
             }
             catch (Exception)
             {
-                return (false, frames);
+                return null;
             }
         }
 
@@ -77,12 +75,10 @@ namespace Extensions
                 var encoder = new AnimatedGifEncoder();
                 encoder.Start(gifPath);
                 encoder.SetRepeat(0);
-
                 foreach (var frame in frames)
                 {
                     encoder.AddFrame(frame.Image, frame.Duration);
                 }
-
                 encoder.Finish();
 
                 return true;
