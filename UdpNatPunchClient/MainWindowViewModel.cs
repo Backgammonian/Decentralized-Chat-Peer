@@ -1097,6 +1097,12 @@ namespace UdpNatPunchClient
                         tracker.PrintHelp();
                     }
                     else
+                    if (command == "connect" &&
+                        argument == ID)
+                    {
+                        tracker.PrintInfo("Error: you can't connect to youself.");
+                    }
+                    else
                     {
                         tracker.SendCommandMessage(command, argument);
                     }
