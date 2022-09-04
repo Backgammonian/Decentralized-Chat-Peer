@@ -12,6 +12,7 @@ This project is a client of decentralized chat application. This app works on to
 * [Microsoft.Xaml.Behaviours.Wpf](https://github.com/Microsoft/XamlBehaviorsWpf)
 * [NGif](https://www.codeproject.com/Articles/11505/NGif-Animated-GIF-Encoder-for-NET)
 * [System.Drawing.Common](https://www.nuget.org/packages/System.Drawing.Common/)
+* [Placeholder Text Box](https://youtu.be/QUx2gh0PaEc)
 ## Demonstration:
 ![demo](demo.jpeg)
 ![animated-demo](animated-demo.gif)
