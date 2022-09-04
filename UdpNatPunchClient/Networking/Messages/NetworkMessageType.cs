@@ -27,6 +27,8 @@
         MessageReadNotification,
         UpdatedInfoForPeer,
         UpdatedProfilePictureForPeer,
-        ImageMessage
+        ImageIntroduceMessage,
+        UpdateImageMessage,
+        ImageSendingFailed,
     }
 }

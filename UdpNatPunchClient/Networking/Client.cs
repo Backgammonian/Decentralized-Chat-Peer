@@ -18,7 +18,6 @@ namespace Networking
         private readonly EncryptedPeers _peers;
         private readonly Task _listenTask;
         private readonly CancellationTokenSource _tokenSource;
-        private IPEndPoint? _expectedTracker;
 
         public Client()
         {
@@ -34,7 +33,7 @@ namespace Networking
             var token = _tokenSource.Token;
             _listenTask = new Task(async () => await Run(token));
 
-            _expectedTracker = null;
+            ExpectedTracker = null;
             Tracker = null;
         }
 
@@ -46,12 +45,14 @@ namespace Networking
         public event EventHandler<NetEventArgs>? MessageFromTrackerReceived;
         public event EventHandler<EventArgs>? TrackerAdded;
         public event EventHandler<EventArgs>? TrackerConnected;
-        public event EventHandler<EventArgs>? TrackerRemoved;
+        public event EventHandler<TrackerDisconnectedEventArgs>? TrackerRemoved;
+        public event EventHandler<EventArgs>? TrackerConnectionAttemptFailed;
 
         public int LocalPort => _client.LocalPort;
         public byte ChannelsCount => _client.ChannelsCount;
         public IEnumerable<EncryptedPeer> Peers => _peers.List;
         public EncryptedPeer? Tracker { get; private set; }
+        public IPEndPoint? ExpectedTracker { get; private set; }
 
         private void OnPeerAdded(object? sender, EncryptedPeerEventArgs e)
         {
@@ -74,6 +75,8 @@ namespace Networking
 
         public bool IsConnectedToPeer(int peerID, out EncryptedPeer? peer)
         {
+            peer = null;
+
             if (_peers.Has(peerID) &&
                 _peers[peerID].IsSecurityEnabled)
             {
@@ -82,14 +85,13 @@ namespace Networking
                 return true;
             }
 
-            peer = null;
-
             return false;
         }
 
         public bool IsConnectedToTracker(IPEndPoint trackerAddress)
         {
-            return Tracker != null && Tracker.EndPoint == trackerAddress;
+            return Tracker != null &&
+                Tracker.EndPoint == trackerAddress;
         }
 
         public EncryptedPeer? GetPeerByID(int peerID)
@@ -127,14 +129,17 @@ namespace Networking
         {
             if (Tracker != null)
             {
+                var endPoint = Tracker.EndPoint;
+
                 Tracker.Disconnect();
-                TrackerRemoved?.Invoke(this, EventArgs.Empty);
+                TrackerRemoved?.Invoke(this, new TrackerDisconnectedEventArgs(endPoint));
+                Tracker = null;
             }
 
-            _expectedTracker = trackerAddress;
-            _client.Connect(_expectedTracker, "ToChatTracker");
+            ExpectedTracker = trackerAddress;
+            _client.Connect(ExpectedTracker, "ToChatTracker");
 
-            Debug.WriteLine("Expecting tracker: {0}", _expectedTracker);
+            Debug.WriteLine("Expecting tracker: {0}", ExpectedTracker);
         }
 
         public void StartListening()
@@ -145,11 +150,11 @@ namespace Networking
 
             _listener.PeerConnectedEvent += peer =>
             {
-                if (_expectedTracker == peer.EndPoint)
+                if (ExpectedTracker == peer.EndPoint)
                 {
                     Debug.WriteLine("Expected tracker connected");
 
-                    _expectedTracker = null;
+                    ExpectedTracker = null;
                     Tracker = new EncryptedPeer(peer);
                     Tracker.SendPublicKeys();
 
@@ -171,12 +176,12 @@ namespace Networking
                     Debug.WriteLine("(Client) Tracker {0} disconnected", peer.EndPoint);
 
                     Tracker = null;
-                    if (_expectedTracker == peer.EndPoint)
-                    {
-                        _expectedTracker = null;
-                    }
+                    TrackerRemoved?.Invoke(this, new TrackerDisconnectedEventArgs(peer.EndPoint));
 
-                    TrackerRemoved?.Invoke(this, EventArgs.Empty);
+                    if (ExpectedTracker == peer.EndPoint)
+                    {
+                        ExpectedTracker = null;
+                    }
                 }
                 else
                 if (_peers.Has(peer.Id))
@@ -188,6 +193,11 @@ namespace Networking
                 else
                 {
                     Debug.WriteLine("(Client) Someone ({0}) disconnected", peer.EndPoint);
+                }
+
+                if (ExpectedTracker == peer.EndPoint)
+                {
+                    TrackerConnectionAttemptFailed?.Invoke(this, EventArgs.Empty);
                 }
             };
 

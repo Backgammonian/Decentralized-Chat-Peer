@@ -31,9 +31,12 @@ namespace UdpNatPunchClient
         private const string _userMessagePlaceholder = "Write a message to user...";
         private const string _trackerMessagePlaceholder = "Write a message to tracker...";
         private const string _noMessagePlaceholder = "---";
+        private const string _noTrackerAddressPlaceholder = "---";
         private const string _title = "Chat Client";
         private const int _profileTabIndex = 0;
         private const int _chatTabIndex = 1;
+        private const string _defaultTrackerIPAddress = "192.168.0.14";
+        private const int _defaultTrackerPort = 56000;
 
         private readonly Client _client;
         private readonly Users _connectedUsers;
@@ -61,7 +64,8 @@ namespace UdpNatPunchClient
         private byte[]? _profilePictureBytes;
         private BaseMessageModel? _selectedMessage;
         private string _systemTrayText = string.Empty;
-        private int _numberOfSendingImages;
+        private TrackerConnectionStatusType _trackerConnectionStatus;
+        private IPEndPoint? _expectedAddress;
 
         public MainWindowViewModel()
         {
@@ -79,15 +83,7 @@ namespace UdpNatPunchClient
             ShowPeerProfilePictureCommand = new RelayCommand<MouseEventArgs?>(ShowPeerProfilePicture);
             ShowPictureFromMessageCommand = new RelayCommand<MouseEventArgs?>(ShowPictureFromMessage);
 
-            SystemTrayText = _title;
-            ID = RandomGenerator.GetRandomString(30);
-            CurrentMessage = string.Empty;
-            IsConnectedToTracker = false;
-            SelectedPeer = null;
-            CanSendMessage = false;
-            CanSendImage = false;
-
-            TextArts = new ObservableCollection<AsciiArtsType>(Enum.GetValues(typeof(AsciiArtsType)).Cast<AsciiArtsType>());
+            _tracker = null;
 
             _client = new Client();
             _client.PeerAdded += OnPeerAdded;
@@ -98,31 +94,35 @@ namespace UdpNatPunchClient
             _client.TrackerConnected += OnTrackerConnected;
             _client.TrackerRemoved += OnTrackerRemoved;
             _client.MessageFromTrackerReceived += OnMessageFromTrackerReceived;
+            _client.TrackerConnectionAttemptFailed += OnTrackerConnectionAttemptFailed;
 
             _connectedUsers = new Users();
             _connectedUsers.UserAdded += OnConnectedPeerAdded;
             _connectedUsers.UserRemoved += OnConnectedPeerRemoved;
 
-            _tracker = null;
-
-            ExternalEndPoint = null;
             _localAddressUpdater = new DispatcherTimer();
             _localAddressUpdater.Interval = new TimeSpan(0, 0, 2);
             _localAddressUpdater.Tick += OnLocalAddressUpdaterTick;
-            LocalEndPoint = new IPEndPoint(new LocalAddressResolver().GetLocalAddress(), _client.LocalPort);
-            _localAddressUpdater.Start();
-
-            NicknameUpdateState = NicknameUpdateState.None;
-            ProfilePictureLoadingStatus = ProfilePictureLoadingStatusType.None;
             _nicknameUpdateTimer = new DispatcherTimer();
             _nicknameUpdateTimer.Interval = new TimeSpan(0, 0, 1);
             _nicknameUpdateTimer.Tick += OnNcknameUpdateTimerTick;
-
-            NumberOfSendingImages = 0;
-
             _keepAliveTimer = new DispatcherTimer();
             _keepAliveTimer.Interval = new TimeSpan(0, 0, 5);
             _keepAliveTimer.Tick += OnKeepAliveTimerTick;
+
+            TextArts = new ObservableCollection<AsciiArtsType>(Enum.GetValues(typeof(AsciiArtsType)).Cast<AsciiArtsType>());
+            SystemTrayText = _title;
+            ID = RandomGenerator.GetRandomString(30);
+            CurrentMessage = string.Empty;
+            IsConnectedToTracker = false;
+            SelectedPeer = null;
+            CanSendMessage = false;
+            CanSendImage = false;
+            ExternalEndPoint = null;
+            LocalEndPoint = new IPEndPoint(new LocalAddressResolver().GetLocalAddress(), _client.LocalPort);
+            NicknameUpdateState = NicknameUpdateState.None;
+            ProfilePictureLoadingStatus = ProfilePictureLoadingStatusType.None;
+            TrackerConnectionStatus = TrackerConnectionStatusType.None;
         }
 
         public ICommand ConnectToTrackerCommand { get; }
@@ -141,7 +141,12 @@ namespace UdpNatPunchClient
         public ObservableCollection<AsciiArtsType> TextArts { get; }
         public string TrackerAddress => _tracker == null ? "---" : _tracker.EndPoint;
         public ObservableCollection<UserModel> ConnectedUsers => new ObservableCollection<UserModel>(_connectedUsers.List.OrderBy(user => user.ConnectionTime));
-        public bool SendingAnyImages => NumberOfSendingImages > 0;
+
+        public IPEndPoint? ExpectedTracker
+        {
+            get => _expectedAddress;
+            private set => SetProperty(ref _expectedAddress, value);
+        }
 
         public string SystemTrayText
         {
@@ -312,19 +317,18 @@ namespace UdpNatPunchClient
             }
         }
 
-        public int NumberOfSendingImages
+        public TrackerConnectionStatusType TrackerConnectionStatus
         {
-            get => _numberOfSendingImages;
-            private set
-            {
-                SetProperty(ref _numberOfSendingImages, value);
-                OnPropertyChanged(nameof(SendingAnyImages));
-            }
+            get => _trackerConnectionStatus;
+            private set => SetProperty(ref _trackerConnectionStatus, value);
         }
 
         private void StartApp()
         {
             _client.StartListening();
+
+            _localAddressUpdater.Start();
+            _keepAliveTimer.Start();
         }
 
         private void ShutdownApp()
@@ -449,7 +453,7 @@ namespace UdpNatPunchClient
             switch (type)
             {
                 case NetworkMessageType.KeepAlive:
-                    Debug.WriteLine($"KeepAliveMessage from peer{source.EndPoint}");
+                    Debug.WriteLine($"KeepAliveMessage from peer {source.EndPoint}");
                     break;
 
                 case NetworkMessageType.IntroducePeerToPeer:
@@ -558,36 +562,20 @@ namespace UdpNatPunchClient
                     }
                     break;
 
-                case NetworkMessageType.ImageMessage:
+                case NetworkMessageType.ImageIntroduceMessage:
                     if (author == null)
                     {
                         return;
                     }
 
-                    var imageMessageFromPeer = JsonConvert.DeserializeObject<ImageMessageToPeer>(json);
-                    if (imageMessageFromPeer == null)
+                    var imageIntroduceMessage = JsonConvert.DeserializeObject<ImageIntroduceMessage>(json);
+                    if (imageIntroduceMessage == null)
                     {
                         return;
                     }
 
-                    var incomingPicture = await ImageItem.SaveByteArrayAsImage(imageMessageFromPeer.PictureBytes,
-                        imageMessageFromPeer.PictureExtension,
-                        Constants.ImageMessageThumbnailSize.Item1,
-                        Constants.ImageMessageThumbnailSize.Item2);
-
-                    if (incomingPicture == null)
-                    {
-                        return;
-                    }
-
-                    var isLoaded = await incomingPicture.TryLoadImage();
-                    if (!isLoaded)
-                    {
-                        return;
-                    }
-
-                    var receivedImageMessage = author.AddIncomingMessage(imageMessageFromPeer, incomingPicture);
-                    if (receivedImageMessage == null)
+                    var receivedImageIntroduceMessage = author.AddIncomingMessage(imageIntroduceMessage);
+                    if (receivedImageIntroduceMessage == null)
                     {
                         return;
                     }
@@ -595,21 +583,53 @@ namespace UdpNatPunchClient
                     if (SelectedPeer == author)
                     {
                         author.DismissNewMessagesSignal();
-                        author.SendReadNotification(receivedImageMessage);
+                        author.SendReadNotification(receivedImageIntroduceMessage);
                     }
                     else
                     {
-                        author.SendReceiptNotification(receivedImageMessage);
+                        author.SendReceiptNotification(receivedImageIntroduceMessage);
 
                         if (WindowState == WindowState.Minimized ||
                             TabIndex != _chatTabIndex)
                         {
-                            Notify("New picture!",
+                            Notify($"Receiving picture from user {author.Nickname}",
                                 $"Incoming picture from {author.Nickname} ({author.ID})",
                                 1500,
                                 System.Windows.Forms.ToolTipIcon.Info);
                         }
                     }
+                    break;
+
+                case NetworkMessageType.UpdateImageMessage:
+                    if (author == null)
+                    {
+                        return;
+                    }
+
+                    var updateImageMessage = JsonConvert.DeserializeObject<UpdateImageMessage>(json);
+                    if (updateImageMessage == null)
+                    {
+                        return;
+                    }
+
+                    await author.SetUpdatedImageInMessage(updateImageMessage.MessageID,
+                        updateImageMessage.PictureBytes,
+                        updateImageMessage.PictureExtension);
+                    break;
+
+                case NetworkMessageType.ImageSendingFailed:
+                    if (author == null)
+                    {
+                        return;
+                    }
+
+                    var imageSendingFailedMessage = JsonConvert.DeserializeObject<ImageSendingFailedMessage>(json);
+                    if (imageSendingFailedMessage == null)
+                    {
+                        return;
+                    }
+
+                    author.SetImageMessageAsFailed(imageSendingFailedMessage.MessageID);
                     break;
 
                 case NetworkMessageType.MessageReceiptNotification:
@@ -656,11 +676,14 @@ namespace UdpNatPunchClient
         private void OnTrackerConnected(object? sender, EventArgs e)
         {
             IsConnectedToTracker = true;
-            _tracker?.SendIntroductionMessage(ID, Nickname);
             OnPropertyChanged(nameof(TrackerAddress));
 
-            if (WindowState != WindowState.Minimized &&
-                TabIndex == _profileTabIndex &&
+            _tracker?.SendIntroductionMessage(ID, Nickname);
+
+            ExpectedTracker = _client.ExpectedTracker;
+            TrackerConnectionStatus = TrackerConnectionStatusType.Connected;
+
+            if (WindowState == WindowState.Minimized &&
                 _tracker != null)
             {
                 Notify($"Tracker {_tracker.EndPoint} has connected",
@@ -668,14 +691,26 @@ namespace UdpNatPunchClient
                     1500,
                     System.Windows.Forms.ToolTipIcon.Info);
             }
+
+            var resetTimer = new DispatcherTimer(DispatcherPriority.Background, Application.Current.Dispatcher);
+            resetTimer.Interval = new TimeSpan(0, 0, 5);
+            resetTimer.Tick += (s, e) =>
+            {
+                resetTimer.Stop();
+                TrackerConnectionStatus = TrackerConnectionStatusType.None;
+            };
+            resetTimer.Start();
         }
 
-        private void OnTrackerRemoved(object? sender, EventArgs e)
+        private void OnTrackerRemoved(object? sender, TrackerDisconnectedEventArgs e)
         {
+            ExpectedTracker = e.TrackerEndPoint;
+            TrackerConnectionStatus = TrackerConnectionStatusType.DisconnectFromTracker;
+
             var oldTrackerAddress = _tracker?.EndPoint;
             if (oldTrackerAddress == null)
             {
-                oldTrackerAddress = _noMessagePlaceholder;
+                oldTrackerAddress = _noTrackerAddressPlaceholder;
             }
 
             if (_tracker == SelectedPeer)
@@ -690,11 +725,10 @@ namespace UdpNatPunchClient
 
             OnPropertyChanged(nameof(TrackerAddress));
 
-            if (WindowState != WindowState.Minimized &&
-                TabIndex == _profileTabIndex)
+            if (WindowState == WindowState.Minimized)
             {
                 Notify($"Tracker {oldTrackerAddress} is disconnected",
-                    $"Tracker {oldTrackerAddress} said bye-bye! 😳",
+                    $"Tracker {oldTrackerAddress} said bye-bye!",
                     1500,
                     System.Windows.Forms.ToolTipIcon.Info);
             }
@@ -756,10 +790,10 @@ namespace UdpNatPunchClient
 
                     _tracker?.PrintInfo($"Unrecognized command: '{commandErrorMessage.WrongCommand} {commandErrorMessage.Argument}'");
 
-                    if (WindowState != WindowState.Minimized &&
-                        TabIndex == _chatTabIndex)
+                    if (WindowState == WindowState.Minimized ||
+                        TabIndex != _chatTabIndex)
                     {
-                        Notify("Message from tracker",
+                        Notify("Error message from tracker",
                             $"Incoming message from tracker {_tracker?.EndPoint}",
                             1500,
                             System.Windows.Forms.ToolTipIcon.Info);
@@ -802,8 +836,8 @@ namespace UdpNatPunchClient
 
                     _tracker?.PrintInfo(string.Format("User not found, unknown ID or nickname: {0}", userNotFoundErrorMessage.UserInfo));
 
-                    if (WindowState != WindowState.Minimized &&
-                        TabIndex == _chatTabIndex)
+                    if (WindowState == WindowState.Minimized ||
+                        TabIndex != _chatTabIndex)
                     {
                         Notify("Response message from tracker",
                             $"Incoming message from tracker {_tracker?.EndPoint}",
@@ -821,8 +855,8 @@ namespace UdpNatPunchClient
 
                     _tracker?.PrintInfo(string.Format("Pong!\nPing: {0} ms", pingResponseMessage.Ping));
 
-                    if (WindowState != WindowState.Minimized &&
-                        TabIndex == _chatTabIndex)
+                    if (WindowState == WindowState.Minimized ||
+                        TabIndex != _chatTabIndex)
                     {
                         Notify("Response message from tracker",
                             $"Incoming message from tracker {_tracker?.EndPoint}",
@@ -842,8 +876,8 @@ namespace UdpNatPunchClient
                     var formattedTime = converter.ConvertTime(timeResponseMessage.Time);
                     _tracker?.PrintInfo(string.Format("Tracker's time: {0}", formattedTime));
 
-                    if (WindowState != WindowState.Minimized &&
-                        TabIndex == _chatTabIndex)
+                    if (WindowState == WindowState.Minimized ||
+                        TabIndex != _chatTabIndex)
                     {
                         Notify("Response message from tracker",
                             $"Incoming message from tracker {_tracker?.EndPoint}",
@@ -873,8 +907,8 @@ namespace UdpNatPunchClient
                         SendMessage();
                     }
 
-                    if (WindowState != WindowState.Minimized &&
-                        TabIndex == _chatTabIndex)
+                    if (WindowState == WindowState.Minimized ||
+                        TabIndex != _chatTabIndex)
                     {
                         Notify("Response message from tracker",
                             $"Incoming message from tracker {_tracker?.EndPoint}",
@@ -885,10 +919,16 @@ namespace UdpNatPunchClient
             }
         }
 
+        private void OnTrackerConnectionAttemptFailed(object? sender, EventArgs e)
+        {
+            ExpectedTracker = _client.ExpectedTracker;
+            TrackerConnectionStatus = TrackerConnectionStatusType.FailedToConnect;
+        }
+
         private void ConnectToTracker()
         {
             var inputBox = new InputBoxUtils();
-            if (inputBox.AskServerAddressAndPort(out IPEndPoint? address) &&
+            if (inputBox.AskServerAddressAndPort(IPAddress.Parse(_defaultTrackerIPAddress), _defaultTrackerPort, out IPEndPoint? address) &&
                 address != null)
             {
                 if (_client.IsConnectedToTracker(address))
@@ -902,6 +942,9 @@ namespace UdpNatPunchClient
                 else
                 {
                     _client.ConnectToTracker(address);
+
+                    TrackerConnectionStatus = TrackerConnectionStatusType.TryingToConnect;
+                    ExpectedTracker = _client.ExpectedTracker;
                 }
             }
             else
@@ -972,6 +1015,7 @@ namespace UdpNatPunchClient
             foreach (var imagePath in args.FilesPath)
             {
                 var imageExtension = Path.GetExtension(imagePath);
+
                 if (Constants.AllowedImageExtensions.Contains(imageExtension) &&
                     TryGetFileSize(imagePath, out var size))
                 {
@@ -1007,29 +1051,33 @@ namespace UdpNatPunchClient
         {
             if (SelectedPeer is UserModel user)
             {
-                NumberOfSendingImages += 1;
+                var message = user.SendImageIntroductionMessage();
 
                 var image = new ImageItem(path,
                     Constants.ImageMessageThumbnailSize.Item1,
                     Constants.ImageMessageThumbnailSize.Item2);
 
-                var result = await image.TryLoadImage() &&
-                    await user.TrySendImageMessage(ID, image);
+                var isImageLoaded = await image.TryLoadImage();
+                var bytes = await image.GetPictureBytes();
 
-                if (!result)
+                if (isImageLoaded &&
+                    bytes != null)
                 {
-                    MessageBox.Show($"Can't send picture {Path.GetFileName(path)}",
-                        "Picture sending error",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Error);
-                }
+                    message.UpdateImage(image);
 
-                NumberOfSendingImages -= 1;
+                    user.SendUpdatedImageMessage(message.MessageID, bytes, image.FileExtension);
+                }
+                else
+                {
+                    message.SetAsFailed();
+
+                    user.SendMessageAboutFailedImageSending(message.MessageID);
+                }
             }
             else
             if (SelectedPeer is TrackerModel tracker)
             {
-                tracker.PrintInfo("You can't send image to the tracker.");
+                tracker.PrintInfo("You can't send images to the tracker.");
             }
         }
 
@@ -1037,7 +1085,7 @@ namespace UdpNatPunchClient
         {
             if (SelectedPeer is UserModel user)
             {
-                user.SendTextMessage(new MessageModel(ID, CurrentMessage));
+                user.SendTextMessage(new MessageModel(CurrentMessage));
             }
             else
             if (SelectedPeer is TrackerModel tracker)

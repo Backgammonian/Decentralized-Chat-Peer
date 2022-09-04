@@ -117,16 +117,19 @@ namespace UdpNatPunchClient.Models
 
         public async Task<byte[]?> GetPictureBytes()
         {
-            if (PictureUri == null)
+            if (IsLoaded &&
+                PictureUri != null)
             {
-                return null;
+                try
+                {
+                    return await File.ReadAllBytesAsync(PictureUri.OriginalString);
+                }
+                catch (Exception)
+                {
+                    return null;
+                }
             }
-
-            try
-            {
-                return await File.ReadAllBytesAsync(PictureUri.OriginalString);
-            }
-            catch (Exception)
+            else
             {
                 return null;
             }

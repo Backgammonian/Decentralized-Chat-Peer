@@ -5,13 +5,13 @@ namespace UdpNatPunchClient.Models
     public class MessageModel : BaseMessageModel
     {
         //outgoing
-        public MessageModel(string authorID, string content) : base(authorID)
+        public MessageModel(string content) : base()
         {
             Content = content;
         }
 
         //incoming
-        public MessageModel(TextMessageToPeer messageFromOutside) : base(messageFromOutside.AuthorID, messageFromOutside.MessageID)
+        public MessageModel(TextMessageToPeer messageFromOutside) : base(messageFromOutside.MessageID)
         {
             Content = messageFromOutside.Content;
         }

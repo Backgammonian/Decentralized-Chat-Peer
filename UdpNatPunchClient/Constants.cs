@@ -12,7 +12,7 @@ namespace UdpNatPunchClient
         public static long MaxProfilePictureSize { get; } = 5242880; //5 MB
         public static long MaxPictureSize { get; } = 20971520; //20 MB
         public static (int, int) ProfilePictureThumbnailSize { get; } = (200, 200);
-        public static (int, int) ImageMessageThumbnailSize { get; } = (300, 300);
+        public static (int, int) ImageMessageThumbnailSize { get; } = (250, 250);
         
     }
 }

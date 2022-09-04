@@ -8,19 +8,17 @@ namespace UdpNatPunchClient.Models
     {
         protected DeliveryState _deliveryState;
 
-        public BaseMessageModel(string authorID)
+        public BaseMessageModel()
         {
             MessageID = RandomGenerator.GetRandomString(20);
-            AuthorID = authorID;
             Time = DateTime.Now;
             Direction = MessageDirection.Outgoing;
             DeliveryState = DeliveryState.NotDelivered;
         }
 
-        public BaseMessageModel(string authorID, string messageID)
+        public BaseMessageModel(string messageID)
         {
             MessageID = messageID;
-            AuthorID = authorID;
             Time = DateTime.Now;
             Direction = MessageDirection.Incoming;
             DeliveryState = DeliveryState.NotDelivered;
@@ -29,14 +27,12 @@ namespace UdpNatPunchClient.Models
         public BaseMessageModel(MessageDirection direction)
         {
             MessageID = RandomGenerator.GetRandomString(20);
-            AuthorID = RandomGenerator.GetRandomString(40); //really not important in this case
             Time = DateTime.Now;
             Direction = direction;
             DeliveryState = DeliveryState.NotDelivered;
         }
 
         public string MessageID { get; }
-        public string AuthorID { get; }
         public DateTime Time { get; }
         public MessageDirection Direction { get; }
 
