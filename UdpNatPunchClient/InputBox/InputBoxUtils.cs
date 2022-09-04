@@ -26,18 +26,19 @@ namespace InputBox
             return false;
         }
 
-        public bool AskServerAddressAndPort(out IPEndPoint? serverAddress)
+        public bool AskServerAddressAndPort(IPAddress defaultAddress, int defaultPort, out IPEndPoint? serverAddress)
         {
             var inputBox = new InputBoxWindow(
                 "Connection to Tracker",
-                "Enter IPv4 address of Tracker (example: 10.0.0.8).\nAlso you can specify port (example: 10.0.0.8:55000)");
+                $"Enter IPv4 address of Tracker (example: {defaultAddress}).\nAlso you can specify port (example: {defaultAddress}:{defaultPort})",
+                $"{defaultAddress}:{defaultPort}");
 
             if (inputBox.ShowDialog() == true)
             {
                 if (IPAddress.TryParse(inputBox.Answer, out IPAddress? address) &&
                     address != null)
                 {
-                    serverAddress = new IPEndPoint(address, 55000);
+                    serverAddress = new IPEndPoint(address, defaultPort);
 
                     return true;
                 }
@@ -53,25 +54,6 @@ namespace InputBox
             }
 
             serverAddress = null;
-
-            return false;
-        }
-
-        public bool AskIDOfDesiredUser(out string id)
-        {
-            var inputBox = new InputBoxWindow(
-                "Bootstrap to User",
-                "Enter ID of desired user");
-
-            if (inputBox.ShowDialog() == true &&
-                inputBox.Answer.IsNotEmpty())
-            {
-                id = inputBox.Answer;
-
-                return true;
-            }
-
-            id = string.Empty;
 
             return false;
         }

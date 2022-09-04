@@ -1,4 +1,7 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
+using System.Linq;
+using System.Diagnostics;
 using Networking;
 using Networking.Messages;
 
@@ -34,13 +37,13 @@ namespace UdpNatPunchClient.Models
             Nickname = newNickname;
         }
 
-        public async Task<bool> TrySetUpdatedPicture(byte[]? pictureByteArray, string pictureExtension)
+        public async Task TrySetUpdatedPicture(byte[]? pictureByteArray, string pictureExtension)
         {
             if (pictureByteArray == null ||
                 pictureByteArray.Length == 0 ||
                 pictureExtension.Length == 0)
             {
-                return false;
+                return;
             }
 
             var newPicture = await ImageItem.SaveByteArrayAsImage(pictureByteArray,
@@ -52,11 +55,7 @@ namespace UdpNatPunchClient.Models
                 await newPicture.TryLoadImage())
             {
                 Picture = newPicture;
-
-                return true;
             }
-
-            return false;
         }
 
         public void SendUpdatedPersonalInfo(string updatedNickname)
@@ -71,38 +70,98 @@ namespace UdpNatPunchClient.Models
             Send(updateMessage, 1);
         }
 
-        public async Task<bool> TrySendImageMessage(string authorID, ImageItem image)
+        public ImageMessageModel SendImageIntroductionMessage()
         {
-            var bytes = await image.GetPictureBytes();
-            if (bytes == null)
-            {
-                return false;
-            }
-
-            var message = new ImageMessageModel(authorID, image);
+            var message = new ImageMessageModel();
             _undeliveredMessages.Add(message);
             _unreadMessages.Add(message);
             Messages.Add(message);
 
-            var messageToPeer = new ImageMessageToPeer(message.AuthorID,
-                message.MessageID,
-                bytes,
-                message.Image.FileExtension);
-
+            var messageToPeer = new ImageIntroduceMessage(message.MessageID);
             Send(messageToPeer, 1);
 
-            return true;
+            return message;
         }
 
-        public ImageMessageModel? AddIncomingMessage(ImageMessageToPeer imageMessageFromPeer, ImageItem image)
+        public void SendUpdatedImageMessage(string messageID, byte[] pictureBytes, string pictureExtension)
         {
-            var message = new ImageMessageModel(imageMessageFromPeer, image);
+            var messageToPeer = new UpdateImageMessage(messageID, pictureBytes, pictureExtension);
+            Send(messageToPeer, 1);
+        }
+
+        public ImageMessageModel? AddIncomingMessage(ImageIntroduceMessage imageMessageFromPeer)
+        {
+            var message = new ImageMessageModel(imageMessageFromPeer);
             Messages.Add(message);
             _incomingMessages.Add(message);
 
             HasNewMessages = true;
 
             return message;
+        }
+
+        public async Task SetUpdatedImageInMessage(string messageID, byte[] pictureBytes, string pictureExtension)
+        {
+            if (pictureBytes == null ||
+                pictureBytes.Length == 0 ||
+                pictureExtension.Length == 0)
+            {
+                return;
+            }
+
+            try
+            {
+                var message = Messages.First(message => message.MessageID == messageID) as ImageMessageModel;
+                if (message == null)
+                {
+                    Debug.WriteLine($"(SetUpdatedImageInMessage) Can't find message with ID {messageID}");
+
+                    return;
+                }
+
+                var newMessagePicture = await ImageItem.SaveByteArrayAsImage(pictureBytes,
+                    pictureExtension,
+                    Constants.ImageMessageThumbnailSize.Item1,
+                    Constants.ImageMessageThumbnailSize.Item2);
+
+                if (newMessagePicture != null &&
+                    await newMessagePicture.TryLoadImage())
+                {
+                    message.UpdateImage(newMessagePicture);
+                }
+                else
+                {
+                    message.SetAsFailed();
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"(SetUpdatedImageInMessage) Can't find message with ID {messageID}: {ex}");
+            }
+        }
+
+        public void SendMessageAboutFailedImageSending(string messageID)
+        {
+            var errorMessage = new ImageSendingFailedMessage(messageID);
+            Send(errorMessage);
+        }
+
+        public void SetImageMessageAsFailed(string messageID)
+        {
+            try
+            {
+                var message = Messages.First(message => message.MessageID == messageID) as ImageMessageModel;
+                if (message == null)
+                {
+                    return;
+                }
+
+                message.SetAsFailed();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex);
+            }
         }
     }
 }

@@ -13,11 +13,14 @@
     <converters:AddressConverter x:Key="AddressConverter"/>
     <converters:ProfilePictureLoadingStatusConverter x:Key="ProfilePictureLoadingStatusConverter"/>
     <converters:NicknameUpdateStateConverter x:Key="NicknameUpdateStateConverter"/>
+    <converters:TrackerConnectionStatusConverter x:Key="TrackerConnectionStatusConverter"/>
+    <converters:ImageMessageStateConverter x:Key="ImageMessageStateConverter"/>
 
     <Style TargetType="TextBlock" x:Key="BaseTextBlock">
         <Setter Property="FontSize" Value="14"/>
         <Setter Property="Margin" Value="2"/>
         <Setter Property="TextWrapping" Value="Wrap"/>
+        <Setter Property="TextAlignment" Value="Left"/>
     </Style>
 
     <Style TargetType="TextBlock" x:Key="TitleTextBlock" BasedOn="{StaticResource BaseTextBlock}">

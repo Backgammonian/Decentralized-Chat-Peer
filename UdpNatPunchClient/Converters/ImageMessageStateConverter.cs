@@ -1,26 +1,22 @@
 ﻿using System;
 using System.Globalization;
 using System.Windows.Data;
-using System.Windows.Media;
 using UdpNatPunchClient.Models;
 
 namespace Converters
 {
-    public class MessageDirectionColorConverter : IValueConverter
+    public class ImageMessageStateConverter : IValueConverter
     {
-        private static readonly SolidColorBrush _incomingMessageColor = new SolidColorBrush(Colors.LightGray);
-        private static readonly SolidColorBrush _outcomingMessageColor = new SolidColorBrush(Colors.LightBlue);
-
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             switch ((MessageDirection)value)
             {
                 default:
                 case MessageDirection.Incoming:
-                    return _incomingMessageColor;
+                    return "Receiving image...";
 
                 case MessageDirection.Outgoing:
-                    return _outcomingMessageColor;
+                    return "Sending image...";
             }
         }
 

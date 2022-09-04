@@ -63,7 +63,7 @@ namespace UdpNatPunchClient.Models
             _undeliveredMessages.Add(message);
             _unreadMessages.Add(message);
 
-            var textMessageToPeer = new TextMessageToPeer(message.MessageID, message.Content, message.AuthorID);
+            var textMessageToPeer = new TextMessageToPeer(message.MessageID, message.Content);
             Send(textMessageToPeer);
         }
 
