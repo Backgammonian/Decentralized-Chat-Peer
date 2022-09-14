@@ -9,7 +9,7 @@ using Networking.Messages;
 
 namespace UdpNatPunchClient.Models
 {
-    public class Users
+    public sealed class Users
     {
         //user's id, UserModel object
         private readonly ConcurrentDictionary<string, UserModel> _users;

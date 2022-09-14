@@ -10,7 +10,7 @@ using Networking.Messages;
 
 namespace Networking
 {
-    public class Client
+    public sealed class Client
     {
         private readonly EventBasedNetListener _listener;
         private readonly XorEncryptLayer _xor;

@@ -5,7 +5,7 @@ using MyBehaviours;
 
 namespace ImageShowcase
 {
-    public partial class ImageShowcaseWindow : Window
+    public sealed partial class ImageShowcaseWindow : Window
     {
         public ImageShowcaseWindow(ImageItem imageItem)
         {

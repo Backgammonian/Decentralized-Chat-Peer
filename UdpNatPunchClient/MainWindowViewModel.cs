@@ -26,7 +26,7 @@ using UdpNatPunchClient.Models;
 
 namespace UdpNatPunchClient
 {
-    public partial class MainWindowViewModel : ObservableObject
+    public sealed partial class MainWindowViewModel : ObservableObject
     {
         private const string _userMessagePlaceholder = "Write a message to user...";
         private const string _trackerMessagePlaceholder = "Write a message to tracker...";

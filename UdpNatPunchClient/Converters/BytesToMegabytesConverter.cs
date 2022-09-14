@@ -4,7 +4,7 @@ using System.Windows.Data;
 
 namespace Converters
 {
-    public class BytesToMegabytesConverter : IValueConverter
+    public sealed class BytesToMegabytesConverter : IValueConverter
     {
         private readonly string[] _sizeSuffixes = { "bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB" };
 

@@ -3,7 +3,7 @@ using System.Security.Cryptography;
 
 namespace Networking.Utils
 {
-    public class RandomGenerator : IDisposable
+    public sealed class RandomGenerator : IDisposable
     {
         private readonly static Random _random = new Random();
         private readonly RNGCryptoServiceProvider _csp;

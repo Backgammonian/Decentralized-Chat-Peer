@@ -8,7 +8,7 @@ using Application = System.Windows.Application;
 
 namespace SystemTrayApp.WPF
 {
-    public class NotifyIconWrapper : FrameworkElement, IDisposable
+    public sealed class NotifyIconWrapper : FrameworkElement, IDisposable
     {
         public static readonly DependencyProperty TextProperty =
             DependencyProperty.Register("Text", typeof(string), typeof(NotifyIconWrapper),

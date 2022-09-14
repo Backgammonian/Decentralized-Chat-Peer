@@ -3,7 +3,7 @@ using System.Net;
 
 namespace Networking
 {
-    public class TrackerDisconnectedEventArgs : EventArgs
+    public sealed class TrackerDisconnectedEventArgs : EventArgs
     {
         public TrackerDisconnectedEventArgs(IPEndPoint? endPoint)
         {

@@ -2,7 +2,7 @@
 
 namespace InputBox
 {
-    public class InputBoxUtils
+    public sealed class InputBoxUtils
     {
         public bool AskServerAddress(out IPAddress? address)
         {

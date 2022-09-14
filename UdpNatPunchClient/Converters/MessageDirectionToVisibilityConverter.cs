@@ -6,7 +6,7 @@ using UdpNatPunchClient.Models;
 
 namespace Converters
 {
-    public class MessageDirectionToVisibilityConverter : IValueConverter
+    public sealed class MessageDirectionToVisibilityConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {

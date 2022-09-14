@@ -1,6 +1,6 @@
 ﻿namespace Networking.Messages
 {
-    public class MessageReadNotification : BaseMessage
+    public sealed class MessageReadNotification : BaseMessage
     {
         public MessageReadNotification(string messageID)
         {

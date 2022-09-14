@@ -6,7 +6,7 @@ using UdpNatPunchClient.Models;
 
 namespace Converters
 {
-    public class TrackerConnectionStatusConverter : IMultiValueConverter
+    public sealed class TrackerConnectionStatusConverter : IMultiValueConverter
     {
         public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
         {

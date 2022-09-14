@@ -5,7 +5,7 @@ using System.Net;
 
 namespace Converters
 {
-    public class AddressConverter : IValueConverter
+    public sealed class AddressConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {

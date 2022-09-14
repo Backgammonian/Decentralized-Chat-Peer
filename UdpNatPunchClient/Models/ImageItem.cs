@@ -9,7 +9,7 @@ using Extensions;
 
 namespace UdpNatPunchClient.Models
 {
-    public class ImageItem : ObservableObject
+    public sealed class ImageItem : ObservableObject
     {
         private const string _imagesFolderName = "LocalImages";
         private const int _defaultPreviewPictureWidth = 100;

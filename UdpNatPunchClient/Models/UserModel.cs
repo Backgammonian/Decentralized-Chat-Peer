@@ -7,7 +7,7 @@ using Networking.Messages;
 
 namespace UdpNatPunchClient.Models
 {
-    public class UserModel : PeerModel
+    public sealed class UserModel : PeerModel
     {
         private string _nickname = "Default nickname";
         private ImageItem? _picture;
