@@ -1,6 +1,6 @@
 ﻿namespace Networking.Messages
 {
-    public class UserInfoFromTracker
+    public sealed class UserInfoFromTracker
     {
         public UserInfoFromTracker(string nickname, string id)
         {
@@ -12,7 +12,7 @@
         public string ID { get; set; }
     }
 
-    public class ListOfUsersWithDesiredNicknameMessage : BaseMessage
+    public sealed class ListOfUsersWithDesiredNicknameMessage : BaseMessage
     {
         public ListOfUsersWithDesiredNicknameMessage(UserInfoFromTracker[] users)
         {

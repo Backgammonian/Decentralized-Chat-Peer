@@ -5,7 +5,7 @@ using UdpNatPunchClient.Models;
 
 namespace Converters
 {
-    public class ImageMessageStateConverter : IValueConverter
+    public sealed class ImageMessageStateConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {

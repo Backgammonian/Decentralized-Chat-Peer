@@ -2,7 +2,7 @@
 
 namespace Extensions
 {
-    public class Frame
+    public sealed class Frame
     {
         public Frame(Bitmap image, int duration)
         {

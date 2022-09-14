@@ -5,7 +5,7 @@ using UdpNatPunchClient.Models;
 
 namespace Converters
 {
-    public class ProfilePictureLoadingStatusConverter : IValueConverter
+    public sealed class ProfilePictureLoadingStatusConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {

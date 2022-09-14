@@ -2,7 +2,7 @@
 
 namespace Networking
 {
-    public class EncryptedPeerEventArgs : EventArgs
+    public sealed class EncryptedPeerEventArgs : EventArgs
     {
         public EncryptedPeerEventArgs(EncryptedPeer peer)
         {

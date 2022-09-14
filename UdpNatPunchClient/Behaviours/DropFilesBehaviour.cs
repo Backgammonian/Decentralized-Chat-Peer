@@ -5,7 +5,7 @@ namespace DropFiles
 {
     //source: https://stackoverflow.com/questions/5916154/how-to-handle-drag-drop-without-violating-mvvm-principals
 
-    public class DropFilesBehavior
+    public sealed class DropFilesBehavior
     {
         public static readonly DependencyProperty FilesDropCommandProperty =
             DependencyProperty.RegisterAttached("FilesDropCommand", typeof(ICommand), typeof(DropFilesBehavior), new FrameworkPropertyMetadata(new PropertyChangedCallback(OnPropChanged)));

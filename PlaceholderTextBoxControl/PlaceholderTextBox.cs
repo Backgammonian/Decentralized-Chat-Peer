@@ -3,7 +3,7 @@ using System.Windows.Controls;
 
 namespace PlaceholderTextBoxControl
 {
-    public class PlaceholderTextBox : TextBox
+    public sealed class PlaceholderTextBox : TextBox
     {
         public string Placeholder
         {

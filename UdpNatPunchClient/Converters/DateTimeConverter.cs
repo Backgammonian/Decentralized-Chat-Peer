@@ -4,7 +4,7 @@ using System.Windows.Data;
 
 namespace Converters
 {
-    public class DateTimeConverter : IValueConverter
+    public sealed class DateTimeConverter : IValueConverter
     {
         private readonly string[] _monthAbbreviations = new string[] { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
 

@@ -5,7 +5,7 @@ using UdpNatPunchClient.Models;
 
 namespace Converters
 {
-    public class DeliveryStateConverter : IValueConverter
+    public sealed class DeliveryStateConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {

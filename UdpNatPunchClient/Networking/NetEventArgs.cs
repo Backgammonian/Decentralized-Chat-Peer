@@ -3,7 +3,7 @@ using Networking.Messages;
 
 namespace Networking
 {
-    public class NetEventArgs : EventArgs
+    public sealed class NetEventArgs : EventArgs
     {
         public NetEventArgs(EncryptedPeer encryptedPeer, NetworkMessageType type, string json)
         {

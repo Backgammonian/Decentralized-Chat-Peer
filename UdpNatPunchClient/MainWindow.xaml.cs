@@ -5,7 +5,7 @@ using UdpNatPunchClient.Models;
 
 namespace UdpNatPunchClient
 {
-    public partial class MainWindow : Window
+    public sealed partial class MainWindow : Window
     {
         public MainWindow()
         {

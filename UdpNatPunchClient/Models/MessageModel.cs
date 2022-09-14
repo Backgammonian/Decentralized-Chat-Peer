@@ -2,7 +2,7 @@
 
 namespace UdpNatPunchClient.Models
 {
-    public class MessageModel : BaseMessageModel
+    public sealed class MessageModel : BaseMessageModel
     {
         //outgoing
         public MessageModel(string content) : base()

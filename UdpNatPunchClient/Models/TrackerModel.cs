@@ -7,7 +7,7 @@ using Networking.Messages;
 
 namespace UdpNatPunchClient.Models
 {
-    public class TrackerModel : PeerModel
+    public sealed class TrackerModel : PeerModel
     {
         //commandID, messageID
         private readonly Dictionary<string, string> _commandsAndMessagesAccordance;

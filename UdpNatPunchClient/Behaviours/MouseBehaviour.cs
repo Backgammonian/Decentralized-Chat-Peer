@@ -3,7 +3,7 @@ using System.Windows.Input;
 
 namespace Lovatts.MouseBehaviours
 {
-    public class MouseBehaviour
+    public sealed class MouseBehaviour
     {
         #region MouseUp
 

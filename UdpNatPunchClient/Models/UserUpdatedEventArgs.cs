@@ -2,7 +2,7 @@
 
 namespace UdpNatPunchClient.Models
 {
-    public class UserUpdatedEventArgs : EventArgs
+    public sealed class UserUpdatedEventArgs : EventArgs
     {
         public UserUpdatedEventArgs(UserModel user)
         {

@@ -3,7 +3,7 @@ using Networking.Messages;
 
 namespace UdpNatPunchClient.Models
 {
-    public class ImageMessageModel : BaseMessageModel
+    public sealed class ImageMessageModel : BaseMessageModel
     {
         private ImageItem? _image;
         private bool _isImageLoaded;

@@ -1,6 +1,6 @@
 ﻿namespace Networking.Messages
 {
-    public class KeepAliveMessage : BaseMessage
+    public sealed class KeepAliveMessage : BaseMessage
     {
         public KeepAliveMessage()
         {

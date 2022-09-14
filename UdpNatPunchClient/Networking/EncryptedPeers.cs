@@ -7,7 +7,7 @@ using System.Net;
 
 namespace Networking
 {
-    public class EncryptedPeers : IEnumerable<EncryptedPeer>
+    public sealed class EncryptedPeers : IEnumerable<EncryptedPeer>
     {
         private readonly ConcurrentDictionary<int, EncryptedPeer> _encryptedPeers;
 

@@ -6,7 +6,7 @@ using UdpNatPunchClient.Models;
 
 namespace Converters
 {
-    public class MessageDirectionColorConverter : IValueConverter
+    public sealed class MessageDirectionColorConverter : IValueConverter
     {
         private static readonly SolidColorBrush _incomingMessageColor = new SolidColorBrush(Colors.LightGray);
         private static readonly SolidColorBrush _outcomingMessageColor = new SolidColorBrush(Colors.LightBlue);

@@ -3,7 +3,7 @@ using System.Windows;
 
 namespace InputBox
 {
-    public partial class InputBoxWindow : Window
+    public sealed partial class InputBoxWindow : Window
     {
         public InputBoxWindow(string title, string question, string defaultAnswer = "")
         {

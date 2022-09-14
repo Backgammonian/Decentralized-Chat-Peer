@@ -11,7 +11,7 @@ using Networking.Messages;
 
 namespace Networking
 {
-    public class EncryptedPeer : ObservableObject
+    public sealed class EncryptedPeer : ObservableObject
     {
         private readonly NetPeer _peer;
         private readonly CryptographyModule _cryptography;

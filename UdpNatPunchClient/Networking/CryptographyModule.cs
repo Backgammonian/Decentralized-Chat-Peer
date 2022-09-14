@@ -5,7 +5,7 @@ using Microsoft.Toolkit.Mvvm.ComponentModel;
 
 namespace Networking
 {
-    public class CryptographyModule : ObservableObject
+    public sealed class CryptographyModule : ObservableObject
     {
         private readonly ECDiffieHellmanCng _ecdh;
         private readonly CngKey _signature;
