@@ -37,7 +37,6 @@ namespace Networking
             Tracker = null;
         }
 
-        public delegate Task AsyncEventHandler<TEventArgs>(object? sender, TEventArgs e);
         public event AsyncEventHandler<NetEventArgs>? MessageFromPeerReceived;
         public event EventHandler<EncryptedPeerEventArgs>? PeerAdded;
         public event EventHandler<EncryptedPeerEventArgs>? PeerConnected;
@@ -139,7 +138,7 @@ namespace Networking
             ExpectedTracker = trackerAddress;
             _client.Connect(ExpectedTracker, "ToChatTracker");
 
-            Debug.WriteLine("Expecting tracker: {0}", ExpectedTracker);
+            Debug.WriteLine($"Expecting tracker: {ExpectedTracker}");
         }
 
         public void StartListening()
@@ -173,7 +172,7 @@ namespace Networking
                 if (Tracker != null &&
                     Tracker.Id == peer.Id)
                 {
-                    Debug.WriteLine("(Client) Tracker {0} disconnected", peer.EndPoint);
+                    Debug.WriteLine($"(Client) Tracker {peer.EndPoint} disconnected");
 
                     Tracker = null;
                     TrackerRemoved?.Invoke(this, new TrackerDisconnectedEventArgs(peer.EndPoint));
@@ -186,13 +185,13 @@ namespace Networking
                 else
                 if (_peers.Has(peer.Id))
                 {
-                    Debug.WriteLine("(Client) Peer {0} disconnected", peer.EndPoint);
+                    Debug.WriteLine($"(Client) Peer {peer.EndPoint} disconnected");
 
                     _peers.Remove(peer.Id);
                 }
                 else
                 {
-                    Debug.WriteLine("(Client) Someone ({0}) disconnected", peer.EndPoint);
+                    Debug.WriteLine($"(Client) Someone ({peer.EndPoint}) disconnected");
                 }
 
                 if (ExpectedTracker == peer.EndPoint)

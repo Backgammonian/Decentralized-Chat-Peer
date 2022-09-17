@@ -2,17 +2,19 @@
 
 namespace InputBox
 {
-    public sealed class InputBoxUtils
+    public static class InputBoxExtensions
     {
-        public bool AskServerAddress(out IPAddress? address)
+        public static bool AskServerAddress(this InputBoxWindow window, string title, string question, IPAddress defaultAddress, out IPAddress? address)
         {
-            var inputBox = new InputBoxWindow(
-                "Connection to Tracker",
-                "Enter IP address of Tracker");
+            address = null;
 
-            if (inputBox.ShowDialog() == true)
+            window.TitleText = title;
+            window.QuestionText = question;
+            window.AnswerText = defaultAddress.ToString();
+
+            if (window.ShowDialog() == true)
             {
-                if (IPAddress.TryParse(inputBox.Answer, out IPAddress? ip) &&
+                if (IPAddress.TryParse(window.AnswerText, out IPAddress? ip) &&
                     ip != null)
                 {
                     address = ip;
@@ -21,29 +23,51 @@ namespace InputBox
                 }
             }
 
-            address = null;
+            return false;
+        }
+
+        public static bool AskPort(this InputBoxWindow window, string title, string question, int defaultPort, out int port)
+        {
+            port = 0;
+
+            window.TitleText = title;
+            window.QuestionText = question;
+            window.AnswerText = defaultPort + string.Empty;
+
+            if (window.ShowDialog() == true)
+            {
+                if (int.TryParse(window.AnswerText, out int portNumber) &&
+                    portNumber > 1024 &&
+                    portNumber < 65536)
+                {
+                    port = portNumber;
+
+                    return true;
+                }
+            }
 
             return false;
         }
 
-        public bool AskServerAddressAndPort(IPAddress defaultAddress, int defaultPort, out IPEndPoint? serverAddress)
+        public static bool AskServerAddressAndPort(this InputBoxWindow window, string title, string question, IPEndPoint defaultEndPoint, out IPEndPoint? serverAddress)
         {
-            var inputBox = new InputBoxWindow(
-                "Connection to Tracker",
-                $"Enter IPv4 address of Tracker (example: {defaultAddress}).\nAlso you can specify port (example: {defaultAddress}:{defaultPort})",
-                $"{defaultAddress}:{defaultPort}");
+            serverAddress = null;
 
-            if (inputBox.ShowDialog() == true)
+            window.TitleText = title;
+            window.QuestionText = question;
+            window.AnswerText = defaultEndPoint + string.Empty;
+
+            if (window.ShowDialog() == true)
             {
-                if (IPAddress.TryParse(inputBox.Answer, out IPAddress? address) &&
+                if (IPAddress.TryParse(window.AnswerText, out IPAddress? address) &&
                     address != null)
                 {
-                    serverAddress = new IPEndPoint(address, defaultPort);
+                    serverAddress = new IPEndPoint(address, 55000);
 
                     return true;
                 }
 
-                if (IPEndPoint.TryParse(inputBox.Answer, out IPEndPoint? endPoint) &&
+                if (IPEndPoint.TryParse(window.AnswerText, out IPEndPoint? endPoint) &&
                     endPoint != null &&
                     endPoint.Port > 1024)
                 {
@@ -52,8 +76,6 @@ namespace InputBox
                     return true;
                 }
             }
-
-            serverAddress = null;
 
             return false;
         }

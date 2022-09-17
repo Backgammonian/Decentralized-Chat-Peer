@@ -43,8 +43,7 @@ namespace Converters
 
         public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
         {
-            //one-way binding only
-            throw new NotImplementedException();
+            return new object[] { Binding.DoNothing, Binding.DoNothing };
         }
     }
 }

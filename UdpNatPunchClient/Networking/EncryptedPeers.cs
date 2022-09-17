@@ -20,7 +20,8 @@ namespace Networking
         public event EventHandler<EncryptedPeerEventArgs>? PeerRemoved;
 
         public IEnumerable<EncryptedPeer> List => _encryptedPeers.Values;
-        public IEnumerable<EncryptedPeer> EstablishedList => _encryptedPeers.Values.Where(cryptoPeer => cryptoPeer.IsSecurityEnabled);
+        public IEnumerable<EncryptedPeer> EstablishedList =>
+            _encryptedPeers.Values.Where(cryptoPeer => cryptoPeer.IsSecurityEnabled);
 
         public EncryptedPeer this[int peerId]
         {

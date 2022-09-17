@@ -5,9 +5,10 @@ namespace Networking.Utils
 {
     public sealed class RandomGenerator : IDisposable
     {
-        private readonly static Random _random = new Random();
-        private readonly RNGCryptoServiceProvider _csp;
         private const string _chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+        private readonly static Random _random = new Random();
+
+        private readonly RNGCryptoServiceProvider _csp;
         private bool _isDisposed;
 
         public RandomGenerator()

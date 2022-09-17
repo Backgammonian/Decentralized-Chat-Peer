@@ -9,9 +9,7 @@ namespace Converters
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            var status = (ProfilePictureLoadingStatusType)value;
-
-            switch (status)
+            switch ((ProfilePictureLoadingStatusType)value)
             {
                 default:
                 case ProfilePictureLoadingStatusType.None:

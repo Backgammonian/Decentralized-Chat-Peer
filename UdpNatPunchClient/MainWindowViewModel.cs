@@ -22,6 +22,7 @@ using InputBox;
 using ImageShowcase;
 using DropFiles;
 using Helpers;
+using Extensions;
 using UdpNatPunchClient.Models;
 
 namespace UdpNatPunchClient
@@ -35,7 +36,7 @@ namespace UdpNatPunchClient
         private const string _title = "Chat Client";
         private const int _profileTabIndex = 0;
         private const int _chatTabIndex = 1;
-        private const string _defaultTrackerIPAddress = "192.168.0.14";
+        private static readonly IPAddress _defaultTrackerIPAddress = IPAddress.Parse("192.168.0.14");
         private const int _defaultTrackerPort = 56000;
 
         private readonly Client _client;
@@ -165,7 +166,7 @@ namespace UdpNatPunchClient
             get => _nickname;
             set
             {
-                if (StringExtensions.IsNotEmpty(value))
+                if (value.IsNotEmpty())
                 {
                     if (value.Length > Constants.MaxNicknameLength)
                     {
@@ -872,8 +873,7 @@ namespace UdpNatPunchClient
                         return;
                     }
 
-                    var converter = new Converters.DateTimeConverter();
-                    var formattedTime = converter.ConvertTime(timeResponseMessage.Time);
+                    var formattedTime = timeResponseMessage.Time.ConvertTime();
                     _tracker?.PrintInfo(string.Format("Tracker's time: {0}", formattedTime));
 
                     if (WindowState == WindowState.Minimized ||
@@ -927,8 +927,14 @@ namespace UdpNatPunchClient
 
         private void ConnectToTracker()
         {
-            var inputBox = new InputBoxUtils();
-            if (inputBox.AskServerAddressAndPort(IPAddress.Parse(_defaultTrackerIPAddress), _defaultTrackerPort, out IPEndPoint? address) &&
+            var inputBox = new InputBoxWindow();
+            var result = inputBox.AskServerAddressAndPort("Connection to Tracker",
+                $"Enter IPv4 address of Tracker (example: {_defaultTrackerIPAddress}).\n" +
+                    $"Also you can specify port (example: {_defaultTrackerIPAddress}:{_defaultTrackerPort})",
+                new IPEndPoint(_defaultTrackerIPAddress, _defaultTrackerPort),
+                out IPEndPoint? address);
+
+            if (result &&
                 address != null)
             {
                 if (_client.IsConnectedToTracker(address))

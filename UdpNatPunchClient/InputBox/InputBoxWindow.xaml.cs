@@ -5,26 +5,38 @@ namespace InputBox
 {
     public sealed partial class InputBoxWindow : Window
     {
-        public InputBoxWindow(string title, string question, string defaultAnswer = "")
+        public InputBoxWindow()
         {
             InitializeComponent();
-
-            Title = title;
-            _question.Content = question;
-            _answer.Text = defaultAnswer;
         }
 
-        public string Answer => _answer.Text;
+        public string TitleText
+        {
+            get => Title;
+            set => Title = value;
+        }
 
-        private void OkClick(object sender, RoutedEventArgs e)
+        public string QuestionText
+        {
+            get => Question.Text;
+            set => Question.Text = value;
+        }
+
+        public string AnswerText
+        {
+            get => Answer.Text;
+            set => Answer.Text = value;
+        }
+
+        private void OnOkClicked(object sender, RoutedEventArgs e)
         {
             DialogResult = true;
         }
 
         private void OnContentRendered(object sender, EventArgs e)
         {
-            _answer.SelectAll();
-            _answer.Focus();
+            Answer.SelectAll();
+            Answer.Focus();
         }
     }
 }
