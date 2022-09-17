@@ -9,17 +9,13 @@ namespace Converters
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            var recepient = value as PeerModel;
-
-            if (recepient is UserModel)
+            if (value is UserModel user)
             {
-                var user = (UserModel)recepient;
                 return $"Peer {user.ID} ({user.EndPoint})";
             }
             else
-            if (recepient is TrackerModel)
+            if (value is TrackerModel tracker)
             {
-                var tracker = (TrackerModel)recepient;
                 return $"Tracker ({tracker.EndPoint})";
             }
 

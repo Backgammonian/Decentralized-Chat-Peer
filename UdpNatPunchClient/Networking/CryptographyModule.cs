@@ -63,10 +63,10 @@ namespace Networking
 
         public bool TryCreateSignature(byte[] data, out byte[] dataSignature)
         {
+            dataSignature = Array.Empty<byte>();
+
             if (!IsEnabled)
             {
-                dataSignature = Array.Empty<byte>();
-
                 return false;
             }
 
@@ -110,11 +110,11 @@ namespace Networking
 
         public bool TryEncrypt(byte[] secretMessage, out byte[] encryptedMessage, out byte[] iv)
         {
+            iv = Array.Empty<byte>();
+            encryptedMessage = Array.Empty<byte>();
+
             if (!IsEnabled)
             {
-                iv = Array.Empty<byte>();
-                encryptedMessage = Array.Empty<byte>();
-
                 return false;
             }
 
@@ -142,10 +142,10 @@ namespace Networking
 
         public bool TryDecrypt(byte[] encryptedMessage, byte[] iv, out byte[] decryptedMessage)
         {
+            decryptedMessage = Array.Empty<byte>();
+
             if (!IsEnabled)
             {
-                decryptedMessage = Array.Empty<byte>();
-
                 return false;
             }
 
@@ -188,7 +188,7 @@ namespace Networking
             }
             catch (Exception)
             {
-                fileHash = "";
+                fileHash = string.Empty;
 
                 return false;
             }

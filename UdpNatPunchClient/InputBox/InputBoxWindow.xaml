@@ -4,23 +4,23 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="Input" 
+        Title="Input"
         WindowStartupLocation="CenterScreen"
         ContentRendered="OnContentRendered"
         SizeToContent="WidthAndHeight">
     <DockPanel
         LastChildFill="True"
         Margin="20">
-        <Label
-            x:Name="_question"
+        <TextBlock
+            x:Name="Question"
             DockPanel.Dock="Top"
-            HorizontalContentAlignment="Center" 
-            Content="Question:"/>
+            TextAlignment="Center"
+            Text="Question:"/>
         <Label
             DockPanel.Dock="Top"
             Height="20"/>
         <TextBox
-            x:Name="_answer" 
+            x:Name="Answer" 
             DockPanel.Dock="Top"
             Text="Answer"/>
         <Label
@@ -30,7 +30,7 @@
             Width="130"
             HorizontalAlignment="Right">
             <Button
-                Click="OkClick"
+                Click="OnOkClicked"
                 IsDefault="True"
                 MinWidth="60" 
                 Content="Ok"/>

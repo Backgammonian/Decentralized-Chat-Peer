@@ -9,9 +9,7 @@ namespace Converters
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            var state = (NicknameUpdateState)value;
-
-            switch (state)
+            switch ((NicknameUpdateState)value)
             {
                 default:
                 case NicknameUpdateState.None:
