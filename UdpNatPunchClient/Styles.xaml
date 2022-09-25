@@ -4,17 +4,21 @@
     xmlns:converters="clr-namespace:Converters">
 
     <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+    <converters:AddressConverter x:Key="AddressConverter"/>
+    <converters:BytesToMegabytesConverter x:Key="BytesToMegabytesConverter"/>
     <converters:DateTimeConverter x:Key="DateTimeConverter"/>
     <converters:DeliveryStateConverter x:Key="DeliveryStateConverter"/>
+    <converters:ImageMessageStateConverter x:Key="ImageMessageStateConverter"/>
     <converters:MessageDirectionAlignmentConverter x:Key="MessageDirectionAlignmentConverter"/>
     <converters:MessageDirectionColorConverter x:Key="MessageDirectionColorConverter"/>
     <converters:MessageDirectionToVisibilityConverter x:Key="MessageDirectionToVisibilityConverter"/>
-    <converters:RecepientConverter x:Key="RecepientConverter"/>
-    <converters:AddressConverter x:Key="AddressConverter"/>
-    <converters:ProfilePictureLoadingStatusConverter x:Key="ProfilePictureLoadingStatusConverter"/>
+    <converters:NetworkSpeedConverter x:Key="NetworkSpeedConverter"/>
     <converters:NicknameUpdateStateConverter x:Key="NicknameUpdateStateConverter"/>
+    <converters:ProfilePictureLoadingStatusConverter x:Key="ProfilePictureLoadingStatusConverter"/>
+    <converters:ProgressConverter x:Key="ProgressConverter"/>
+    <converters:RecepientConverter x:Key="RecepientConverter"/>
+    <converters:TimeSpanConverter x:Key="TimeSpanConverter"/>
     <converters:TrackerConnectionStatusConverter x:Key="TrackerConnectionStatusConverter"/>
-    <converters:ImageMessageStateConverter x:Key="ImageMessageStateConverter"/>
 
     <Style TargetType="TextBlock" x:Key="BaseTextBlock">
         <Setter Property="FontSize" Value="14"/>

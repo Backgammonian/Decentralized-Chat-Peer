@@ -31,7 +31,7 @@ namespace UdpNatPunchClient.Models
             DownloadFinished?.Invoke(this, e);
         }
 
-        public Download? HasDownloadWithSamePath(string downloadFilePath)
+        public Download? GetDownloadWithSamePath(string downloadFilePath)
         {
             try
             {

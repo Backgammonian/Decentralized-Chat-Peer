@@ -22,7 +22,7 @@ namespace UdpNatPunchClient.Models
         public event EventHandler<UserUpdatedEventArgs>? UserAdded;
         public event EventHandler<UserUpdatedEventArgs>? UserRemoved;
 
-        public IEnumerable<UserModel> List => _users.Values;
+        public IEnumerable<UserModel> List => _users.Values.OrderBy(user => user.ConnectionTime);
 
         public UserModel? GetUserByPeer(EncryptedPeer peer)
         {
@@ -33,15 +33,13 @@ namespace UdpNatPunchClient.Models
             catch (InvalidOperationException)
             {
                 Debug.WriteLine("(GetUserByPeer) Unknown user");
-
-                return null;
             }
             catch (Exception e)
             {
                 Debug.WriteLine(e);
-
-                return null;
             }
+
+            return null;
         }
         
         public bool Has(string id)
@@ -51,16 +49,13 @@ namespace UdpNatPunchClient.Models
 
         public async Task Add(string id, string nickname, byte[] profilePictureArray, string profilePictureExtension, EncryptedPeer peer)
         {
-            if (!Has(id))
+            var user = new UserModel(peer, id, nickname);
+
+            if (!Has(user.ID) &&
+                _users.TryAdd(user.ID, user))
             {
-                var user = new UserModel(peer, id, nickname);
-
-                if (_users.TryAdd(user.ID, user))
-                {
-                    UserAdded?.Invoke(this, new UserUpdatedEventArgs(user));
-
-                    await user.TrySetUpdatedPicture(profilePictureArray, profilePictureExtension);
-                }
+                UserAdded?.Invoke(this, new UserUpdatedEventArgs(user));
+                await user.TrySetUpdatedPicture(profilePictureArray, profilePictureExtension);
             }
         }
 

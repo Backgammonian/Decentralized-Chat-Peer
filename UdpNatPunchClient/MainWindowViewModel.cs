@@ -9,7 +9,6 @@ using System.Windows.Input;
 using System.Windows.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
-using Microsoft.Win32;
 using Microsoft.Toolkit.Mvvm.ComponentModel;
 using Microsoft.Toolkit.Mvvm.Input;
 using Newtonsoft.Json;
@@ -37,13 +36,17 @@ namespace UdpNatPunchClient
         private const int _profileTabIndex = 0;
         private const int _chatTabIndex = 1;
         private const int _defaultTrackerPort = 56000;
-        private static readonly IPAddress _defaultTrackerIPAddress = IPAddress.Parse("192.168.0.14");
+        private static readonly IPAddress _defaultTrackerIPAddress = LocalAddressResolver.GetLocalAddress();
 
         private readonly Client _client;
         private readonly Users _connectedUsers;
         private readonly DispatcherTimer _nicknameUpdateTimer;
         private readonly DispatcherTimer _localAddressUpdater;
         private readonly DispatcherTimer _keepAliveTimer;
+        private readonly AvailableFiles _availableFiles;
+        private readonly Downloads _downloads;
+        private readonly SharedFiles _sharedFiles;
+        private readonly Uploads _uploads;
         private string _titleText = _title;
         private TrackerModel? _tracker;
         private string _nickname = "My nickname";
@@ -102,30 +105,108 @@ namespace UdpNatPunchClient
             _connectedUsers.UserRemoved += OnConnectedPeerRemoved;
 
             _localAddressUpdater = new DispatcherTimer();
-            _localAddressUpdater.Interval = new TimeSpan(0, 0, 2);
+            _localAddressUpdater.Interval = TimeSpan.FromSeconds(2);
             _localAddressUpdater.Tick += OnLocalAddressUpdaterTick;
+
             _nicknameUpdateTimer = new DispatcherTimer();
-            _nicknameUpdateTimer.Interval = new TimeSpan(0, 0, 1);
+            _nicknameUpdateTimer.Interval = TimeSpan.FromSeconds(1);
             _nicknameUpdateTimer.Tick += OnNcknameUpdateTimerTick;
+
             _keepAliveTimer = new DispatcherTimer();
-            _keepAliveTimer.Interval = new TimeSpan(0, 0, 5);
+            _keepAliveTimer.Interval = TimeSpan.FromSeconds(5);
             _keepAliveTimer.Tick += OnKeepAliveTimerTick;
 
+            _availableFiles = new AvailableFiles();
+            _availableFiles.FileAdded += OnAvailableFileAdded;
+
+            _downloads = new Downloads();
+            _downloads.DownloadFinished += OnDownloadFinished;
+            _downloads.DownloadsListUpdated += OnDownloadsListUpdated;
+
+            _sharedFiles = new SharedFiles();
+            _sharedFiles.SharedFileAdded += OnSharedFileAdded;
+            _sharedFiles.SharedFileError += OnSharedFileError;
+            _sharedFiles.SharedFileHashCalculated += OnSharedFileHashCalculated;
+            _sharedFiles.SharedFileRemoved += OnSharedFileRemoved;
+
+            _uploads = new Uploads();
+            _uploads.UploadAdded += OnUploadAdded;
+            _uploads.UploadRemoved += OnUploadRemoved;
+
+            ID = RandomGenerator.GetRandomString(30);
             TextArts = new ObservableCollection<AsciiArtsType>(Enum.GetValues(typeof(AsciiArtsType)).Cast<AsciiArtsType>());
             SystemTrayText = _title;
-            ID = RandomGenerator.GetRandomString(30);
             CurrentMessage = string.Empty;
             IsConnectedToTracker = false;
             SelectedPeer = null;
             CanSendMessage = false;
             CanSendImage = false;
             ExternalEndPoint = null;
-            LocalEndPoint = new IPEndPoint(new LocalAddressResolver().GetLocalAddress(), _client.LocalPort);
+            LocalEndPoint = new IPEndPoint(LocalAddressResolver.GetLocalAddress(), _client.LocalPort);
             NicknameUpdateState = NicknameUpdateState.None;
             ProfilePictureLoadingStatus = ProfilePictureLoadingStatusType.None;
             TrackerConnectionStatus = TrackerConnectionStatusType.None;
         }
 
+        private void OnUploadRemoved(object? sender, UploadEventArgs e)
+        {
+            OnPropertyChanged(nameof(Uploads));
+        }
+
+        private void OnUploadAdded(object? sender, UploadEventArgs e)
+        {
+            OnPropertyChanged(nameof(Uploads));
+        }
+
+        private void OnSharedFileRemoved(object? sender, EventArgs e)
+        {
+            OnPropertyChanged(nameof(SharedFiles));
+            //TODO отменить отправку удаленного файла
+        }
+
+        private void OnSharedFileHashCalculated(object? sender, EventArgs e)
+        {
+            Debug.WriteLine("(OnSharedFileHashCalculated)");
+            //TODO отправить сообщение с файлом
+        }
+
+        private void OnSharedFileError(object? sender, SharedFileEventArgs e)
+        {
+            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                MessageBox.Show($"Couldn't add file to share: {e.Path}",
+                    "File sharing error",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }));
+
+            //TODO не удалять из коллекции, а оставить и сделать пометку о неудачном добавлении
+        }
+
+        private void OnSharedFileAdded(object? sender, EventArgs e)
+        {
+            OnPropertyChanged(nameof(SharedFiles));
+        }
+
+        private void OnDownloadsListUpdated(object? sender, EventArgs e)
+        {
+            OnPropertyChanged(nameof(Downloads));
+        }
+
+        private void OnDownloadFinished(object? sender, DownloadFinishedEventArgs e)
+        {
+            Notify("Download is finished",
+                $"Download of file {e.DownloadedFileName} has finished!",
+                1500,
+                System.Windows.Forms.ToolTipIcon.Info);
+        }
+
+        private void OnAvailableFileAdded(object? sender, EventArgs e)
+        {
+            OnPropertyChanged(nameof(AvailableFiles));
+        }
+
+        #region Bindings
         public ICommand ConnectToTrackerCommand { get; }
         public ICommand SendMessageCommand { get; }
         public ICommand PutAsciiArtCommand { get; }
@@ -141,7 +222,11 @@ namespace UdpNatPunchClient
         public string ID { get; }
         public ObservableCollection<AsciiArtsType> TextArts { get; }
         public string TrackerAddress => _tracker == null ? "---" : _tracker.EndPoint;
-        public ObservableCollection<UserModel> ConnectedUsers => new ObservableCollection<UserModel>(_connectedUsers.List.OrderBy(user => user.ConnectionTime));
+        public ObservableCollection<UserModel> ConnectedUsers => new ObservableCollection<UserModel>(_connectedUsers.List);
+        public ObservableCollection<AvailableFile> AvailableFiles => new ObservableCollection<AvailableFile>(_availableFiles.AvailableFilesList);
+        public ObservableCollection<Download> Downloads => new ObservableCollection<Download>(_downloads.DownloadsList);
+        public ObservableCollection<SharedFile> SharedFiles => new ObservableCollection<SharedFile>(_sharedFiles.SharedFilesList);
+        public ObservableCollection<Upload> Uploads => new ObservableCollection<Upload>(_uploads.UploadsList);
 
         public IPEndPoint? ExpectedTracker
         {
@@ -323,7 +408,9 @@ namespace UdpNatPunchClient
             get => _trackerConnectionStatus;
             private set => SetProperty(ref _trackerConnectionStatus, value);
         }
+        #endregion
 
+        #region Startup and shutdown methods
         private void StartApp()
         {
             _client.StartListening();
@@ -350,7 +437,9 @@ namespace UdpNatPunchClient
 
             Application.Current.Shutdown();
         }
+        #endregion
 
+        #region Event handlers
         private void RestartNicknameUpdateTimerTick()
         {
             _nicknameUpdateTimer.Stop();
@@ -378,7 +467,7 @@ namespace UdpNatPunchClient
         private void OnLocalAddressUpdaterTick(object? sender, EventArgs e)
         {
             _localAddressUpdater.Stop();
-            LocalEndPoint = new IPEndPoint(new LocalAddressResolver().GetLocalAddress(), _client.LocalPort);
+            LocalEndPoint = new IPEndPoint(LocalAddressResolver.GetLocalAddress(), _client.LocalPort);
         }
 
         private void OnConnectedPeerAdded(object? sender, UserUpdatedEventArgs e)
@@ -448,6 +537,8 @@ namespace UdpNatPunchClient
             }
 
             _connectedUsers.Remove(user.ID);
+            _downloads.CancelAllDownloadsFromServer(e.Peer.Id);
+            _availableFiles.MarkAllFilesFromServerAsUnavailable(e.Peer.Id);
         }
 
         private async Task OnMessageFromPeerReceived(object? sender, NetEventArgs e)
@@ -704,7 +795,7 @@ namespace UdpNatPunchClient
             }
 
             var resetTimer = new DispatcherTimer(DispatcherPriority.Background, Application.Current.Dispatcher);
-            resetTimer.Interval = new TimeSpan(0, 0, 5);
+            resetTimer.Interval = TimeSpan.FromSeconds(5);
             resetTimer.Tick += (s, e) =>
             {
                 resetTimer.Stop();
@@ -934,7 +1025,9 @@ namespace UdpNatPunchClient
             ExpectedTracker = _client.ExpectedTracker;
             TrackerConnectionStatus = TrackerConnectionStatusType.FailedToConnect;
         }
+        #endregion
 
+        #region Command implementations
         private void ConnectToTracker()
         {
             var inputBox = new InputBoxWindow();
@@ -972,27 +1065,10 @@ namespace UdpNatPunchClient
             }
         }
 
-        private bool TryParseCommand(string input, out string command, out string argument)
-        {
-            var spacePosition = input.IndexOf(' ');
-            if (spacePosition == -1)
-            {
-                command = input.Substring(0, input.Length).ToLower();
-                argument = string.Empty;
-            }
-            else
-            {
-                command = input.Substring(0, spacePosition).ToLower();
-                argument = input.Substring(spacePosition + 1, input.Length - spacePosition - 1);
-            }
-
-            return true;
-        }
-
         private async Task SelectImageToSend()
         {
-            if (TrySelectFile("Select a picture to send", Constants.ImageFilter, out var path) &&
-                TryGetFileSize(path, out var size))
+            if (FileSelector.TrySelectFile("Select a picture to send", Constants.ImageFilter, out var path) &&
+                FileSelector.TryGetFileSize(path, out var size))
             {
                 if (size == 0)
                 {
@@ -1033,7 +1109,7 @@ namespace UdpNatPunchClient
                 var imageExtension = Path.GetExtension(imagePath);
 
                 if (Constants.AllowedImageExtensions.Contains(imageExtension) &&
-                    TryGetFileSize(imagePath, out var size))
+                    FileSelector.TryGetFileSize(imagePath, out var size))
                 {
                     if (size == 0)
                     {
@@ -1080,13 +1156,11 @@ namespace UdpNatPunchClient
                     bytes != null)
                 {
                     message.UpdateImage(image);
-
                     user.SendUpdatedImageMessage(message.MessageID, bytes, image.FileExtension);
                 }
                 else
                 {
                     message.SetAsFailed();
-
                     user.SendMessageAboutFailedImageSending(message.MessageID);
                 }
             }
@@ -1106,7 +1180,7 @@ namespace UdpNatPunchClient
             else
             if (SelectedPeer is TrackerModel tracker)
             {
-                if (TryParseCommand(CurrentMessage, out var command, out var argument))
+                if (CurrentMessage.TryParseCommand(out var command, out var argument))
                 {
                     if (command == "help")
                     {
@@ -1174,43 +1248,6 @@ namespace UdpNatPunchClient
             }
         }
 
-        private bool TrySelectFile(string title, string filter, out string path)
-        {
-            var selectFileDialog = new OpenFileDialog
-            {
-                Filter = filter,
-                Title = title
-            };
-
-            if (selectFileDialog.ShowDialog() != true)
-            {
-                path = string.Empty;
-
-                return false;
-            }
-
-            path = selectFileDialog.FileName;
-
-            return true;
-        }
-
-        private bool TryGetFileSize(string path, out long size)
-        {
-            size = 0;
-
-            try
-            {
-                using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
-                size = stream.Length;
-
-                return true;
-            }
-            catch (Exception)
-            {
-                return false;
-            }
-        }
-
         private void ShowOwnProfilePicture(MouseEventArgs? e)
         {
             if (e == null)
@@ -1218,11 +1255,9 @@ namespace UdpNatPunchClient
                 return;
             }
 
-            switch (e.LeftButton)
+            if (e.LeftButton == MouseButtonState.Released)
             {
-                case MouseButtonState.Released:
-                    ShowImageFullScreen(ProfilePicture);
-                    break;
+                ShowImageFullScreen(ProfilePicture);
             }
         }
 
@@ -1233,14 +1268,10 @@ namespace UdpNatPunchClient
                 return;
             }
 
-            switch (e.LeftButton)
+            if (e.LeftButton == MouseButtonState.Released &&
+                SelectedPeer is UserModel user)
             {
-                case MouseButtonState.Released:
-                    if (SelectedPeer is UserModel user)
-                    {
-                        ShowImageFullScreen(user.Picture);
-                    }
-                    break;
+                ShowImageFullScreen(user.Picture);
             }
         }
 
@@ -1251,31 +1282,16 @@ namespace UdpNatPunchClient
                 return;
             }
 
-            switch (e.LeftButton)
+            if (e.LeftButton == MouseButtonState.Released &&
+                SelectedMessage is ImageMessageModel message)
             {
-                case MouseButtonState.Released:
-                    if (SelectedMessage is ImageMessageModel message)
-                    {
-                        ShowImageFullScreen(message.Image);
-                    }
-                    break;
+                ShowImageFullScreen(message.Image);
             }
-        }
-
-        private void ShowImageFullScreen(ImageItem? image)
-        {
-            if (image == null)
-            {
-                return;
-            }
-
-            var showcaseWindow = new ImageShowcaseWindow(image);
-            showcaseWindow.ShowDialog();
         }
 
         private async Task ChangeProfilePicture()
         {
-            if (TrySelectFile("Select new profile picture", Constants.ImageFilter, out var path))
+            if (FileSelector.TrySelectFile("Select new profile picture", Constants.ImageFilter, out var path))
             {
                 await UpdateProfilePicture(path);
             }
@@ -1307,8 +1323,8 @@ namespace UdpNatPunchClient
 
         private async Task UpdateProfilePicture(string path)
         {
-            var gotSize = TryGetFileSize(path, out long size);
-            if (!gotSize)
+            var haveGotSize = FileSelector.TryGetFileSize(path, out long size);
+            if (!haveGotSize)
             {
                 return;
             }
@@ -1385,7 +1401,20 @@ namespace UdpNatPunchClient
                     MessageBoxImage.Error);
             }
         }
+        #endregion
 
+        private void ShowImageFullScreen(ImageItem? image)
+        {
+            if (image == null)
+            {
+                return;
+            }
+
+            var showcaseWindow = new ImageShowcaseWindow(image);
+            showcaseWindow.ShowDialog();
+        }
+
+        #region Miscellaneous methods
         public void SetSelectedUserModel(UserModel userModel)
         {
             if (ConnectedUsers.Contains(userModel))
@@ -1429,8 +1458,10 @@ namespace UdpNatPunchClient
             _tracker?.SendKeepAliveMessage();
             _connectedUsers.SendKeepAliveMessageToConnectedUsers();
         }
+        #endregion
     }
 
+    #region Notifications and system tray
     public partial class MainWindowViewModel
     {
         private NotifyIconWrapper.NotifyRequestRecord? _notifyRequest;
@@ -1502,4 +1533,5 @@ namespace UdpNatPunchClient
             NotifyIconExitCommand = new RelayCommand(ShutdownApp);
         }
     }
+    #endregion
 }
