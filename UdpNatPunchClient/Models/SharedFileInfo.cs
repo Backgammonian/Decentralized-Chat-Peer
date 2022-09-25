@@ -1,28 +1,25 @@
-﻿using Networking;
+﻿using Microsoft.Toolkit.Mvvm.ComponentModel;
 
 namespace UdpNatPunchClient.Models
 {
-    public sealed class SharedFileInfo
+    public sealed class SharedFileInfo : ObservableObject
     {
-        public SharedFileInfo() //user in file client
+        public SharedFileInfo(SharedFile sharedFile)
         {
-            Name = string.Empty;
-            Hash = string.Empty;
-        }
+            if (sharedFile == null)
+            {
+                return;
+            }
 
-        public SharedFileInfo(SharedFile sharedFile) //used in file server
-        {
+            Hash = sharedFile.Hash;
             Name = sharedFile.Name;
             Size = sharedFile.Size;
             NumberOfSegments = sharedFile.NumberOfSegments;
-            Hash = sharedFile.Hash;
-            Server = null;
         }
 
-        public string Name { get; set; }
+        public string Hash { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
         public long Size { get; set; }
         public long NumberOfSegments { get; set; }
-        public string Hash { get; set; }
-        public EncryptedPeer? Server { get; set; }
     }
 }

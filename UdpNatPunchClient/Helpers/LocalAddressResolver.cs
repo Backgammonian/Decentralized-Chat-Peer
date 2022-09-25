@@ -4,9 +4,9 @@ using System.Net.Sockets;
 
 namespace Helpers
 {
-    public sealed class LocalAddressResolver
+    public static class LocalAddressResolver
     {
-        public IPAddress GetLocalAddress()
+        public static IPAddress GetLocalAddress()
         {
             try
             {
