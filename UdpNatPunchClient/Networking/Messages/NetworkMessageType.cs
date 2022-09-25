@@ -30,5 +30,12 @@
         ImageIntroduceMessage,
         UpdateImageMessage,
         ImageSendingFailed,
+
+        FileMessage,
+        FileRequest,
+        FileSegment,
+        FileSegmentAck,
+        CancelDownload,
+        CancelUpload,
     }
 }

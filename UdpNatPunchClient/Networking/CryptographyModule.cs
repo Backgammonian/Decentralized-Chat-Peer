@@ -7,9 +7,11 @@ namespace Networking
 {
     public sealed class CryptographyModule : ObservableObject
     {
+        public const string DefaultFileHash = "---";
+
         private readonly ECDiffieHellmanCng _ecdh;
-        private readonly CngKey _signature;
         private readonly byte[] _publicKey;
+        private readonly CngKey _signature;
         private readonly byte[] _signaturePublicKey;
         private byte[] _privateKey;
         private byte[] _recipientsSignaturePublicKey;
@@ -133,9 +135,6 @@ namespace Networking
             }
             catch (Exception)
             {
-                iv = Array.Empty<byte>();
-                encryptedMessage = Array.Empty<byte>();
-
                 return false;
             }
         }
@@ -164,8 +163,6 @@ namespace Networking
             }
             catch (Exception)
             {
-                decryptedMessage = Array.Empty<byte>();
-
                 return false;
             }
         }
@@ -175,22 +172,19 @@ namespace Networking
             IsEnabled = false;
         }
 
-        public static bool TryComputeFileHash(string path, out string fileHash)
+        public static string ComputeFileHash(string path)
         {
             try
             {
                 using var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, 10 * 1024 * 1024);
                 using var sha = SHA256.Create();
-                byte[] hash = sha.ComputeHash(fs);
-                fileHash = BitConverter.ToString(hash).ToLower().Replace("-", "");
+                var hash = sha.ComputeHash(fs);
 
-                return true;
+                return BitConverter.ToString(hash).ToLower().Replace("-", "");
             }
             catch (Exception)
             {
-                fileHash = string.Empty;
-
-                return false;
+                return DefaultFileHash;
             }
         }
     }

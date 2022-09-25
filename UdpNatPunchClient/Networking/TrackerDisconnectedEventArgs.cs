@@ -5,11 +5,11 @@ namespace Networking
 {
     public sealed class TrackerDisconnectedEventArgs : EventArgs
     {
-        public TrackerDisconnectedEventArgs(IPEndPoint? endPoint)
+        public TrackerDisconnectedEventArgs(IPEndPoint endPoint)
         {
             TrackerEndPoint = endPoint;
         }
 
-        public IPEndPoint? TrackerEndPoint { get; }
+        public IPEndPoint TrackerEndPoint { get; }
     }
 }

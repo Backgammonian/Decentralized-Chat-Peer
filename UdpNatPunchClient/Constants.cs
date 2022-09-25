@@ -1,4 +1,5 @@
-﻿using System.Collections.Immutable;
+﻿using System;
+using System.Collections.Immutable;
 
 namespace UdpNatPunchClient
 {
@@ -6,13 +7,13 @@ namespace UdpNatPunchClient
     {
         public static int MaxNicknameLength { get; } = 150;
         public static int MaxMessageLength { get; } = 3000;
-        public static ImmutableHashSet<string> AllowedImageExtensions { get; }
-            = ImmutableHashSet.Create(new[] { ".jpg", ".jpeg", ".png", ".bmp", ".tiff", ".gif" });
         public static string ImageFilter { get; } = "Pictures|*.jpg;*.jpeg;*.png;*.bmp;*.tiff;*.gif";
-        public static long MaxProfilePictureSize { get; } = 5242880; //5 MB
-        public static long MaxPictureSize { get; } = 20971520; //20 MB
+        public static int MaxProfilePictureSize { get; } = 5242880; //5 MB
+        public static int MaxPictureSize { get; } = 20971520; //20 MB
+        public static int FileSegmentSize { get; } = Convert.ToInt32(Math.Pow(2, 20)); //1 MB
         public static (int, int) ProfilePictureThumbnailSize { get; } = (200, 200);
         public static (int, int) ImageMessageThumbnailSize { get; } = (250, 250);
-        
+        public static ImmutableHashSet<string> AllowedImageExtensions { get; } =
+            ImmutableHashSet.Create(new[] { ".jpg", ".jpeg", ".png", ".bmp", ".tiff", ".gif" });
     }
 }
