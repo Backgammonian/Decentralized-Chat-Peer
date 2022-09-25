@@ -61,7 +61,7 @@ namespace UdpNatPunchClient.Models
         public void SendUpdatedPersonalInfo(string updatedNickname)
         {
             var updateMessage = new UpdatedInfoForPeerMessage(updatedNickname);
-            Send(updateMessage);
+            Send(updateMessage, 0);
         }
 
         public void SendUpdatedProfilePicture(byte[] pictureByteArray, string pictureExtension)
@@ -143,7 +143,7 @@ namespace UdpNatPunchClient.Models
         public void SendMessageAboutFailedImageSending(string messageID)
         {
             var errorMessage = new ImageSendingFailedMessage(messageID);
-            Send(errorMessage);
+            Send(errorMessage, 0);
         }
 
         public void SetImageMessageAsFailed(string messageID)

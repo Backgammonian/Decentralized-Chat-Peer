@@ -5,8 +5,8 @@ using System.Net;
 using Microsoft.Toolkit.Mvvm.ComponentModel;
 using LiteNetLib;
 using LiteNetLib.Utils;
-using Networking.Utils;
 using Networking.Messages;
+using Networking.Utils;
 
 namespace Networking
 {
@@ -33,17 +33,17 @@ namespace Networking
             _outcomingSegmentNumber = _outcomingSegmentNumber != 0 ? _outcomingSegmentNumber - 1 : _outcomingSegmentNumber;
 
             _durationTimer = new DispatcherTimer(DispatcherPriority.Background, Application.Current.Dispatcher);
-            _durationTimer.Interval = new TimeSpan(0, 0, 1);
+            _durationTimer.Interval = TimeSpan.FromSeconds(1);
             _durationTimer.Tick += OnDurationTimerTick;
             _durationTimer.Start();
 
             _disconnectTimer = new DispatcherTimer(DispatcherPriority.Background, Application.Current.Dispatcher);
-            _disconnectTimer.Interval = new TimeSpan(0, 0, NetworkingConstants.DisconnectionTimeoutMilliseconds / 1000);
+            _disconnectTimer.Interval = TimeSpan.FromMilliseconds(NetworkingConstants.DisconnectionTimeoutMilliseconds);
             _disconnectTimer.Tick += OnDisconnectTimerTick;
             _disconnectTimer.Start();
 
             _pingUpdateTimer = new DispatcherTimer(DispatcherPriority.Background, Application.Current.Dispatcher);
-            _pingUpdateTimer.Interval = new TimeSpan(0, 0, 0, 0, 500);
+            _pingUpdateTimer.Interval = TimeSpan.FromMilliseconds(200);
             _pingUpdateTimer.Tick += OnPingUdpateTimerTick;
             _pingUpdateTimer.Start();
 
@@ -57,6 +57,7 @@ namespace Networking
 
         public event EventHandler<EncryptedPeerEventArgs>? PeerDisconnected;
 
+        public DateTime StartTime { get; }
         public bool IsSecurityEnabled => _cryptography.IsEnabled;
         public int Id => _peer.Id;
         public IPEndPoint EndPoint => _peer.EndPoint;
@@ -66,7 +67,6 @@ namespace Networking
         public double UploadSpeed => _uploadSpeedCounter.Speed;
         public long BytesDownloaded => _downloadSpeedCounter.Bytes;
         public long BytesUploaded => _uploadSpeedCounter.Bytes;
-        public DateTime StartTime { get; }
 
         public TimeSpan ConnectionDuration
         {
@@ -133,13 +133,14 @@ namespace Networking
             }
         }
 
-        public void SendEncrypted(BaseMessage message)
-        {
-            SendEncrypted(message, RandomGenerator.GetPseudoRandomByte(0, NetworkingConstants.ChannelsCount));
-        }
-
         public void SendEncrypted(BaseMessage message, byte channelNumber)
         {
+            if (channelNumber < 0 ||
+                channelNumber >= _peer.NetManager.ChannelsCount)
+            {
+                return;
+            }
+
             var messageContent = message.GetContent();
             messageContent.Put(_outcomingSegmentNumber);
 
@@ -161,7 +162,6 @@ namespace Networking
                 outcomingMessage.PutBytesWithLength(encryptedMessage);
                 outcomingMessage.PutBytesWithLength(signature);
                 outcomingMessage.PutBytesWithLength(iv);
-                outcomingMessage.Put(CRC32.Compute(encryptedMessage));
 
                 _peer.Send(outcomingMessage, channelNumber, DeliveryMethod.ReliableOrdered);
 
@@ -184,17 +184,14 @@ namespace Networking
             if (incomingDataReader.TryGetBytesWithLength(out byte[] encryptedMessage) &&
                 incomingDataReader.TryGetBytesWithLength(out byte[] signature) &&
                 incomingDataReader.TryGetBytesWithLength(out byte[] iv) &&
-                incomingDataReader.TryGetUInt(out uint receivedCrc32) &&
-                CRC32.Compute(encryptedMessage) == receivedCrc32 &&
                 _cryptography.TryDecrypt(encryptedMessage, iv, out byte[] decryptedMessage) &&
                 decryptedMessage.TryDecompressByteArray(out byte[] decompressedMessage) &&
                 _cryptography.TryVerifySignature(decompressedMessage, signature))
             {
                 var messageReader = new NetDataReader(decompressedMessage);
 
-                if (messageReader.TryGetByte(out byte type) &&
-                    Enum.TryParse(typeof(NetworkMessageType), type.ToString(), out object? networkMessageType) &&
-                    networkMessageType != null &&
+                if (messageReader.TryGetByte(out byte typeByte) &&
+                    typeByte.TryParseType(out NetworkMessageType type) &&
                     messageReader.TryGetString(out string json) &&
                     messageReader.TryGetULong(out ulong recepientsOutcomingSegmentNumber) &&
                     recepientsOutcomingSegmentNumber == _incomingSegmentNumber)
@@ -204,7 +201,7 @@ namespace Networking
 
                     _downloadSpeedCounter.AddBytes(incomingDataReader.RawDataSize);
 
-                    messageType = (NetworkMessageType)networkMessageType;
+                    messageType = type;
                     outputJson = json;
 
                     return true;

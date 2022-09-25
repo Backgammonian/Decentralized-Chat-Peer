@@ -14,7 +14,7 @@
         <TextBlock
             x:Name="Question"
             DockPanel.Dock="Top"
-            TextAlignment="Center"
+            TextAlignment="Left"
             Text="Question:"/>
         <Label
             DockPanel.Dock="Top"

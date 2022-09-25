@@ -38,11 +38,6 @@ namespace UdpNatPunchClient.Models
             protected set => SetProperty(ref _hasNewMessages, value);
         }
 
-        protected virtual void Send(BaseMessage baseMessage)
-        {
-            _peer.SendEncrypted(baseMessage);
-        }
-
         protected virtual void Send(BaseMessage baseMessage, byte channel)
         {
             if (channel >= 0 &&
@@ -64,7 +59,7 @@ namespace UdpNatPunchClient.Models
             _unreadMessages.Add(message);
 
             var textMessageToPeer = new TextMessageToPeer(message.MessageID, message.Content);
-            Send(textMessageToPeer);
+            Send(textMessageToPeer, 0);
         }
 
         public virtual void MarkMessageAsDelivered(string messageID)
@@ -127,13 +122,13 @@ namespace UdpNatPunchClient.Models
         public virtual void SendReceiptNotification(BaseMessageModel message)
         {
             var receiptNotification = new MessageReceiptNotification(message.MessageID);
-            Send(receiptNotification);
+            Send(receiptNotification, 0);
         }
 
         public virtual void SendReadNotification(BaseMessageModel message)
         {
             var readNotification = new MessageReadNotification(message.MessageID);
-            Send(readNotification);
+            Send(readNotification, 0);
 
             _incomingMessages.Remove(message);
         }
@@ -145,7 +140,7 @@ namespace UdpNatPunchClient.Models
 
         public void SendKeepAliveMessage()
         {
-            Send(new KeepAliveMessage());
+            Send(new KeepAliveMessage(), 0);
         }
     }
 }

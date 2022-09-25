@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 using System.Security.Cryptography;
 
 namespace Networking.Utils
@@ -61,13 +62,14 @@ namespace Networking.Utils
         public static string GetRandomString(int length)
         {
             using var rnd = new RandomGenerator();
-            var result = "";
+
+            var result = new StringBuilder();
             for (var j = 0; j < length; j++)
             {
-                result += _chars[rnd.Next(0, _chars.Length)];
+                result.Append(_chars[rnd.Next(0, _chars.Length - 1)]);
             }
 
-            return result;
+            return result.ToString();
         }
 
         public static long GetRandomLong()

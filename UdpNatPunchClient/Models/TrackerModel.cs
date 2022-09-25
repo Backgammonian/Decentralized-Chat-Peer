@@ -31,7 +31,7 @@ namespace UdpNatPunchClient.Models
         public void SendIntroductionMessage(string id, string nickname)
         {
             var introductionMessage = new IntroduceClientToTrackerMessage(id, nickname);
-            Send(introductionMessage);
+            Send(introductionMessage, 0);
         }
 
         public void SendCommandMessage(string command, string argument)
@@ -45,7 +45,7 @@ namespace UdpNatPunchClient.Models
             _commandsAndMessagesAccordance.Add(commandMessage.CommandID, message.MessageID);
             Messages.Add(message);
 
-            Send(commandMessage);
+            Send(commandMessage, 0);
         }
 
         public void PrintInfo(string info)
@@ -111,7 +111,7 @@ namespace UdpNatPunchClient.Models
         public void SendUpdatedPersonalInfo(string newNickname)
         {
             var updatedInfoMessage = new UpdatedInfoToTrackerMessage(newNickname);
-            Send(updatedInfoMessage);
+            Send(updatedInfoMessage, 0);
         }
     }
 }

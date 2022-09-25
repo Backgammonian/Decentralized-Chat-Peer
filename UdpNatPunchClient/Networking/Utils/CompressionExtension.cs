@@ -4,7 +4,7 @@ using System.IO.Compression;
 
 namespace Networking.Utils
 {
-    public static class Compression
+    public static class CompressionExtension
     {
         public static bool TryCompressByteArray(this byte[] data, out byte[] result)
         {

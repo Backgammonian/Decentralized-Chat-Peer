@@ -37,15 +37,15 @@ namespace Networking
             Tracker = null;
         }
 
-        public event AsyncEventHandler<NetEventArgs>? MessageFromPeerReceived;
         public event EventHandler<EncryptedPeerEventArgs>? PeerAdded;
         public event EventHandler<EncryptedPeerEventArgs>? PeerConnected;
         public event EventHandler<EncryptedPeerEventArgs>? PeerRemoved;
-        public event EventHandler<NetEventArgs>? MessageFromTrackerReceived;
+        public event AsyncEventHandler<NetEventArgs>? MessageFromPeerReceived;
         public event EventHandler<EventArgs>? TrackerAdded;
         public event EventHandler<EventArgs>? TrackerConnected;
         public event EventHandler<TrackerDisconnectedEventArgs>? TrackerRemoved;
         public event EventHandler<EventArgs>? TrackerConnectionAttemptFailed;
+        public event EventHandler<NetEventArgs>? MessageFromTrackerReceived;
 
         public int LocalPort => _client.LocalPort;
         public byte ChannelsCount => _client.ChannelsCount;
@@ -72,36 +72,10 @@ namespace Networking
             }
         }
 
-        public bool IsConnectedToPeer(int peerID, out EncryptedPeer? peer)
-        {
-            peer = null;
-
-            if (_peers.Has(peerID) &&
-                _peers[peerID].IsSecurityEnabled)
-            {
-                peer = _peers[peerID];
-
-                return true;
-            }
-
-            return false;
-        }
-
         public bool IsConnectedToTracker(IPEndPoint trackerAddress)
         {
             return Tracker != null &&
                 Tracker.EndPoint == trackerAddress;
-        }
-
-        public EncryptedPeer? GetPeerByID(int peerID)
-        {
-            return _peers.Has(peerID) ? _peers[peerID] : null;
-        }
-
-        public void Stop()
-        {
-            _tokenSource.Cancel();
-            _client.Stop();
         }
 
         public void RemovePeer(EncryptedPeer peer)
@@ -162,8 +136,8 @@ namespace Networking
                 else
                 {
                     var newPeer = new EncryptedPeer(peer);
+                    newPeer.SendPublicKeys();
                     _peers.Add(newPeer);
-                    _peers[newPeer.Id].SendPublicKeys();
                 }
             };
 
@@ -202,6 +176,8 @@ namespace Networking
 
             _listener.NetworkReceiveEvent += (fromPeer, dataReader, deliveryMethod) =>
             {
+                var peer = _peers.Get(fromPeer.Id);
+
                 if (Tracker != null &&
                     Tracker.Id == fromPeer.Id) //from tracker
                 {
@@ -224,23 +200,23 @@ namespace Networking
                     }
                 }
                 else
-                if (_peers.Has(fromPeer.Id)) //from peer
+                if (peer != null) //from peer
                 {
-                    if (_peers[fromPeer.Id].IsSecurityEnabled &&
-                        _peers[fromPeer.Id].TryDecryptReceivedData(dataReader, out NetworkMessageType type, out string json))
+                    if (peer.IsSecurityEnabled &&
+                       peer.TryDecryptReceivedData(dataReader, out NetworkMessageType type, out string json))
                     {
-                        MessageFromPeerReceived?.Invoke(this, new NetEventArgs(_peers[fromPeer.Id], type, json));
+                        MessageFromPeerReceived?.Invoke(this, new NetEventArgs(peer, type, json));
                     }
                     else
-                    if (!_peers[fromPeer.Id].IsSecurityEnabled)
+                    if (!peer.IsSecurityEnabled)
                     {
                         if (dataReader.TryGetBytesWithLength(out byte[] publicKey) &&
                             dataReader.TryGetBytesWithLength(out byte[] signaturePublicKey) &&
                             dataReader.TryGetULong(out ulong recepientsIncomingSegmentNumber))
                         {
-                            _peers[fromPeer.Id].ApplyKeys(publicKey, signaturePublicKey, recepientsIncomingSegmentNumber);
+                            peer.ApplyKeys(publicKey, signaturePublicKey, recepientsIncomingSegmentNumber);
 
-                            PeerConnected?.Invoke(this, new EncryptedPeerEventArgs(_peers[fromPeer.Id]));
+                            PeerConnected?.Invoke(this, new EncryptedPeerEventArgs(peer));
                         }
                     }
                 }
@@ -249,6 +225,12 @@ namespace Networking
             };
 
             _listenTask.Start();
+        }
+
+        public void Stop()
+        {
+            _tokenSource.Cancel();
+            _client.Stop();
         }
     }
 }

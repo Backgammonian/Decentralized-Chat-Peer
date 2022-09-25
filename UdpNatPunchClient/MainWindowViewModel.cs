@@ -36,8 +36,8 @@ namespace UdpNatPunchClient
         private const string _title = "Chat Client";
         private const int _profileTabIndex = 0;
         private const int _chatTabIndex = 1;
-        private static readonly IPAddress _defaultTrackerIPAddress = IPAddress.Parse("192.168.0.14");
         private const int _defaultTrackerPort = 56000;
+        private static readonly IPAddress _defaultTrackerIPAddress = IPAddress.Parse("192.168.0.14");
 
         private readonly Client _client;
         private readonly Users _connectedUsers;
@@ -334,6 +334,16 @@ namespace UdpNatPunchClient
 
         private void ShutdownApp()
         {
+            var question = MessageBox.Show("Do you want to close Chat Client? Existing connections with users will be shut down!",
+                "Shutdown Confirmation",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+
+            if (question != MessageBoxResult.Yes)
+            {
+                return;
+            }
+
             _tracker?.Disconnect();
             _client.DisconnectAll();
             _client.Stop();
@@ -419,7 +429,7 @@ namespace UdpNatPunchClient
             }
 
             var introducePeerToPeerMessage = new IntroducePeerToPeerMessage(ID, Nickname, profilePictureByteArray, profilePictureExtension);
-            e.Peer.SendEncrypted(introducePeerToPeerMessage);
+            e.Peer.SendEncrypted(introducePeerToPeerMessage, 1);
         }
 
         private void OnPeerRemoved(object? sender, EncryptedPeerEventArgs e)
@@ -477,7 +487,7 @@ namespace UdpNatPunchClient
                     }
 
                     var introducePeerToPeerResponseMessage = new IntroducePeerToPeerResponse(ID, Nickname, profilePictureByteArray, profilePictureExtension);
-                    source.SendEncrypted(introducePeerToPeerResponseMessage);
+                    source.SendEncrypted(introducePeerToPeerResponseMessage, 1);
                     break;
 
                 case NetworkMessageType.IntroducePeerToPeerResponse:
