@@ -57,7 +57,17 @@ namespace UdpNatPunchClient.Models
 
         public void CancelAllUploadsOfPeer(int peerID)
         {
-            var uploads = _uploads.Values.Where(upload => upload.Destination.Id == peerID);
+            var uploads = _uploads.Values.Where(upload => upload.Destination.PeerID == peerID);
+
+            foreach (var upload in uploads)
+            {
+                upload.Cancel();
+            }
+        }
+
+        public void CancelAllUploadsOfFile(string fileHash)
+        {
+            var uploads = _uploads.Values.Where(upload => upload.FileHash == fileHash);
 
             foreach (var upload in uploads)
             {

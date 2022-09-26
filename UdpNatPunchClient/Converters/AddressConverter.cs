@@ -2,6 +2,8 @@
 using System.Globalization;
 using System.Windows.Data;
 using System.Net;
+using UdpNatPunchClient.Models;
+using Networking;
 
 namespace Converters
 {
@@ -9,11 +11,19 @@ namespace Converters
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            var endPoint = value as IPEndPoint;
-
-            if (endPoint != null)
+            if (value is IPEndPoint endPoint)
             {
                 return endPoint.ToString();
+            }
+            else
+            if (value is EncryptedPeer peer)
+            {
+                return peer.ToString();
+            }
+            else
+            if (value is UserModel user)
+            {
+                return user.EndPoint.ToString();
             }
 
             return "---";

@@ -108,7 +108,7 @@ namespace UdpNatPunchClient.Models
             HasNewMessages = false;
         }
 
-        public virtual MessageModel? AddIncomingMessage(TextMessageToPeer textMessageFromPeer)
+        public virtual MessageModel AddIncomingMessage(TextMessageToPeer textMessageFromPeer)
         {
             var message = new MessageModel(textMessageFromPeer);
             Messages.Add(message);
@@ -136,6 +136,11 @@ namespace UdpNatPunchClient.Models
         public virtual void DismissNewMessagesSignal()
         {
             HasNewMessages = false;
+        }
+
+        public virtual void PrintInfo(string info)
+        {
+            Messages.Add(new MessageModel(info, MessageDirection.Incoming));
         }
 
         public void SendKeepAliveMessage()

@@ -9,7 +9,7 @@
             Segment = segment;
         }
 
-        public string UploadID { get; }
-        public byte[] Segment { get; }
+        public string UploadID { get; set; }
+        public byte[] Segment { get; set; }
     }
 }

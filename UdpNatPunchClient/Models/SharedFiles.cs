@@ -22,7 +22,7 @@ namespace UdpNatPunchClient.Models
         public event EventHandler<EventArgs>? SharedFileAdded;
         public event EventHandler<EventArgs>? SharedFileHashCalculated;
         public event EventHandler<SharedFileEventArgs>? SharedFileError;
-        public event EventHandler<EventArgs>? SharedFileRemoved;
+        public event EventHandler<SharedFileEventArgs>? SharedFileRemoved;
 
         public IEnumerable<SharedFile> SharedFilesList => _files.Values;
 
@@ -52,22 +52,18 @@ namespace UdpNatPunchClient.Models
                 .ToList();
         }
 
-        public void AddFile(string filePath)
+        public async Task<SharedFile?> AddFile(string filePath)
         {
-            var addFileTask = new Task(() =>
-            {
-                AddFileRoutine(filePath);
-            });
-            addFileTask.Start();
+            return await Task.Run(() => AddFileRoutine(filePath));
         }
 
-        private void AddFileRoutine(string filePath)
+        private SharedFile? AddFileRoutine(string filePath)
         {
             if (!File.Exists(filePath))
             {
                 Debug.WriteLine($"(AddFileRoutine) File {filePath} doesn't exist");
 
-                return;
+                return null;
             }
 
             var index = _indexer.GetNewIndex();
@@ -78,19 +74,25 @@ namespace UdpNatPunchClient.Models
             {
                 SharedFileAdded?.Invoke(this, EventArgs.Empty);
 
-                if (_files[sharedFile.Index].TryComputeFileHash())
+                if (sharedFile.TryComputeFileHash())
                 {
                     SharedFileHashCalculated?.Invoke(this, EventArgs.Empty);
+
+                    return sharedFile;
                 }
                 else
                 {
                     RemoveFile(sharedFile.Index);
+
+                    return null;
                 }
             }
             else
             {
-                RemoveFile(index);
-                SharedFileError?.Invoke(this, new SharedFileEventArgs(filePath));
+                RemoveFile(sharedFile.Index);
+                SharedFileError?.Invoke(this, new SharedFileEventArgs(sharedFile));
+
+                return null;
             }
         }
 
@@ -101,7 +103,7 @@ namespace UdpNatPunchClient.Models
                 removedFile != null)
             {
                 removedFile.CloseStream();
-                SharedFileRemoved?.Invoke(this, EventArgs.Empty);
+                SharedFileRemoved?.Invoke(this, new SharedFileEventArgs(removedFile));
             }
         }
 

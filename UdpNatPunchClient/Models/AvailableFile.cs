@@ -9,7 +9,7 @@ namespace UdpNatPunchClient.Models
 
         public AvailableFile(SharedFileInfo sharedFile, UserModel server)
         {
-            ID = RandomGenerator.GetRandomString(29);
+            ID = RandomGenerator.GetRandomString(40);
             Hash = sharedFile.Hash;
             Name = sharedFile.Name;
             Size = sharedFile.Size;

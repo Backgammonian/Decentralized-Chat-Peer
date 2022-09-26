@@ -17,7 +17,7 @@ namespace UdpNatPunchClient.Models
         private bool _isStarted;
         private DateTime _finishTime;
 
-        public Upload(string id, SharedFile sharedFile, EncryptedPeer destination)
+        public Upload(string id, SharedFile sharedFile, UserModel destination)
         {
             _sharedFile = sharedFile;
             _sharedFile.Closed += OnSharedFileClosed;
@@ -33,7 +33,7 @@ namespace UdpNatPunchClient.Models
         }
 
         public string ID { get; }
-        public EncryptedPeer Destination { get; }
+        public UserModel Destination { get; }
         public DateTime StartTime { get; }
         public string FileName => _sharedFile.Name;
         public long FileSize => _sharedFile.Size;
@@ -131,13 +131,7 @@ namespace UdpNatPunchClient.Models
             }
 
             IsCancelled = true;
-            SendCancellationMessage();
-        }
-
-        private void SendCancellationMessage()
-        {
-            var cancellationMessage = new UploadCancellationMessage(ID);
-            Destination.SendEncrypted(cancellationMessage, 0);
+            Destination.SendUploadCancellationMessage(ID);
         }
 
         public void StartUpload()
@@ -165,8 +159,7 @@ namespace UdpNatPunchClient.Models
             }
 
             _uploadSpeedCounter.AddBytes(segment.Length);
-            var fileSegmentMessage = new FileSegmentMessage(ID, segment);
-            Destination.SendEncrypted(fileSegmentMessage, 1);
+            Destination.SendFileSegment(ID, segment);
         }
     }
 }

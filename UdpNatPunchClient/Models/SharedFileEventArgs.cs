@@ -4,11 +4,11 @@ namespace UdpNatPunchClient.Models
 {
     public sealed class SharedFileEventArgs : EventArgs
     {
-        public SharedFileEventArgs(string path)
+        public SharedFileEventArgs(SharedFile sharedFile)
         {
-            Path = path;
+            SharedFile = sharedFile;
         }
 
-        public string Path { get; set; }
+        public SharedFile SharedFile { get; }
     }
 }

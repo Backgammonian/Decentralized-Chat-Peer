@@ -14,11 +14,11 @@ namespace UdpNatPunchClient.Models
 
         public UserModel(EncryptedPeer peer, string id, string nickname) : base(peer)
         {
-            ID = id;
+            UserID = id;
             Nickname = nickname;
         }
 
-        public string ID { get; }
+        public string UserID { get; }
 
         public string Nickname
         {
@@ -89,9 +89,20 @@ namespace UdpNatPunchClient.Models
             Send(messageToPeer, 1);
         }
 
-        public ImageMessageModel? AddIncomingMessage(ImageIntroduceMessage imageMessageFromPeer)
+        public ImageMessageModel AddIncomingMessage(ImageIntroduceMessage imageMessageFromPeer)
         {
             var message = new ImageMessageModel(imageMessageFromPeer);
+            Messages.Add(message);
+            _incomingMessages.Add(message);
+
+            HasNewMessages = true;
+
+            return message;
+        }
+
+        public FileMessageModel AddIncomingMessage(FileMessage fileMessageFromPeer)
+        {
+            var message = new FileMessageModel(fileMessageFromPeer);
             Messages.Add(message);
             _incomingMessages.Add(message);
 
@@ -162,6 +173,54 @@ namespace UdpNatPunchClient.Models
             {
                 Debug.WriteLine(ex);
             }
+        }
+
+        public void SendFileMessage(SharedFileInfo sharedFileInfo)
+        {
+            var message = new FileMessageModel();
+            message.UpdateFileInfo(sharedFileInfo);
+            _undeliveredMessages.Add(message);
+            _unreadMessages.Add(message);
+            Messages.Add(message);
+
+            var messageToPeer = new FileMessage(sharedFileInfo, message.MessageID);
+            Send(messageToPeer, 0);
+        }
+
+        public void SendFileRequest(Download download)
+        {
+            var messageToPeer = new FileRequestMessage(download.ID, download.Hash);
+            Send(messageToPeer, 0);
+        }
+
+        public void SendFileSegmentAckMessage(string downloadID)
+        {
+            var segmentAckMessage = new FileSegmentAckMessage(downloadID);
+            Send(segmentAckMessage, 0);
+        }
+
+        public void SendDownloadCancellationMessage(string downloadID)
+        {
+            var cancellationMessage = new DownloadCancellationMessage(downloadID);
+            Send(cancellationMessage, 0);
+        }
+
+        public void SendUploadCancellationMessage(string uploadID)
+        {
+            var cancellationMessage = new UploadCancellationMessage(uploadID);
+            Send(cancellationMessage, 0);
+        }
+
+        public void SendFileSegment(string uploadID, byte[] segment)
+        {
+            var fileSegmentMessage = new FileSegmentMessage(uploadID, segment);
+            Send(fileSegmentMessage, 1);
+        }
+
+        public void SendFileRequestErrorMessage(string fileHash)
+        {
+            var message = new FileRequestErrorMessage(fileHash);
+            Send(message, 0);
         }
     }
 }
