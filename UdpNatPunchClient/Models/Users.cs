@@ -51,8 +51,8 @@ namespace UdpNatPunchClient.Models
         {
             var user = new UserModel(peer, id, nickname);
 
-            if (!Has(user.ID) &&
-                _users.TryAdd(user.ID, user))
+            if (!Has(user.UserID) &&
+                _users.TryAdd(user.UserID, user))
             {
                 UserAdded?.Invoke(this, new UserUpdatedEventArgs(user));
                 await user.TrySetUpdatedPicture(profilePictureArray, profilePictureExtension);

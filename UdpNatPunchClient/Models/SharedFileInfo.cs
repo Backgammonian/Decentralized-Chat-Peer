@@ -4,7 +4,7 @@ namespace UdpNatPunchClient.Models
 {
     public sealed class SharedFileInfo : ObservableObject
     {
-        public SharedFileInfo(SharedFile sharedFile)
+        public SharedFileInfo(SharedFile? sharedFile)
         {
             if (sharedFile == null)
             {

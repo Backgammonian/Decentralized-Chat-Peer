@@ -22,10 +22,10 @@ namespace UdpNatPunchClient.Models
             //pass
         }
 
-        public override MessageModel? AddIncomingMessage(TextMessageToPeer textMessageFromPeer)
+        public override MessageModel AddIncomingMessage(TextMessageToPeer textMessageFromPeer)
         {
             //pass
-            return null;
+            return new MessageModel(string.Empty);
         }
 
         public void SendIntroductionMessage(string id, string nickname)
@@ -46,11 +46,6 @@ namespace UdpNatPunchClient.Models
             Messages.Add(message);
 
             Send(commandMessage, 0);
-        }
-
-        public void PrintInfo(string info)
-        {
-            Messages.Add(new MessageModel(info, MessageDirection.Incoming));
         }
 
         public void PrintSupport(string currentMessage)

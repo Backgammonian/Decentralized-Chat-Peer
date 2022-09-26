@@ -8,6 +8,6 @@
             DownloadID = downloadID;
         }
 
-        public string DownloadID { get; }
+        public string DownloadID { get; set; }
     }
 }

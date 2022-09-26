@@ -20,6 +20,9 @@
     <converters:TimeSpanConverter x:Key="TimeSpanConverter"/>
     <converters:TrackerConnectionStatusConverter x:Key="TrackerConnectionStatusConverter"/>
 
+    <SolidColorBrush x:Key="ServerColor" Color="LightGreen" Opacity="0.5"/>
+    <SolidColorBrush x:Key="ClientColor" Color="Blue" Opacity="0.1"/>
+    
     <Style TargetType="TextBlock" x:Key="BaseTextBlock">
         <Setter Property="FontSize" Value="14"/>
         <Setter Property="Margin" Value="2"/>
@@ -126,6 +129,163 @@
     <Style x:Key="BaseMediaElementStyle" TargetType="MediaElement">
         <Setter Property="Stretch" Value="Uniform"/>
         <Setter Property="StretchDirection" Value="DownOnly"/>
+    </Style>
+
+    <Style x:Key="TabControlStyle" TargetType="TabControl">
+        <Setter Property="Margin" Value="2"/>
+    </Style>
+
+    <Style x:Key="StackPanelStyle" TargetType="StackPanel">
+        <Setter Property="Margin" Value="2"/>
+        <Setter Property="Orientation" Value="Horizontal"/>
+    </Style>
+
+    <Style x:Key="EllipseStyle" TargetType="Ellipse">
+        <Setter Property="Width" Value="5"/>
+        <Setter Property="Height" Value="5"/>
+        <Setter Property="Fill" Value="Black"/>
+        <Setter Property="Margin" Value="5, 0, 5, 0"/>
+    </Style>
+
+    <Style x:Key="StackPanelInListBoxStyle" TargetType="StackPanel" BasedOn="{StaticResource StackPanelStyle}">
+        <Setter Property="Margin" Value="5"/>
+        <Setter Property="Orientation" Value="Vertical"/>
+    </Style>
+
+    <Style x:Key="PopUpTextBlock" TargetType="TextBlock" BasedOn="{StaticResource BaseTextBlock}">
+        <Setter Property="Visibility" Value="Collapsed"/>
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding RelativeSource={RelativeSource 
+                Mode=FindAncestor, 
+                AncestorType={x:Type ListBoxItem}},
+                Path=IsSelected}" 
+                Value="True">
+                <Setter Property="Visibility" Value="Visible"/>
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="PopUpButtonStyle" TargetType="Button" BasedOn="{StaticResource BaseButton}">
+        <Setter Property="Visibility" Value="Collapsed"/>
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding RelativeSource={RelativeSource 
+                Mode=FindAncestor, 
+                AncestorType={x:Type ListBoxItem}},
+                Path=IsSelected}" 
+                Value="True">
+                <Setter Property="Visibility" Value="Visible"/>
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="CancellationStatus" TargetType="TextBlock" BasedOn="{StaticResource BaseTextBlock}">
+        <Setter Property="Text" Value="Cancelled"/>
+        <Setter Property="Visibility" Value="Collapsed"/>
+        <Setter Property="Foreground" Value="Blue" />
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding IsCancelled}" Value="True">
+                <Setter Property="Visibility" Value="Visible"/>
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="CalculatedHashTextBlock" TargetType="TextBlock" BasedOn="{StaticResource PopUpTextBlock}">
+        <Setter Property="Visibility" Value="Collapsed"/>
+        <Style.Triggers>
+            <MultiDataTrigger>
+                <MultiDataTrigger.Conditions>
+                    <Condition Binding="{Binding HashVerificationStatus}" Value="Started"/>
+                    <Condition Binding="{Binding RelativeSource={RelativeSource 
+                        Mode=FindAncestor, 
+                        AncestorType={x:Type ListBoxItem}},
+                        Path=IsSelected}" 
+                        Value="True"/>
+                </MultiDataTrigger.Conditions>
+                <MultiDataTrigger.Setters>
+                    <Setter Property="Visibility" Value="Visible"/>
+                </MultiDataTrigger.Setters>
+            </MultiDataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="CancellationButton" TargetType="Button" BasedOn="{StaticResource BaseButton}">
+        <Setter Property="Visibility" Value="Collapsed"/>
+        <Setter Property="IsEnabled" Value="True"/>
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding RelativeSource={RelativeSource 
+                    Mode=FindAncestor, 
+                    AncestorType={x:Type ListBoxItem}},
+                    Path=IsSelected}" 
+                    Value="True">
+                <Setter Property="Visibility" Value="Visible"/>
+            </DataTrigger>
+
+            <DataTrigger Binding="{Binding IsDownloaded}" Value="True">
+                <Setter Property="Visibility" Value="Collapsed"/>
+                <Setter Property="IsEnabled" Value="False"/>
+            </DataTrigger>
+
+            <DataTrigger Binding="{Binding IsCancelled}" Value="True">
+                <Setter Property="Visibility" Value="Collapsed"/>
+                <Setter Property="IsEnabled" Value="False"/>
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="HashVerificationStatus" TargetType="TextBlock" BasedOn="{StaticResource BaseTextBlock}">
+        <Setter Property="Visibility" Value="Collapsed"/>
+        <Setter Property="Foreground" Value="DarkBlue"/>
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding HashVerificationStatus}" Value="Started">
+                <Setter Property="Visibility" Value="Visible"/>
+                <Setter Property="Text" Value="Hash verification in progress..."/>
+            </DataTrigger>
+
+            <DataTrigger Binding="{Binding HashVerificationStatus}" Value="Failed">
+                <Setter Property="Visibility" Value="Visible"/>
+                <Setter Property="Text" Value="Hash verification is failed. ❎"/>
+            </DataTrigger>
+
+            <DataTrigger Binding="{Binding HashVerificationStatus}" Value="Positive">
+                <Setter Property="Visibility" Value="Visible"/>
+                <Setter Property="Text" Value="Hash is correct! ✅"/>
+            </DataTrigger>
+
+            <DataTrigger Binding="{Binding HashVerificationStatus}" Value="Negative">
+                <Setter Property="Visibility" Value="Visible"/>
+                <Setter Property="Text" Value="Hash is NOT correct! ❎ Try download file again"/>
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="HashTextBlock" TargetType="TextBlock" BasedOn="{StaticResource PopUpTextBlock}">
+        <Setter Property="Text" Value="🔴 Calculating hash..."/>
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding IsHashCalculated}" Value="True">
+                <Setter Property="Text" Value="{Binding Hash, StringFormat={}SHA256 Hash: {0}}"/>
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="FinishTimeTextBlock" TargetType="TextBlock" BasedOn="{StaticResource BaseTextBlock}">
+        <Setter Property="Visibility" Value="Collapsed"/>
+        <Setter Property="Text" Value="Finish time"/>
+        <Style.Triggers>
+            <MultiDataTrigger>
+                <MultiDataTrigger.Conditions>
+                    <Condition Binding="{Binding IsFinished}" Value="True"/>
+                    <Condition Binding="{Binding RelativeSource={RelativeSource 
+                        Mode=FindAncestor, 
+                        AncestorType={x:Type ListBoxItem}},
+                        Path=IsSelected}" 
+                        Value="True"/>
+                </MultiDataTrigger.Conditions>
+                <MultiDataTrigger.Setters>
+                    <Setter Property="Text" Value="{Binding FinishTime, Converter={StaticResource DateTimeConverter}, StringFormat={}Finish time: {0}}"/>
+                    <Setter Property="Visibility" Value="Visible"/>
+                </MultiDataTrigger.Setters>
+            </MultiDataTrigger>
+        </Style.Triggers>
     </Style>
     
 </ResourceDictionary>

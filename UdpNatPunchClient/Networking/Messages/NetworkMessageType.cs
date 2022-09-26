@@ -33,6 +33,7 @@
 
         FileMessage,
         FileRequest,
+        FileRequestError,
         FileSegment,
         FileSegmentAck,
         CancelDownload,

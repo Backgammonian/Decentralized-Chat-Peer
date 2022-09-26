@@ -8,6 +8,6 @@
             UploadID = uploadID;
         }
 
-        public string UploadID { get; }
+        public string UploadID { get; set; }
     }
 }

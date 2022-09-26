@@ -19,7 +19,7 @@ namespace UdpNatPunchClient.Models
         private string _calculatedHash = CryptographyModule.DefaultFileHash;
         private long _numberOfReceivedSegments;
 
-        public Download(SharedFileInfo availableFile, EncryptedPeer server, string path)
+        public Download(SharedFileInfo availableFile, UserModel server, string path)
         {
             _downloadSpeedCounter = new SpeedCounter();
             _downloadSpeedCounter.Updated += OnDownloadSpeedCounterUpdated;
@@ -49,7 +49,7 @@ namespace UdpNatPunchClient.Models
         public long Size { get; }
         public long NumberOfSegments { get; }
         public string Hash { get; }
-        public EncryptedPeer Server { get; }
+        public UserModel Server { get; }
         public DateTime StartTime { get; }
         public bool IsActive => !IsCancelled && !IsDownloaded;
         public double DownloadSpeed => _downloadSpeedCounter.Speed;
@@ -207,9 +207,7 @@ namespace UdpNatPunchClient.Models
             }
 
             AddReceivedBytes(segment);
-
-            var segmentAckMessage = new FileSegmentAckMessage(ID);
-            Server.SendEncrypted(segmentAckMessage, 0);
+            Server.SendFileSegmentAckMessage(ID);
         }
 
         public void CancelWithDeletion()
@@ -236,13 +234,7 @@ namespace UdpNatPunchClient.Models
 
             IsCancelled = true;
             ShutdownFile();
-            SendCancellationMessage();
-        }
-
-        private void SendCancellationMessage()
-        {
-            var cancellationMessage = new DownloadCancellationMessage(ID);
-            Server.SendEncrypted(cancellationMessage, 0);
+            Server.SendDownloadCancellationMessage(ID);
         }
     }
 }

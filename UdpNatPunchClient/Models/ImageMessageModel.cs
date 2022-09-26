@@ -62,7 +62,7 @@ namespace UdpNatPunchClient.Models
             }
             else
             {
-                Debug.WriteLine("(UpdateImage) Can't update message image");
+                Debug.WriteLine("(UpdateImage) Can't update message image!");
             }
         }
 

@@ -224,5 +224,10 @@ namespace Networking
 
             PeerDisconnected?.Invoke(this, new EncryptedPeerEventArgs(this));
         }
+
+        public override string ToString()
+        {
+            return _peer.EndPoint.ToString();
+        }
     }
 }

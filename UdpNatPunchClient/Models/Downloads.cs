@@ -40,7 +40,7 @@ namespace UdpNatPunchClient.Models
             }
             catch (Exception)
             {
-                Debug.WriteLine($"(HasDownloadWithSamePath) No match with file {downloadFilePath}");
+                Debug.WriteLine($"(GetDownloadWithSamePath) No match with file {downloadFilePath}");
 
                 return null;
             }
@@ -103,7 +103,7 @@ namespace UdpNatPunchClient.Models
 
         public void CancelAllDownloadsFromServer(int serverID)
         {
-            var downloadsFromServer = _downloads.Values.Where(download => download.Server.Id == serverID);
+            var downloadsFromServer = _downloads.Values.Where(download => download.Server.PeerID == serverID);
             foreach (var download in downloadsFromServer)
             {
                 download.Cancel();
