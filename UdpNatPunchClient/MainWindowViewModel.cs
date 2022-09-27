@@ -88,10 +88,10 @@ namespace UdpNatPunchClient
             ShowOwnProfilePictureCommand = new RelayCommand<MouseEventArgs?>(ShowOwnProfilePicture);
             ShowPeerProfilePictureCommand = new RelayCommand<MouseEventArgs?>(ShowPeerProfilePicture);
             ShowPictureFromMessageCommand = new RelayCommand<MouseEventArgs?>(ShowPictureFromMessage);
-            DownloadFileCommand = new RelayCommand<SharedFileInfo>(DownloadFile); //TODO
+            DownloadFileCommand = new RelayCommand<SharedFileInfo>(DownloadFile);
             CancelDownloadCommand = new RelayCommand<Download>(CancelDownload);
-            //OpenFileInFolderCommand = new RelayCommand(OpenFileInFolder);
-            //RemoveSharedFileCommand = new RelayCommand(RemoveSharedFile);
+            OpenFileInFolderCommand = new RelayCommand<Download>(OpenFileInFolder);
+            RemoveSharedFileCommand = new RelayCommand<SharedFile>(RemoveSharedFile);
 
             _tracker = null;
 
@@ -162,11 +162,11 @@ namespace UdpNatPunchClient
         public ICommand ChangeProfilePictureCommand { get; }
         public ICommand ShowOwnProfilePictureCommand { get; }
         public ICommand ShowPeerProfilePictureCommand { get; }
+        public ICommand ShowPictureFromMessageCommand { get; }
         public ICommand SendImageCommand { get; }
         public ICommand SendFileCommand { get; }
         public ICommand GetNewProfilePictureFromDropCommand { get; }
         public ICommand SendMediaFromDropCommand { get; }
-        public ICommand ShowPictureFromMessageCommand { get; }
         public ICommand DownloadFileCommand { get; }
         public ICommand CancelDownloadCommand { get; }
         public ICommand OpenFileInFolderCommand { get; }
@@ -1389,6 +1389,64 @@ namespace UdpNatPunchClient
             }
 
             PrepareForFileReceiving(user, newDownload);
+        }
+
+        private void CancelDownload(Download? download)
+        {
+            if (download == null)
+            {
+                return;
+            }
+
+            var confirmDownloadCancellation = MessageBox.Show($"Do you want to cancel the download of the file '{download.Name}'?",
+                "Cancel Download Confirmation",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (confirmDownloadCancellation == MessageBoxResult.Yes)
+            {
+                download.Cancel();
+            }
+        }
+
+        private void OpenFileInFolder(Download? download)
+        {
+            if (download == null)
+            {
+                return;
+            }
+
+            if (!File.Exists(download.FilePath))
+            {
+                MessageBox.Show($"File '{download.Name}' was removed or deleted.",
+                    "File not found",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+
+                return;
+            }
+
+            var argument = $"/select, \"{download.FilePath}\"";
+            Process.Start("explorer.exe", argument);
+        }
+
+        private void RemoveSharedFile(SharedFile? sharedFile)
+        {
+            if (sharedFile == null)
+            {
+                return;
+            }
+
+            var messageBoxResult = MessageBox.Show($"Do you want to stop sharing this file: '{sharedFile.Name}'? " +
+                $"Users' current downloads will be stopped.",
+                "Delete Confirmation",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (messageBoxResult == MessageBoxResult.Yes)
+            {
+                _sharedFiles.RemoveFile(sharedFile.Index);
+            }
         }
 
         private void PutAsciiArt(AsciiArtsType artType)
