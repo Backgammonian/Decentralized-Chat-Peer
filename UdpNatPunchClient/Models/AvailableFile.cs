@@ -1,5 +1,4 @@
 ﻿using Microsoft.Toolkit.Mvvm.ComponentModel;
-using Networking.Utils;
 
 namespace UdpNatPunchClient.Models
 {
@@ -9,8 +8,8 @@ namespace UdpNatPunchClient.Models
 
         public AvailableFile(SharedFileInfo sharedFile, UserModel server)
         {
-            ID = RandomGenerator.GetRandomString(40);
-            Hash = sharedFile.Hash;
+            FileIDFromServer = sharedFile.FileID;
+            Hash = sharedFile.FileHash;
             Name = sharedFile.Name;
             Size = sharedFile.Size;
             NumberOfSegments = sharedFile.NumberOfSegments;
@@ -18,7 +17,7 @@ namespace UdpNatPunchClient.Models
             IsAvailable = true;
         }
 
-        public string ID { get; }
+        public string FileIDFromServer { get; }
         public string Hash { get; }
         public string Name { get; }
         public long Size { get; }

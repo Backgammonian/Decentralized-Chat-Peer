@@ -48,8 +48,7 @@ namespace UdpNatPunchClient.Models
 
         public Download? Get(string downloadID)
         {
-            if (HasDownload(downloadID) &&
-                _downloads.TryGetValue(downloadID, out var download))
+            if (_downloads.TryGetValue(downloadID, out var download))
             {
                 return download;
             }
@@ -57,33 +56,30 @@ namespace UdpNatPunchClient.Models
             return null;
         }
 
-        public bool HasDownload(string downloadID)
-        {
-            return _downloads.ContainsKey(downloadID);
-        }
-
         public bool TryAddDownload(Download download)
         {
-            if (!HasDownload(download.ID) &&
-                download.TryOpenFile() &&
-                _downloads.TryAdd(download.ID, download))
+            if (download.TryOpenFile() &&
+                _downloads.TryAdd(download.DownloadID, download))
             {
-                _downloads[download.ID].Finished += OnDownloadFinished;
-                _downloads[download.ID].FileRemoved += OnFileRemoved;
+                _downloads[download.DownloadID].Finished += OnDownloadFinished;
+                _downloads[download.DownloadID].FileRemoved += OnFileRemoved;
                 DownloadsListUpdated?.Invoke(this, EventArgs.Empty);
 
                 return true;
             }
+            else
+            {
+                Debug.WriteLine($"(TryAddDownload) Can't add download {download.DownloadID} into collection");
 
-            Debug.WriteLine($"(TryAddDownload) Can't add download {download.ID} into collection");
+                download.ShutdownFile();
 
-            return false;
+                return false;
+            }
         }
 
         public void RemoveDownload(string downloadID)
         {
-            if (HasDownload(downloadID) &&
-                _downloads.TryRemove(downloadID, out Download? removedDownload) &&
+            if (_downloads.TryRemove(downloadID, out Download? removedDownload) &&
                 removedDownload != null)
             {
                 removedDownload.ShutdownFile();

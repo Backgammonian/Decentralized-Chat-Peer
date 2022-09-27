@@ -11,13 +11,15 @@ namespace UdpNatPunchClient.Models
                 return;
             }
 
-            Hash = sharedFile.Hash;
+            FileHash = sharedFile.Hash;
+            FileID = sharedFile.ID;
             Name = sharedFile.Name;
             Size = sharedFile.Size;
             NumberOfSegments = sharedFile.NumberOfSegments;
         }
 
-        public string Hash { get; set; } = string.Empty;
+        public string FileHash { get; set; } = string.Empty;
+        public string FileID { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
         public long Size { get; set; }
         public long NumberOfSegments { get; set; }

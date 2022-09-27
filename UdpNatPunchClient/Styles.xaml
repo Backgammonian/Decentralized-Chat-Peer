@@ -21,7 +21,7 @@
     <converters:TrackerConnectionStatusConverter x:Key="TrackerConnectionStatusConverter"/>
 
     <SolidColorBrush x:Key="ServerColor" Color="LightCoral" Opacity="0.7"/>
-    <SolidColorBrush x:Key="ClientColor" Color="Blue" Opacity="0.1"/>
+    <SolidColorBrush x:Key="ClientColor" Color="Blue" Opacity="0.2"/>
     
     <Style TargetType="TextBlock" x:Key="BaseTextBlock">
         <Setter Property="FontSize" Value="14"/>

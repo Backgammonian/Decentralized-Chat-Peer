@@ -11,7 +11,7 @@ namespace Converters
         {
             if (value is UserModel user)
             {
-                return $"Peer {user.ID} ({user.EndPoint})";
+                return $"Peer {user.UserID} ({user.EndPoint})";
             }
             else
             if (value is TrackerModel tracker)

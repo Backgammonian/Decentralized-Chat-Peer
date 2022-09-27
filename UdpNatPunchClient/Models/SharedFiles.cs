@@ -10,13 +10,11 @@ namespace UdpNatPunchClient.Models
 {
     public sealed class SharedFiles
     {
-        private readonly ConcurrentDictionary<long, SharedFile> _files;
-        private readonly Indexer _indexer;
+        private readonly ConcurrentDictionary<string, SharedFile> _files;
 
         public SharedFiles()
         {
-            _files = new ConcurrentDictionary<long, SharedFile>();
-            _indexer = new Indexer();
+            _files = new ConcurrentDictionary<string, SharedFile>();
         }
 
         public event EventHandler<EventArgs>? SharedFileAdded;
@@ -26,17 +24,13 @@ namespace UdpNatPunchClient.Models
 
         public IEnumerable<SharedFile> SharedFilesList => _files.Values;
 
-        public bool HasFile(long index)
-        {
-            return _files.ContainsKey(index);
-        }
-
-        public SharedFile? GetByHash(string fileHash)
+        public SharedFile? GetByID(string fileID)
         {
             try
             {
                 return _files.Values.First(sharedFile =>
-                    sharedFile.Hash == fileHash && sharedFile.IsHashCalculated);
+                    sharedFile.ID == fileID &&
+                    sharedFile.IsHashCalculated);
             }
             catch (Exception)
             {
@@ -66,11 +60,10 @@ namespace UdpNatPunchClient.Models
                 return null;
             }
 
-            var index = _indexer.GetNewIndex();
-            var sharedFile = new SharedFile(index, filePath);
+            var sharedFile = new SharedFile(filePath);
 
             if (sharedFile.TryOpenStream() &&
-                _files.TryAdd(sharedFile.Index, sharedFile))
+                _files.TryAdd(sharedFile.ID, sharedFile))
             {
                 SharedFileAdded?.Invoke(this, EventArgs.Empty);
 
@@ -82,24 +75,23 @@ namespace UdpNatPunchClient.Models
                 }
                 else
                 {
-                    RemoveFile(sharedFile.Index);
+                    RemoveFile(sharedFile.ID);
 
                     return null;
                 }
             }
             else
             {
-                RemoveFile(sharedFile.Index);
+                RemoveFile(sharedFile.ID);
                 SharedFileError?.Invoke(this, new SharedFileEventArgs(sharedFile));
 
                 return null;
             }
         }
 
-        public void RemoveFile(long fileIndex)
+        public void RemoveFile(string fileID)
         {
-            if (HasFile(fileIndex) &&
-                _files.TryRemove(fileIndex, out SharedFile? removedFile) &&
+            if (_files.TryRemove(fileID, out SharedFile? removedFile) &&
                 removedFile != null)
             {
                 removedFile.CloseStream();

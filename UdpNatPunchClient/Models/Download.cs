@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Microsoft.Toolkit.Mvvm.ComponentModel;
 using Networking;
 using Networking.Utils;
-using Networking.Messages;
 
 namespace UdpNatPunchClient.Models
 {
@@ -19,18 +18,14 @@ namespace UdpNatPunchClient.Models
         private string _calculatedHash = CryptographyModule.DefaultFileHash;
         private long _numberOfReceivedSegments;
 
-        public Download(SharedFileInfo availableFile, UserModel server, string path)
+        public Download(AvailableFile availableFile, string path)
         {
             _downloadSpeedCounter = new SpeedCounter();
             _downloadSpeedCounter.Updated += OnDownloadSpeedCounterUpdated;
-            ID = RandomGenerator.GetRandomString(30);
-            OriginalName = availableFile.Name;
+            DownloadID = RandomGenerator.GetRandomString(30);
+            SourceInfo = availableFile;
             Name = Path.GetFileName(path);
             FilePath = path;
-            Size = availableFile.Size;
-            NumberOfSegments = availableFile.NumberOfSegments;
-            Hash = availableFile.Hash;
-            Server = server;
             IsDownloaded = false;
             IsCancelled = false;
             HashVerificationStatus = HashVerificationStatus.None;
@@ -42,15 +37,17 @@ namespace UdpNatPunchClient.Models
         public event EventHandler<EventArgs>? FileRemoved;
         public event EventHandler<DownloadFinishedEventArgs>? Finished;
 
-        public string ID { get; }
-        public string OriginalName { get; }
+        public string DownloadID { get; }
+        public AvailableFile SourceInfo { get; }
         public string Name { get; }
         public string FilePath { get; }
-        public long Size { get; }
-        public long NumberOfSegments { get; }
-        public string Hash { get; }
-        public UserModel Server { get; }
         public DateTime StartTime { get; }
+        public string SharedFileID => SourceInfo.FileIDFromServer;
+        public UserModel Server => SourceInfo.Server;
+        public string OriginalName => SourceInfo.Name;
+        public long Size => SourceInfo.Size;
+        public long NumberOfSegments => SourceInfo.NumberOfSegments;
+        public string Hash => SourceInfo.Hash;
         public bool IsActive => !IsCancelled && !IsDownloaded;
         public double DownloadSpeed => _downloadSpeedCounter.Speed;
         public double AverageSpeed => _downloadSpeedCounter.AverageSpeed;
@@ -109,11 +106,11 @@ namespace UdpNatPunchClient.Models
             OnPropertyChanged(nameof(Progress));
         }
 
-        private void AddReceivedBytes(byte[] segment)
+        private bool AddReceivedBytes(byte[] segment)
         {
             if (_stream == null)
             {
-                return;
+                return false;
             }
 
             try
@@ -122,11 +119,14 @@ namespace UdpNatPunchClient.Models
                 _stream.Write(segment);
                 _downloadSpeedCounter.AddBytes(segment.Length);
                 NumberOfReceivedSegments += 1;
+
+                return true;
             }
             catch (Exception)
             {
-                Cancel();
             }
+
+            return false;
         }
 
         private void FinishDownload()
@@ -206,8 +206,14 @@ namespace UdpNatPunchClient.Models
                 return;
             }
 
-            AddReceivedBytes(segment);
-            Server.SendFileSegmentAckMessage(ID);
+            if (AddReceivedBytes(segment))
+            {
+                Server.SendFileSegmentAckMessage(DownloadID);
+            }
+            else
+            {
+                Cancel();
+            }
         }
 
         public void CancelWithDeletion()
@@ -234,7 +240,12 @@ namespace UdpNatPunchClient.Models
 
             IsCancelled = true;
             ShutdownFile();
-            Server.SendDownloadCancellationMessage(ID);
+            Server.SendDownloadCancellationMessage(DownloadID);
+        }
+
+        public void SendFileRequest()
+        {
+            Server.SendFileRequest(this);
         }
     }
 }

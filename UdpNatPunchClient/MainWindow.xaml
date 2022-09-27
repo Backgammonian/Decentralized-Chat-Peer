@@ -355,7 +355,7 @@
                                     </DataTemplate>
 
                                     <DataTemplate
-                                        DataType="{x:Type models:FileMessageModel}">
+                                        DataType="{x:Type models:OutgoingFileMessageModel}">
                                         <StackPanel
                                             Margin="5"
                                             HorizontalAlignment="{Binding Direction, Converter={StaticResource MessageDirectionAlignmentConverter}}"
@@ -368,6 +368,35 @@
                                                 Style="{StaticResource MessageContentTextBlock}"
                                                 Background="{Binding Direction, Converter={StaticResource MessageDirectionColorConverter}}"
                                                 Text="{Binding FileInfo.Size, Converter={StaticResource BytesToMegabytesConverter}}"/>
+                                            <StackPanel
+                                                Margin="2"
+                                                Orientation="Horizontal"
+                                                HorizontalAlignment="{Binding Direction, Converter={StaticResource MessageDirectionAlignmentConverter}}">
+                                                <TextBlock
+                                                    Style="{StaticResource MessageDateTextBlock}"
+                                                    Text="{Binding Time, Converter={StaticResource DateTimeConverter}}"/>
+                                                <TextBlock
+                                                    Style="{StaticResource MessageDeliveryStateTextBlock}"
+                                                    Text="{Binding DeliveryState, Converter={StaticResource DeliveryStateConverter}}"
+                                                    Visibility="{Binding Direction, Converter={StaticResource MessageDirectionToVisibilityConverter}}"/>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </DataTemplate>
+
+                                    <DataTemplate
+                                        DataType="{x:Type models:IncomingFileMessageModel}">
+                                        <StackPanel
+                                            Margin="5"
+                                            HorizontalAlignment="{Binding Direction, Converter={StaticResource MessageDirectionAlignmentConverter}}"
+                                            Background="{Binding Direction, Converter={StaticResource MessageDirectionColorConverter}}">
+                                            <TextBlock
+                                                Style="{StaticResource MessageContentTextBlock}"
+                                                Background="{Binding Direction, Converter={StaticResource MessageDirectionColorConverter}}"
+                                                Text="{Binding AvailableFile.Name}"/>
+                                            <TextBlock
+                                                Style="{StaticResource MessageContentTextBlock}"
+                                                Background="{Binding Direction, Converter={StaticResource MessageDirectionColorConverter}}"
+                                                Text="{Binding AvailableFile.Size, Converter={StaticResource BytesToMegabytesConverter}}"/>
                                             <Button 
                                                 Style="{StaticResource BaseButton}"
                                                 Command="{Binding DataContext.DownloadFileCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"

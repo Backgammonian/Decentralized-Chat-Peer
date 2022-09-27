@@ -2,14 +2,16 @@
 {
     public sealed class FileRequestMessage : BaseMessage
     {
-        public FileRequestMessage(string id, string fileHash)
+        public FileRequestMessage(string newDownloadID, string fileID, string fileName)
         {
             Type = NetworkMessageType.FileRequest;
-            ID = id;
-            FileHash = fileHash;
+            NewDownloadID = newDownloadID;
+            FileID = fileID;
+            FileName = fileName;
         }
 
-        public string ID { get; set; }
-        public string FileHash { get; set; }
+        public string NewDownloadID { get; set; }
+        public string FileID { get; set; }
+        public string FileName { get; set; }
     }
 }
