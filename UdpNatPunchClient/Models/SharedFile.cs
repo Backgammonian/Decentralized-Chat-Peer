@@ -2,6 +2,7 @@
 using System.IO;
 using Microsoft.Toolkit.Mvvm.ComponentModel;
 using Networking;
+using Networking.Utils;
 
 namespace UdpNatPunchClient.Models
 {
@@ -14,16 +15,16 @@ namespace UdpNatPunchClient.Models
         private long _numberOfSegments;
         private bool _isActive;
 
-        public SharedFile(long index, string path)
+        public SharedFile(string path)
         {
-            Index = index;
+            ID = RandomGenerator.GetRandomString(40);
             FilePath = path;
             IsActive = false;
         }
 
         public event EventHandler<EventArgs>? Closed;
 
-        public long Index { get; }
+        public string ID { get; }
         public string FilePath { get; }
         public bool IsHashCalculated => Hash != CryptographyModule.DefaultFileHash;
 

@@ -88,12 +88,10 @@ namespace UdpNatPunchClient
             ShowOwnProfilePictureCommand = new RelayCommand<MouseEventArgs?>(ShowOwnProfilePicture);
             ShowPeerProfilePictureCommand = new RelayCommand<MouseEventArgs?>(ShowPeerProfilePicture);
             ShowPictureFromMessageCommand = new RelayCommand<MouseEventArgs?>(ShowPictureFromMessage);
-            DownloadFileCommand = new RelayCommand<SharedFileInfo>(DownloadFile);
+            DownloadFileCommand = new RelayCommand<AvailableFile>(DownloadFile);
             CancelDownloadCommand = new RelayCommand<Download>(CancelDownload);
             OpenFileInFolderCommand = new RelayCommand<Download>(OpenFileInFolder);
             RemoveSharedFileCommand = new RelayCommand<SharedFile>(RemoveSharedFile);
-
-            _tracker = null;
 
             _client = new Client();
             _client.PeerAdded += OnPeerAdded;
@@ -116,7 +114,7 @@ namespace UdpNatPunchClient
 
             _nicknameUpdateTimer = new DispatcherTimer();
             _nicknameUpdateTimer.Interval = TimeSpan.FromSeconds(1);
-            _nicknameUpdateTimer.Tick += OnNcknameUpdateTimerTick;
+            _nicknameUpdateTimer.Tick += OnNicknameUpdateTimerTick;
 
             _keepAliveTimer = new DispatcherTimer();
             _keepAliveTimer.Interval = TimeSpan.FromSeconds(5);
@@ -124,6 +122,7 @@ namespace UdpNatPunchClient
 
             _availableFiles = new AvailableFiles();
             _availableFiles.FileAdded += OnAvailableFileAdded;
+            _availableFiles.FileRemoved += OnAvailableFileRemoved;
 
             _downloads = new Downloads();
             _downloads.DownloadFinished += OnDownloadFinished;
@@ -138,6 +137,8 @@ namespace UdpNatPunchClient
             _uploads = new Uploads();
             _uploads.UploadAdded += OnUploadAdded;
             _uploads.UploadRemoved += OnUploadRemoved;
+
+            _tracker = null;
 
             ID = RandomGenerator.GetRandomString(30);
             TextArts = new ObservableCollection<AsciiArtsType>(Enum.GetValues(typeof(AsciiArtsType)).Cast<AsciiArtsType>());
@@ -154,7 +155,7 @@ namespace UdpNatPunchClient
             TrackerConnectionStatus = TrackerConnectionStatusType.None;
         }
 
-        #region Bindings
+        #region Command bindings
         public ICommand ConnectToTrackerCommand { get; }
         public ICommand SendMessageCommand { get; }
         public ICommand PutAsciiArtCommand { get; }
@@ -171,7 +172,9 @@ namespace UdpNatPunchClient
         public ICommand CancelDownloadCommand { get; }
         public ICommand OpenFileInFolderCommand { get; }
         public ICommand RemoveSharedFileCommand { get; }
+        #endregion
 
+        #region Data bindings
         public string ID { get; }
         public ObservableCollection<AsciiArtsType> TextArts { get; }
         public string TrackerAddress => _tracker == null ? "---" : _tracker.EndPoint;
@@ -399,7 +402,7 @@ namespace UdpNatPunchClient
             _nicknameUpdateTimer.Start();
         }
 
-        private void OnNcknameUpdateTimerTick(object? sender, EventArgs e)
+        private void OnNicknameUpdateTimerTick(object? sender, EventArgs e)
         {
             _nicknameUpdateTimer.Stop();
             NicknameUpdateState = NicknameUpdateState.Updated;
@@ -453,12 +456,12 @@ namespace UdpNatPunchClient
 
         private void OnPeerAdded(object? sender, EncryptedPeerEventArgs e)
         {
-            Debug.WriteLine("(OnPeerAdded) " + e.Peer.Id);
+            Debug.WriteLine($"(OnPeerAdded) {e.Peer.Id}");
         }
 
         private void OnPeerConnected(object? sender, EncryptedPeerEventArgs e)
         {
-            Debug.WriteLine("(OnPeerConnected) " + e.Peer.Id);
+            Debug.WriteLine($"(OnPeerConnected) {e.Peer.Id}");
 
             var profilePictureByteArray = Array.Empty<byte>();
             var profilePictureExtension = string.Empty;
@@ -476,7 +479,7 @@ namespace UdpNatPunchClient
 
         private void OnPeerRemoved(object? sender, EncryptedPeerEventArgs e)
         {
-            Debug.WriteLine("(OnPeerRemoved) " + e.Peer.Id);
+            Debug.WriteLine($"(OnPeerRemoved) {e.Peer.Id}");
 
             var user = _connectedUsers.GetUserByPeer(e.Peer);
             if (user == null)
@@ -491,7 +494,8 @@ namespace UdpNatPunchClient
 
             _connectedUsers.Remove(user.UserID);
             _downloads.CancelAllDownloadsFromServer(e.Peer.Id);
-            _availableFiles.MarkAllFilesFromServerAsUnavailable(e.Peer.Id);
+            _uploads.CancelAllUploadsOfPeer(e.Peer.Id);
+            _availableFiles.RemoveAllFilesFromServer(e.Peer.Id);
         }
 
         private async Task OnMessageFromPeerReceived(object? sender, NetEventArgs e)
@@ -500,8 +504,8 @@ namespace UdpNatPunchClient
             var type = e.Type;
             var json = e.Json;
 
-            Debug.WriteLine("(OnMessageFromPeerReceived) source = " + source.EndPoint);
-            Debug.WriteLine("(OnMessageFromPeerReceived) type = " + type);
+            Debug.WriteLine($"(OnMessageFromPeerReceived) source = {source.EndPoint}");
+            Debug.WriteLine($"(OnMessageFromPeerReceived) type = {type}");
 
             var author = _connectedUsers.GetUserByPeer(source);
 
@@ -647,6 +651,21 @@ namespace UdpNatPunchClient
                     }
                     break;
 
+                case NetworkMessageType.ImageSendingFailed:
+                    if (author == null)
+                    {
+                        return;
+                    }
+
+                    var imageSendingFailedMessage = JsonConvert.DeserializeObject<ImageSendingFailedMessage>(json);
+                    if (imageSendingFailedMessage == null)
+                    {
+                        return;
+                    }
+
+                    author.SetImageMessageAsFailed(imageSendingFailedMessage.MessageID);
+                    break;
+
                 case NetworkMessageType.FileMessage:
                     if (author == null)
                     {
@@ -660,9 +679,7 @@ namespace UdpNatPunchClient
                     }
 
                     var receivedFileMessage = author.AddIncomingMessage(fileMessage);
-                    receivedFileMessage.UpdateFileInfo(fileMessage.SharedFileInfo);
-                    var newAvailableFile = new AvailableFile(fileMessage.SharedFileInfo, author);
-                    _availableFiles.Add(newAvailableFile);
+                    _availableFiles.Add(receivedFileMessage.AvailableFile);
 
                     if (SelectedPeer == author)
                     {
@@ -711,13 +728,92 @@ namespace UdpNatPunchClient
                         return;
                     }
 
-                    var sharedFileInfo = _sharedFiles.GetByHash(fileRequestErrorMessage.FileHash);
-                    if (sharedFileInfo == null)
+                    author.PrintInfo($"(System) Error: file {fileRequestErrorMessage.FileName} is unavailable.");
+                    break;
+
+                case NetworkMessageType.FileSegment:
+                    if (author == null)
                     {
                         return;
                     }
 
-                    author.PrintInfo($"(System) Error: file {sharedFileInfo.Name} is unavailable.");
+                    var fileSegmentMessage = JsonConvert.DeserializeObject<FileSegmentMessage>(json);
+                    if (fileSegmentMessage == null)
+                    {
+                        return;
+                    }
+
+                    var download = _downloads.Get(fileSegmentMessage.UploadID);
+                    if (download == null)
+                    {
+                        return;
+                    }
+
+                    download.Write(fileSegmentMessage.Segment);
+                    break;
+
+                case NetworkMessageType.FileSegmentAck:
+                    if (author == null)
+                    {
+                        return;
+                    }
+
+                    var fileSegmentAckMessage = JsonConvert.DeserializeObject<FileSegmentAckMessage>(json);
+                    if (fileSegmentAckMessage == null)
+                    {
+                        return;
+                    }
+
+                    var upload = _uploads.Get(fileSegmentAckMessage.DownloadID);
+                    if (upload == null)
+                    {
+                        return;
+                    }
+
+                    if (upload.AddAck())
+                    {
+                        upload.SendNextFileSegment();
+                    }
+                    break;
+
+                case NetworkMessageType.CancelDownload:
+                    if (author == null)
+                    {
+                        return;
+                    }
+
+                    var downloadCancellationMessage = JsonConvert.DeserializeObject<DownloadCancellationMessage>(json);
+                    if (downloadCancellationMessage == null)
+                    {
+                        return;
+                    }
+
+                    var downloadToCancel = _downloads.Get(downloadCancellationMessage.DownloadID);
+                    if (downloadToCancel == null)
+                    {
+                        return;
+                    }
+
+                    downloadToCancel.Cancel();
+                    break;
+
+                case NetworkMessageType.CancelUpload:
+                    if (author == null)
+                    {
+                        return;
+                    }
+
+                    var uploadCancellationMessage = JsonConvert.DeserializeObject<UploadCancellationMessage>(json);
+                    if (uploadCancellationMessage == null)
+                    {
+                        return;
+                    }
+
+                    var uploadToCancel = _uploads.Get(uploadCancellationMessage.UploadID);
+                    if (uploadToCancel != null)
+                    {
+                        uploadToCancel.Cancel();
+                    }
                     break;
 
                 case NetworkMessageType.UpdateImageMessage:
@@ -737,20 +833,7 @@ namespace UdpNatPunchClient
                         updateImageMessage.PictureExtension);
                     break;
 
-                case NetworkMessageType.ImageSendingFailed:
-                    if (author == null)
-                    {
-                        return;
-                    }
-
-                    var imageSendingFailedMessage = JsonConvert.DeserializeObject<ImageSendingFailedMessage>(json);
-                    if (imageSendingFailedMessage == null)
-                    {
-                        return;
-                    }
-
-                    author.SetImageMessageAsFailed(imageSendingFailedMessage.MessageID);
-                    break;
+                
 
                 case NetworkMessageType.MessageReceiptNotification:
                     if (author == null)
@@ -1064,7 +1147,7 @@ namespace UdpNatPunchClient
             OnPropertyChanged(nameof(SharedFiles));
             _uploads.CancelAllUploadsOfFile(e.SharedFile.Hash);
 
-            //TODO
+            //TODO разослать клиентам, что такой файл больше недоступен?
         }
 
         private void OnSharedFileHashCalculated(object? sender, EventArgs e)
@@ -1076,7 +1159,7 @@ namespace UdpNatPunchClient
         {
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
-                MessageBox.Show($"Couldn't add file to share: {e.SharedFile.FilePath}",
+                MessageBox.Show($"Error: can't load and send file {e.SharedFile.FilePath}",
                     "File sharing error",
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
@@ -1097,6 +1180,11 @@ namespace UdpNatPunchClient
         }
 
         private void OnAvailableFileAdded(object? sender, EventArgs e)
+        {
+            OnPropertyChanged(nameof(AvailableFiles));
+        }
+
+        private void OnAvailableFileRemoved(object? sender, EventArgs e)
         {
             OnPropertyChanged(nameof(AvailableFiles));
         }
@@ -1317,10 +1405,20 @@ namespace UdpNatPunchClient
             CurrentMessage = string.Empty;
         }
 
-        private void DownloadFile(SharedFileInfo? file)
+        private void DownloadFile(AvailableFile? file)
         {
             if (file == null)
             {
+                return;
+            }
+
+            if (!file.IsAvailable)
+            {
+                MessageBox.Show($"File {file.Name} from peer {file.Server.Nickname} ({file.Server.UserID}) is not available!",
+                    "Download error",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+
                 return;
             }
 
@@ -1352,9 +1450,10 @@ namespace UdpNatPunchClient
                 return;
             }
 
-            Debug.WriteLine($"(DownloadFile) Path: {saveFileDialog.FileName}");
+            var path = saveFileDialog.FileName;
+            Debug.WriteLine($"(DownloadFile) Path: {path}");
 
-            var newDownload = new Download(file, user, saveFileDialog.FileName);
+            var newDownload = new Download(file, path);
 
             var duplicateDownload = _downloads.GetDownloadWithSamePath(newDownload.FilePath);
             if (duplicateDownload != null)
@@ -1367,7 +1466,7 @@ namespace UdpNatPunchClient
                 if (confirmDownloadRestart == MessageBoxResult.Yes)
                 {
                     duplicateDownload.Cancel();
-                    PrepareForFileReceiving(user, newDownload);
+                    PrepareForFileReceiving(newDownload);
                 }
 
                 return;
@@ -1382,13 +1481,13 @@ namespace UdpNatPunchClient
 
                 if (confirmDownloadRepeat == MessageBoxResult.Yes)
                 {
-                    PrepareForFileReceiving(user, newDownload);
+                    PrepareForFileReceiving(newDownload);
                 }
 
                 return;
             }
 
-            PrepareForFileReceiving(user, newDownload);
+            PrepareForFileReceiving(newDownload);
         }
 
         private void CancelDownload(Download? download)
@@ -1445,7 +1544,8 @@ namespace UdpNatPunchClient
 
             if (messageBoxResult == MessageBoxResult.Yes)
             {
-                _sharedFiles.RemoveFile(sharedFile.Index);
+                _sharedFiles.RemoveFile(sharedFile.ID);
+                _uploads.CancelAllUploadsOfFile(sharedFile.Hash);
             }
         }
 
@@ -1646,14 +1746,12 @@ namespace UdpNatPunchClient
         }
         #endregion
 
-
-
         #region Miscellaneous methods
-        private void PrepareForFileReceiving(UserModel server, Download download)
+        private void PrepareForFileReceiving(Download download)
         {
             if (_downloads.TryAddDownload(download))
             {
-                server.SendFileRequest(download);
+                download.SendFileRequest();
 
                 Notify("New download",
                     $"File {download.Name} is now downloading!",
@@ -1671,25 +1769,34 @@ namespace UdpNatPunchClient
 
         private void StartSendingFileToPeer(UserModel destination, FileRequestMessage message)
         {
-            var desiredFile = _sharedFiles.GetByHash(message.FileHash);
+            var desiredFile = _sharedFiles.GetByID(message.FileID);
             if (desiredFile == null)
             {
-                destination.SendFileRequestErrorMessage(message.FileHash);
+                destination.SendFileRequestErrorMessage(message.FileName);
 
                 return;
             }
 
-            var upload = new Upload(message.ID, desiredFile, destination);
-            if (_uploads.Has(upload.ID))
+            var upload = new Upload(message.NewDownloadID, desiredFile, destination);
+            if (_uploads.Add(upload))
             {
-                upload.Cancel();
+                upload.StartUpload();
+
+                Debug.WriteLine($"(StartSendingFileToPeer) Upload {upload.ID} of file {desiredFile.Name} has started. " +
+                    $"Segments count: {desiredFile.NumberOfSegments}");
             }
+            else
+            {
+                Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    MessageBox.Show($"Error: can't start the upload of file {desiredFile.FilePath}",
+                        "Upload start error",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+                }));
 
-            _uploads.Add(upload);
-            upload.StartUpload();
-
-            Debug.WriteLine($"(StartSendingFileToPeer) Upload {upload.ID} of file {desiredFile.Name} has started. " +
-                $"Segments count: {desiredFile.NumberOfSegments}");
+                destination.SendFileRequestErrorMessage(message.FileName);
+            }
         }
 
         private void ShowImageFullScreen(ImageItem? image)

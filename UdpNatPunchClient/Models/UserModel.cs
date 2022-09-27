@@ -100,9 +100,9 @@ namespace UdpNatPunchClient.Models
             return message;
         }
 
-        public FileMessageModel AddIncomingMessage(FileMessage fileMessageFromPeer)
+        public IncomingFileMessageModel AddIncomingMessage(FileMessage fileMessageFromPeer)
         {
-            var message = new FileMessageModel(fileMessageFromPeer);
+            var message = new IncomingFileMessageModel(fileMessageFromPeer, this);
             Messages.Add(message);
             _incomingMessages.Add(message);
 
@@ -177,8 +177,7 @@ namespace UdpNatPunchClient.Models
 
         public void SendFileMessage(SharedFileInfo sharedFileInfo)
         {
-            var message = new FileMessageModel();
-            message.UpdateFileInfo(sharedFileInfo);
+            var message = new OutgoingFileMessageModel(sharedFileInfo);
             _undeliveredMessages.Add(message);
             _unreadMessages.Add(message);
             Messages.Add(message);
@@ -189,7 +188,7 @@ namespace UdpNatPunchClient.Models
 
         public void SendFileRequest(Download download)
         {
-            var messageToPeer = new FileRequestMessage(download.ID, download.Hash);
+            var messageToPeer = new FileRequestMessage(download.DownloadID, download.Hash, download.OriginalName);
             Send(messageToPeer, 0);
         }
 
@@ -217,9 +216,9 @@ namespace UdpNatPunchClient.Models
             Send(fileSegmentMessage, 1);
         }
 
-        public void SendFileRequestErrorMessage(string fileHash)
+        public void SendFileRequestErrorMessage(string fileName)
         {
-            var message = new FileRequestErrorMessage(fileHash);
+            var message = new FileRequestErrorMessage(fileName);
             Send(message, 0);
         }
     }
