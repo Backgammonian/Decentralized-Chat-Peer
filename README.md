@@ -8,7 +8,7 @@ Main reason of using UDP instead of TCP is the ability to perform [UDP hole punc
 
 This app can also be hidden in system tray and can send receipt notifications to user.
 
-UPD: Now users can send files of any size and extension to each other! That functionality is mostly based off my [file sharing project](https://github.com/Backgammonian/File-Sharing).
+UPD: Now users can send files of any size and extension to each other! This functionality was borrowed from my [file sharing project](https://github.com/Backgammonian/File-Sharing).
 
 ## Libraries used in this project:
 * [LiteNetLib](https://github.com/RevenantX/LiteNetLib)
