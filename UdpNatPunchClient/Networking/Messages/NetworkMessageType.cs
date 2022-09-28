@@ -38,5 +38,6 @@
         FileSegmentAck,
         CancelDownload,
         CancelUpload,
+        FileIsNotAvailable,
     }
 }

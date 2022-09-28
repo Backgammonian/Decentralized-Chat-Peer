@@ -48,7 +48,7 @@ namespace UdpNatPunchClient
         private readonly Downloads _downloads;
         private readonly SharedFiles _sharedFiles;
         private readonly Uploads _uploads;
-        private string _titleText = _title;
+        private string _titleText = string.Empty;
         private TrackerModel? _tracker;
         private string _nickname = "My nickname";
         private NicknameUpdateState _nicknameUpdateState;
@@ -68,7 +68,6 @@ namespace UdpNatPunchClient
         private int _tabIndex;
         private byte[]? _profilePictureBytes;
         private BaseMessageModel? _selectedMessage;
-        private string _systemTrayText = string.Empty;
         private TrackerConnectionStatusType _trackerConnectionStatus;
         private IPEndPoint? _expectedAddress;
 
@@ -142,7 +141,6 @@ namespace UdpNatPunchClient
 
             ID = RandomGenerator.GetRandomString(30);
             TextArts = new ObservableCollection<AsciiArtsType>(Enum.GetValues(typeof(AsciiArtsType)).Cast<AsciiArtsType>());
-            SystemTrayText = _title;
             CurrentMessage = string.Empty;
             IsConnectedToTracker = false;
             SelectedPeer = null;
@@ -177,23 +175,18 @@ namespace UdpNatPunchClient
         #region Data bindings
         public string ID { get; }
         public ObservableCollection<AsciiArtsType> TextArts { get; }
-        public string TrackerAddress => _tracker == null ? "---" : _tracker.EndPoint;
+        public string TrackerAddress => _tracker == null ? Converters.AddressConverter.NoAddress : _tracker.EndPoint;
         public ObservableCollection<UserModel> ConnectedUsers => new ObservableCollection<UserModel>(_connectedUsers.List);
         public ObservableCollection<AvailableFile> AvailableFiles => new ObservableCollection<AvailableFile>(_availableFiles.AvailableFilesList);
         public ObservableCollection<Download> Downloads => new ObservableCollection<Download>(_downloads.DownloadsList);
         public ObservableCollection<SharedFile> SharedFiles => new ObservableCollection<SharedFile>(_sharedFiles.SharedFilesList);
         public ObservableCollection<Upload> Uploads => new ObservableCollection<Upload>(_uploads.UploadsList);
+        public string SystemTrayText => $"{_title} - {Nickname} ({ID})";
 
         public IPEndPoint? ExpectedTracker
         {
             get => _expectedAddress;
             private set => SetProperty(ref _expectedAddress, value);
-        }
-
-        public string SystemTrayText
-        {
-            get => _systemTrayText;
-            set => SetProperty(ref _systemTrayText, value);
         }
 
         public string TitleText
@@ -218,6 +211,7 @@ namespace UdpNatPunchClient
                         SetProperty(ref _nickname, value);
                     }
 
+                    OnPropertyChanged(nameof(SystemTrayApp));
                     NicknameUpdateState = NicknameUpdateState.Changing;
                     RestartNicknameUpdateTimerTick();
                 }
@@ -388,7 +382,7 @@ namespace UdpNatPunchClient
             }
 
             _tracker?.Disconnect();
-            _client.DisconnectAll();
+            _connectedUsers.DisconnectAll();
             _client.Stop();
 
             Application.Current.Shutdown();
@@ -666,6 +660,23 @@ namespace UdpNatPunchClient
                     author.SetImageMessageAsFailed(imageSendingFailedMessage.MessageID);
                     break;
 
+                case NetworkMessageType.UpdateImageMessage:
+                    if (author == null)
+                    {
+                        return;
+                    }
+
+                    var updateImageMessage = JsonConvert.DeserializeObject<UpdateImageMessage>(json);
+                    if (updateImageMessage == null)
+                    {
+                        return;
+                    }
+
+                    await author.SetUpdatedImageInMessage(updateImageMessage.MessageID,
+                        updateImageMessage.PictureBytes,
+                        updateImageMessage.PictureExtension);
+                    break;
+
                 case NetworkMessageType.FileMessage:
                     if (author == null)
                     {
@@ -728,7 +739,13 @@ namespace UdpNatPunchClient
                         return;
                     }
 
-                    author.PrintInfo($"(System) Error: file {fileRequestErrorMessage.FileName} is unavailable.");
+                    var failedDownload = _downloads.Get(fileRequestErrorMessage.DownloadID);
+                    if (failedDownload != null)
+                    {
+                        failedDownload.CancelWithDeletion();
+                    }
+
+                    author.PrintError($"(Download error) File '{fileRequestErrorMessage.FileName}' is unavailable.");
                     break;
 
                 case NetworkMessageType.FileSegment:
@@ -770,10 +787,7 @@ namespace UdpNatPunchClient
                         return;
                     }
 
-                    if (upload.AddAck())
-                    {
-                        upload.SendNextFileSegment();
-                    }
+                    upload.AddAck();
                     break;
 
                 case NetworkMessageType.CancelDownload:
@@ -816,24 +830,24 @@ namespace UdpNatPunchClient
                     }
                     break;
 
-                case NetworkMessageType.UpdateImageMessage:
+                case NetworkMessageType.FileIsNotAvailable:
                     if (author == null)
                     {
                         return;
                     }
 
-                    var updateImageMessage = JsonConvert.DeserializeObject<UpdateImageMessage>(json);
-                    if (updateImageMessage == null)
+                    var fileIsNotAvailableMessage = JsonConvert.DeserializeObject<FileIsNotAvailableMessage>(json);
+                    if (fileIsNotAvailableMessage == null)
                     {
                         return;
                     }
 
-                    await author.SetUpdatedImageInMessage(updateImageMessage.MessageID,
-                        updateImageMessage.PictureBytes,
-                        updateImageMessage.PictureExtension);
+                    var availableFile = _availableFiles.GetByFileID(fileIsNotAvailableMessage.FileID);
+                    if (availableFile != null)
+                    {
+                        _availableFiles.Remove(fileIsNotAvailableMessage.FileID);
+                    }
                     break;
-
-                
 
                 case NetworkMessageType.MessageReceiptNotification:
                     if (author == null)
@@ -991,7 +1005,7 @@ namespace UdpNatPunchClient
                         return;
                     }
 
-                    _tracker?.PrintInfo($"Unrecognized command: '{commandErrorMessage.WrongCommand} {commandErrorMessage.Argument}'");
+                    _tracker?.PrintError($"Unrecognized command: '{commandErrorMessage.WrongCommand} {commandErrorMessage.Argument}'");
 
                     if (WindowState == WindowState.Minimized ||
                         TabIndex != _chatTabIndex)
@@ -1037,7 +1051,7 @@ namespace UdpNatPunchClient
                         return;
                     }
 
-                    _tracker?.PrintInfo(string.Format("User not found, unknown ID or nickname: {0}", userNotFoundErrorMessage.UserInfo));
+                    _tracker?.PrintError(string.Format("User not found, unknown ID or nickname: {0}", userNotFoundErrorMessage.UserInfo));
 
                     if (WindowState == WindowState.Minimized ||
                         TabIndex != _chatTabIndex)
@@ -1146,8 +1160,7 @@ namespace UdpNatPunchClient
         {
             OnPropertyChanged(nameof(SharedFiles));
             _uploads.CancelAllUploadsOfFile(e.SharedFile.Hash);
-
-            //TODO разослать клиентам, что такой файл больше недоступен?
+            _connectedUsers.SendFileIsNotAvailableMessage(e.SharedFile.ID);
         }
 
         private void OnSharedFileHashCalculated(object? sender, EventArgs e)
@@ -1328,13 +1341,13 @@ namespace UdpNatPunchClient
                 }
                 else
                 {
-                    user.PrintInfo($"Can't load file {path}.");
+                    user.PrintError($"(Error) Can't load file {path}.");
                 }
             }
             else
             if (SelectedPeer is TrackerModel tracker)
             {
-                tracker.PrintInfo("You can't send files to the tracker.");
+                tracker.PrintError("You can't send files to the tracker.");
             }
         }
 
@@ -1366,7 +1379,7 @@ namespace UdpNatPunchClient
             else
             if (SelectedPeer is TrackerModel tracker)
             {
-                tracker.PrintInfo("You can't send images to the tracker.");
+                tracker.PrintError("You can't send images to the tracker.");
             }
         }
 
@@ -1389,7 +1402,7 @@ namespace UdpNatPunchClient
                     if (command == "connect" &&
                         argument == ID)
                     {
-                        tracker.PrintInfo("Error: you can't connect to youself.");
+                        tracker.PrintError("Error: you can't connect to youself.");
                     }
                     else
                     {
@@ -1422,9 +1435,9 @@ namespace UdpNatPunchClient
                 return;
             }
 
-            if (!(SelectedPeer is UserModel user))
+            if (!(SelectedPeer is UserModel))
             {
-                MessageBox.Show($"File {file.Name} is unreachable: unknown file source",
+                MessageBox.Show($"File {file.Name} is unreachable - unknown file source.",
                     "Download error",
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
@@ -1545,7 +1558,6 @@ namespace UdpNatPunchClient
             if (messageBoxResult == MessageBoxResult.Yes)
             {
                 _sharedFiles.RemoveFile(sharedFile.ID);
-                _uploads.CancelAllUploadsOfFile(sharedFile.Hash);
             }
         }
 
@@ -1772,7 +1784,7 @@ namespace UdpNatPunchClient
             var desiredFile = _sharedFiles.GetByID(message.FileID);
             if (desiredFile == null)
             {
-                destination.SendFileRequestErrorMessage(message.FileName);
+                destination.SendFileRequestErrorMessage(message.NewDownloadID, message.FileName);
 
                 return;
             }
@@ -1787,6 +1799,7 @@ namespace UdpNatPunchClient
             }
             else
             {
+                //starting the message box from separate (non-UI) thread
                 Application.Current.Dispatcher.BeginInvoke(new Action(() =>
                 {
                     MessageBox.Show($"Error: can't start the upload of file {desiredFile.FilePath}",
@@ -1795,7 +1808,7 @@ namespace UdpNatPunchClient
                         MessageBoxImage.Error);
                 }));
 
-                destination.SendFileRequestErrorMessage(message.FileName);
+                destination.SendFileRequestErrorMessage(message.NewDownloadID, message.FileName);
             }
         }
 

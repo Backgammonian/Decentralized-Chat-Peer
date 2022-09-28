@@ -2,12 +2,14 @@
 {
     public sealed class FileRequestErrorMessage : BaseMessage
     {
-        public FileRequestErrorMessage(string fileName)
+        public FileRequestErrorMessage(string downloadID, string fileName)
         {
             Type = NetworkMessageType.FileRequestError;
+            DownloadID = downloadID;
             FileName = fileName;
         }
 
+        public string DownloadID { get; set; }
         public string FileName { get; set; }
     }
 }

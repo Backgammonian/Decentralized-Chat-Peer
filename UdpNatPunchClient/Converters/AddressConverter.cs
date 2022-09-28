@@ -9,6 +9,8 @@ namespace Converters
 {
     public sealed class AddressConverter : IValueConverter
     {
+        public const string NoAddress = "---";
+
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             if (value is IPEndPoint endPoint)
@@ -26,7 +28,7 @@ namespace Converters
                 return user.EndPoint.ToString();
             }
 
-            return "---";
+            return NoAddress;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

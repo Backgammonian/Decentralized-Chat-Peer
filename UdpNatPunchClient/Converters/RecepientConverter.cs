@@ -19,7 +19,7 @@ namespace Converters
                 return $"Tracker ({tracker.EndPoint})";
             }
 
-            return "---";
+            return AddressConverter.NoAddress;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

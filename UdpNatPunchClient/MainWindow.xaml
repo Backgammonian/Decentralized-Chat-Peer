@@ -10,7 +10,6 @@
         xmlns:xamlBehaviors="http://schemas.microsoft.com/xaml/behaviors"
         xmlns:tray="clr-namespace:SystemTrayApp.WPF"
         xmlns:dropFiles="clr-namespace:DropFiles"
-        xmlns:extensions="clr-namespace:Extensions"
         xmlns:myBehaviours="clr-namespace:MyBehaviours"
         mc:Ignorable="d"
         Title="{Binding TitleText}"
@@ -312,7 +311,33 @@
                                             </StackPanel>
                                         </StackPanel>
                                     </DataTemplate>
-                                    
+
+                                    <DataTemplate
+                                        DataType="{x:Type models:ErrorMessageModel}">
+                                        <StackPanel
+                                            Margin="5"
+                                            HorizontalAlignment="{Binding Direction, Converter={StaticResource MessageDirectionAlignmentConverter}}"
+                                            Background="{Binding Direction, Converter={StaticResource MessageDirectionColorConverter}}">
+                                            <TextBox
+                                                Style="{StaticResource IncomingMessageTextBox}"
+                                                Background="{Binding Direction, Converter={StaticResource MessageDirectionColorConverter}}"
+                                                Text="{Binding Text, Mode=OneWay}"
+                                                Foreground="#D30E00"/>
+                                            <StackPanel
+                                                Margin="2"
+                                                Orientation="Horizontal"
+                                                HorizontalAlignment="{Binding Direction, Converter={StaticResource MessageDirectionAlignmentConverter}}">
+                                                <TextBlock
+                                                    Style="{StaticResource MessageDateTextBlock}"
+                                                    Text="{Binding Time, Converter={StaticResource DateTimeConverter}}"/>
+                                                <TextBlock
+                                                    Style="{StaticResource MessageDeliveryStateTextBlock}"
+                                                    Text="{Binding DeliveryState, Converter={StaticResource DeliveryStateConverter}}"
+                                                    Visibility="{Binding Direction, Converter={StaticResource MessageDirectionToVisibilityConverter}}"/>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </DataTemplate>
+
                                     <DataTemplate
                                         DataType="{x:Type models:ImageMessageModel}">
                                         <StackPanel

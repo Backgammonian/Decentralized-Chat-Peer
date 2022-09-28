@@ -37,7 +37,7 @@ namespace Converters
                     return $"Tracker {endPointString} disconnected";
 
                 default:
-                    return "---";
+                    return AddressConverter.NoAddress;
             }
         }
 

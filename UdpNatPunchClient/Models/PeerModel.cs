@@ -143,6 +143,11 @@ namespace UdpNatPunchClient.Models
             Messages.Add(new MessageModel(info, MessageDirection.Incoming));
         }
 
+        public virtual void PrintError(string text)
+        {
+            Messages.Add(new ErrorMessageModel(text));
+        }
+
         public void SendKeepAliveMessage()
         {
             Send(new KeepAliveMessage(), 0);

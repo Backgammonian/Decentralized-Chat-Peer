@@ -108,18 +108,17 @@ namespace UdpNatPunchClient.Models
             FinishTime = DateTime.Now;
         }
 
-        public bool AddAck()
+        public void AddAck()
         {
             if (!IsActive)
             {
                 Debug.WriteLine($"(Upload_AddAck) Can't receive ACK for file {FileName}, upload {ID}");
 
-                return false;
+                return;
             }
 
             NumberOfAckedSegments += 1;
-
-            return true;
+            SendSegmentInternal(NumberOfAckedSegments);
         }
 
         public void Cancel()
@@ -138,11 +137,6 @@ namespace UdpNatPunchClient.Models
         {
             IsStarted = true;
             SendSegmentInternal(0);
-        }
-
-        public void SendNextFileSegment()
-        {
-            SendSegmentInternal(NumberOfAckedSegments);
         }
 
         private void SendSegmentInternal(long numberOfSegment)
