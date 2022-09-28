@@ -4,6 +4,7 @@ using System.Linq;
 using System.Diagnostics;
 using Networking;
 using Networking.Messages;
+using Networking.Utils;
 
 namespace UdpNatPunchClient.Models
 {
@@ -188,7 +189,9 @@ namespace UdpNatPunchClient.Models
 
         public void SendFileRequest(Download download)
         {
-            var messageToPeer = new FileRequestMessage(download.DownloadID, download.Hash, download.OriginalName);
+            var messageToPeer = new FileRequestMessage(download.DownloadID,
+                download.Hash,
+                download.OriginalName);
             Send(messageToPeer, 0);
         }
 
@@ -216,9 +219,15 @@ namespace UdpNatPunchClient.Models
             Send(fileSegmentMessage, 1);
         }
 
-        public void SendFileRequestErrorMessage(string fileName)
+        public void SendFileRequestErrorMessage(string downloadID, string fileName)
         {
-            var message = new FileRequestErrorMessage(fileName);
+            var message = new FileRequestErrorMessage(downloadID, fileName);
+            Send(message, 0);
+        }
+
+        public void SendFileIsNotAvailableMessage(string fileID)
+        {
+            var message = new FileIsNotAvailableMessage(fileID);
             Send(message, 0);
         }
     }

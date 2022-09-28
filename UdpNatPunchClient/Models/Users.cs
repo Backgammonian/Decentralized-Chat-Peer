@@ -79,6 +79,14 @@ namespace UdpNatPunchClient.Models
             }
         }
 
+        public void DisconnectAll()
+        {
+            foreach (var user in _users.Values)
+            {
+                user.Disconnect();
+            }
+        }
+
         public void SendKeepAliveMessageToConnectedUsers()
         {
             foreach (var user in _users.Values)
@@ -100,6 +108,14 @@ namespace UdpNatPunchClient.Models
             foreach (var user in _users.Values)
             {
                 user.SendUpdatedProfilePicture(updatedPictureArray, updatedPictureExtension);
+            }
+        }
+
+        public void SendFileIsNotAvailableMessage(string fileID)
+        {
+            foreach (var user in _users.Values)
+            {
+                user.SendFileIsNotAvailableMessage(fileID);
             }
         }
     }

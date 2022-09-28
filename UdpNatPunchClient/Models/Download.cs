@@ -219,6 +219,7 @@ namespace UdpNatPunchClient.Models
         public void CancelWithDeletion()
         {
             Cancel();
+
             try
             {
                 File.Delete(FilePath);
