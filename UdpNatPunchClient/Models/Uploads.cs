@@ -37,7 +37,7 @@ namespace UdpNatPunchClient.Models
             return _uploads.ContainsKey(uploadID);
         }
 
-        public bool Add(Upload upload)
+        public bool TryAdd(Upload upload)
         {
             if (_uploads.TryAdd(upload.ID, upload))
             {

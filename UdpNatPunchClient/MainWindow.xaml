@@ -252,7 +252,7 @@
                                                         Text="{Binding Nickname}"/>
                                                     <TextBlock
                                                         Style="{StaticResource BaseTextBlock}"
-                                                        Text="{Binding ID, StringFormat={}({0})}"/>
+                                                        Text="{Binding UserID, StringFormat={}({0})}"/>
                                                     <TextBlock
                                                         Style="{StaticResource BaseTextBlock}"
                                                         Text="{Binding EndPoint, StringFormat={}Address: {0}}"/>
@@ -322,7 +322,7 @@
                                                 Style="{StaticResource IncomingMessageTextBox}"
                                                 Background="{Binding Direction, Converter={StaticResource MessageDirectionColorConverter}}"
                                                 Text="{Binding Text, Mode=OneWay}"
-                                                Foreground="#D30E00"/>
+                                                Foreground="#C00000"/>
                                             <StackPanel
                                                 Margin="2"
                                                 Orientation="Horizontal"
@@ -349,7 +349,7 @@
                                                 Text="{Binding Direction, Converter={StaticResource ImageMessageStateConverter}}"/>
                                             <TextBlock
                                                 Style="{StaticResource MessageContentTextBlock}"
-                                                Foreground="Red"
+                                                Foreground="#C00000"
                                                 Text="Error: can't load image"
                                                 Visibility="{Binding IsFailed, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                                             <Grid
@@ -386,11 +386,11 @@
                                             HorizontalAlignment="{Binding Direction, Converter={StaticResource MessageDirectionAlignmentConverter}}"
                                             Background="{Binding Direction, Converter={StaticResource MessageDirectionColorConverter}}">
                                             <TextBlock
-                                                Style="{StaticResource MessageContentTextBlock}"
+                                                Style="{StaticResource FileInfoTextBlock}"
                                                 Background="{Binding Direction, Converter={StaticResource MessageDirectionColorConverter}}"
                                                 Text="{Binding FileInfo.Name}"/>
                                             <TextBlock
-                                                Style="{StaticResource MessageContentTextBlock}"
+                                                Style="{StaticResource FileInfoTextBlock}"
                                                 Background="{Binding Direction, Converter={StaticResource MessageDirectionColorConverter}}"
                                                 Text="{Binding FileInfo.Size, Converter={StaticResource BytesToMegabytesConverter}}"/>
                                             <StackPanel
@@ -415,17 +415,17 @@
                                             HorizontalAlignment="{Binding Direction, Converter={StaticResource MessageDirectionAlignmentConverter}}"
                                             Background="{Binding Direction, Converter={StaticResource MessageDirectionColorConverter}}">
                                             <TextBlock
-                                                Style="{StaticResource MessageContentTextBlock}"
+                                                Style="{StaticResource FileInfoTextBlock}"
                                                 Background="{Binding Direction, Converter={StaticResource MessageDirectionColorConverter}}"
                                                 Text="{Binding AvailableFile.Name}"/>
                                             <TextBlock
-                                                Style="{StaticResource MessageContentTextBlock}"
+                                                Style="{StaticResource FileInfoTextBlock}"
                                                 Background="{Binding Direction, Converter={StaticResource MessageDirectionColorConverter}}"
                                                 Text="{Binding AvailableFile.Size, Converter={StaticResource BytesToMegabytesConverter}}"/>
                                             <Button 
                                                 Style="{StaticResource BaseButton}"
                                                 Command="{Binding DataContext.DownloadFileCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"
-                                                CommandParameter="{Binding}">
+                                                CommandParameter="{Binding AvailableFile}">
                                                 <TextBlock
                                                     Style="{StaticResource BaseTextBlock}"
                                                     Text="Download">

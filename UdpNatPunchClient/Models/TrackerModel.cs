@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Linq;
 using System.Collections.Generic;
+using System.Text;
 using Networking;
 using Networking.Messages;
 
@@ -9,6 +10,14 @@ namespace UdpNatPunchClient.Models
 {
     public sealed class TrackerModel : PeerModel
     {
+        private static readonly StringBuilder _helpStringBuilder = new StringBuilder()
+            .AppendLine("List of commands:")
+            .AppendLine("connect [ID] - establish connection to peer with specified ID")
+            .AppendLine("connect [Nickname] - get list of users with such nickname")
+            .AppendLine("ping - get pong from tracker")
+            .AppendLine("time - get tracker's current time");
+        private static readonly string _helpText = _helpStringBuilder.ToString();
+
         //commandID, messageID
         private readonly Dictionary<string, string> _commandsAndMessagesAccordance;
 
@@ -55,26 +64,20 @@ namespace UdpNatPunchClient.Models
 
         public void PrintHelp()
         {
-            var help = "List of commands:\n";
-            help += "connect [ID] - establish connection to peer with specified ID\n";
-            help += "connect [Nickname] - get list of users with such nickname\n";
-            help += "ping - get pong from tracker\n";
-            help += "time - get tracker's current time";
-
-            PrintInfo(help);
+            PrintInfo(_helpText);
         }
 
-        public void PrintListOfUsers(UserInfoFromTracker[] users)
+        public void PrintListOfUsers(List<UserInfoFromTracker> users)
         {
             var i = 1;
-            var response = "Response from tracker:";
+            var responseStringBuilder = new StringBuilder("Response from tracker:");
             foreach (var user in users)
             {
-                response += $"\n{i}. Nickname: '{user.Nickname}', ID: {user.ID}";
+                responseStringBuilder.AppendLine($"{i}. Nickname: '{user.Nickname}', ID: {user.ID}");
                 i += 1;
             }
 
-            PrintInfo(response);
+            PrintInfo(responseStringBuilder.ToString());
         }
 
         public void MarkCommandAsReadAndDelivered(string commandID)
@@ -94,7 +97,6 @@ namespace UdpNatPunchClient.Models
 
                 var message = Messages.First(message => message.MessageID == messageID);
                 message.MarkAsReadAndDelivered();
-
                 _commandsAndMessagesAccordance.Remove(commandID);
             }
             catch (Exception ex)

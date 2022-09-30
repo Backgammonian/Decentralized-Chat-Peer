@@ -190,7 +190,7 @@ namespace UdpNatPunchClient.Models
         public void SendFileRequest(Download download)
         {
             var messageToPeer = new FileRequestMessage(download.DownloadID,
-                download.Hash,
+                download.SharedFileID,
                 download.OriginalName);
             Send(messageToPeer, 0);
         }

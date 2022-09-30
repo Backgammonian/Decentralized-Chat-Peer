@@ -106,7 +106,7 @@ namespace UdpNatPunchClient.Models
             OnPropertyChanged(nameof(Progress));
         }
 
-        private bool AddReceivedBytes(byte[] segment)
+        private bool TryAddReceivedBytes(byte[] segment)
         {
             if (_stream == null)
             {
@@ -118,6 +118,7 @@ namespace UdpNatPunchClient.Models
                 _ = _stream.Seek(NumberOfReceivedSegments * Constants.FileSegmentSize, SeekOrigin.Begin);
                 _stream.Write(segment);
                 _downloadSpeedCounter.AddBytes(segment.Length);
+
                 NumberOfReceivedSegments += 1;
 
                 return true;
@@ -206,7 +207,7 @@ namespace UdpNatPunchClient.Models
                 return;
             }
 
-            if (AddReceivedBytes(segment))
+            if (TryAddReceivedBytes(segment))
             {
                 Server.SendFileSegmentAckMessage(DownloadID);
             }

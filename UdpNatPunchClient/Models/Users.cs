@@ -87,14 +87,6 @@ namespace UdpNatPunchClient.Models
             }
         }
 
-        public void SendKeepAliveMessageToConnectedUsers()
-        {
-            foreach (var user in _users.Values)
-            {
-                user.SendKeepAliveMessage();
-            }
-        }
-
         public void SendUpdatedInfoToConnectedUsers(string updatedNickname)
         {
             foreach (var user in _users.Values)
