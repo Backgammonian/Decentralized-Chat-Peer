@@ -1,4 +1,6 @@
-﻿namespace Networking.Messages
+﻿using System.Collections.Generic;
+
+namespace Networking.Messages
 {
     public sealed class UserInfoFromTracker
     {
@@ -14,12 +16,14 @@
 
     public sealed class ListOfUsersWithDesiredNicknameMessage : BaseMessage
     {
-        public ListOfUsersWithDesiredNicknameMessage(UserInfoFromTracker[] users)
+        public ListOfUsersWithDesiredNicknameMessage(List<UserInfoFromTracker> users, string nicknameQuery)
         {
             Type = NetworkMessageType.ListOfUsersWithDesiredNickname;
             Users = users;
+            NicknameQuery = nicknameQuery;
         }
 
-        public UserInfoFromTracker[] Users { get; set; }
+        public List<UserInfoFromTracker> Users { get; set; }
+        public string NicknameQuery { get; set; }
     }
 }

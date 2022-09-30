@@ -118,7 +118,7 @@ namespace UdpNatPunchClient.Models
             }
 
             NumberOfAckedSegments += 1;
-            SendSegmentInternal(NumberOfAckedSegments);
+            SendSegmentInternal();
         }
 
         public void Cancel()
@@ -136,17 +136,17 @@ namespace UdpNatPunchClient.Models
         public void StartUpload()
         {
             IsStarted = true;
-            SendSegmentInternal(0);
+            SendSegmentInternal();
         }
 
-        private void SendSegmentInternal(long numberOfSegment)
+        private void SendSegmentInternal()
         {
             if (!_sharedFile.IsActive)
             {
                 return;
             }
 
-            var segment = _sharedFile.TryReadSegment(numberOfSegment);
+            var segment = _sharedFile.TryReadSegment(NumberOfAckedSegments);
             if (segment.Length == 0)
             {
                 return;

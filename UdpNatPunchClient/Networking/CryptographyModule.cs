@@ -82,8 +82,6 @@ namespace Networking
             }
             catch (Exception)
             {
-                dataSignature = Array.Empty<byte>();
-        
                 return false;
             }
         }

@@ -43,7 +43,6 @@ namespace UdpNatPunchClient
         private readonly Users _connectedUsers;
         private readonly DispatcherTimer _nicknameUpdateTimer;
         private readonly DispatcherTimer _localAddressUpdater;
-        private readonly DispatcherTimer _keepAliveTimer;
         private readonly AvailableFiles _availableFiles;
         private readonly Downloads _downloads;
         private readonly SharedFiles _sharedFiles;
@@ -114,10 +113,6 @@ namespace UdpNatPunchClient
             _nicknameUpdateTimer = new DispatcherTimer();
             _nicknameUpdateTimer.Interval = TimeSpan.FromSeconds(1);
             _nicknameUpdateTimer.Tick += OnNicknameUpdateTimerTick;
-
-            _keepAliveTimer = new DispatcherTimer();
-            _keepAliveTimer.Interval = TimeSpan.FromSeconds(5);
-            _keepAliveTimer.Tick += OnKeepAliveTimerTick;
 
             _availableFiles = new AvailableFiles();
             _availableFiles.FileAdded += OnAvailableFileAdded;
@@ -211,7 +206,7 @@ namespace UdpNatPunchClient
                         SetProperty(ref _nickname, value);
                     }
 
-                    OnPropertyChanged(nameof(SystemTrayApp));
+                    OnPropertyChanged(nameof(SystemTrayText));
                     NicknameUpdateState = NicknameUpdateState.Changing;
                     RestartNicknameUpdateTimerTick();
                 }
@@ -364,9 +359,7 @@ namespace UdpNatPunchClient
         private void StartApp()
         {
             _client.StartListening();
-
             _localAddressUpdater.Start();
-            _keepAliveTimer.Start();
         }
 
         private void ShutdownApp()
@@ -505,10 +498,6 @@ namespace UdpNatPunchClient
 
             switch (type)
             {
-                case NetworkMessageType.KeepAlive:
-                    Debug.WriteLine($"KeepAliveMessage from peer {source.EndPoint}");
-                    break;
-
                 case NetworkMessageType.IntroducePeerToPeer:
                     var introducePeerToPeerMessage = JsonConvert.DeserializeObject<IntroducePeerToPeerMessage>(json);
                     if (introducePeerToPeerMessage == null)
@@ -962,10 +951,6 @@ namespace UdpNatPunchClient
 
             switch (type)
             {
-                case NetworkMessageType.KeepAlive:
-                    Debug.WriteLine($"KeepAliveMessage from tracker {source.EndPoint}");
-                    break;
-
                 case NetworkMessageType.IntroduceClientToTrackerError:
                     MessageBox.Show("Tracker already has user with such ID: " + ID,
                         "Tracker connection error",
@@ -1103,23 +1088,31 @@ namespace UdpNatPunchClient
                     break;
 
                 case NetworkMessageType.ListOfUsersWithDesiredNickname:
-                    var listOfUsersResponse = JsonConvert.DeserializeObject<ListOfUsersWithDesiredNicknameMessage>(json);
-                    if (listOfUsersResponse == null)
+                    var listOfUsersWithDesiredNickname = JsonConvert.DeserializeObject<ListOfUsersWithDesiredNicknameMessage>(json);
+                    if (listOfUsersWithDesiredNickname == null)
                     {
                         return;
                     }
 
-                    var usersQuery = listOfUsersResponse.Users;
-                    if (usersQuery.Length == 0)
+                    var usersListResponse = listOfUsersWithDesiredNickname.Users;
+                    if (usersListResponse.Count == 0)
                     {
+                        _tracker?.PrintError($"Tracker couldn't find any users with such ID or nickname: {listOfUsersWithDesiredNickname.NicknameQuery}");
+
                         return;
                     }
 
-                    _tracker?.PrintListOfUsers(usersQuery);
-
-                    if (usersQuery.Length == 1)
+                    var positionOfUserWithSameID = usersListResponse.FindIndex(user => user.ID == ID);
+                    if (positionOfUserWithSameID != -1)
                     {
-                        CurrentMessage = $"connect {usersQuery[0].ID}";
+                        usersListResponse.RemoveAt(positionOfUserWithSameID);
+                    }
+
+                    _tracker?.PrintListOfUsers(usersListResponse);
+
+                    if (usersListResponse.Count == 1)
+                    {
+                        CurrentMessage = $"connect {usersListResponse[0].ID}";
                         SendMessage();
                     }
 
@@ -1790,7 +1783,7 @@ namespace UdpNatPunchClient
             }
 
             var upload = new Upload(message.NewDownloadID, desiredFile, destination);
-            if (_uploads.Add(upload))
+            if (_uploads.TryAdd(upload))
             {
                 upload.StartUpload();
 
@@ -1799,6 +1792,8 @@ namespace UdpNatPunchClient
             }
             else
             {
+                destination.SendFileRequestErrorMessage(message.NewDownloadID, message.FileName);
+
                 //starting the message box from separate (non-UI) thread
                 Application.Current.Dispatcher.BeginInvoke(new Action(() =>
                 {
@@ -1807,8 +1802,6 @@ namespace UdpNatPunchClient
                         MessageBoxButton.OK,
                         MessageBoxImage.Error);
                 }));
-
-                destination.SendFileRequestErrorMessage(message.NewDownloadID, message.FileName);
             }
         }
 
@@ -1859,12 +1852,6 @@ namespace UdpNatPunchClient
             {
                 _focusOnMessageBox?.Invoke();
             });
-        }
-
-        private void OnKeepAliveTimerTick(object? sender, EventArgs e)
-        {
-            _tracker?.SendKeepAliveMessage();
-            _connectedUsers.SendKeepAliveMessageToConnectedUsers();
         }
         #endregion
     }

@@ -147,10 +147,5 @@ namespace UdpNatPunchClient.Models
         {
             Messages.Add(new ErrorMessageModel(text));
         }
-
-        public void SendKeepAliveMessage()
-        {
-            Send(new KeepAliveMessage(), 0);
-        }
     }
 }
