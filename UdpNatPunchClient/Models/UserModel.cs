@@ -79,7 +79,7 @@ namespace UdpNatPunchClient.Models
             Messages.Add(message);
 
             var messageToPeer = new ImageIntroduceMessage(message.MessageID);
-            Send(messageToPeer, 1);
+            Send(messageToPeer, 0);
 
             return message;
         }
@@ -216,7 +216,7 @@ namespace UdpNatPunchClient.Models
         public void SendFileSegment(string uploadID, byte[] segment)
         {
             var fileSegmentMessage = new FileSegmentMessage(uploadID, segment);
-            Send(fileSegmentMessage, 1);
+            Send(fileSegmentMessage, 2);
         }
 
         public void SendFileRequestErrorMessage(string downloadID, string fileName)

@@ -1095,6 +1095,12 @@ namespace UdpNatPunchClient
                     }
 
                     var usersListResponse = listOfUsersWithDesiredNickname.Users;
+                    var positionOfUserWithSameID = usersListResponse.FindIndex(user => user.ID == ID);
+                    if (positionOfUserWithSameID != -1)
+                    {
+                        usersListResponse.RemoveAt(positionOfUserWithSameID);
+                    }
+
                     if (usersListResponse.Count == 0)
                     {
                         _tracker?.PrintError($"Tracker couldn't find any users with such ID or nickname: {listOfUsersWithDesiredNickname.NicknameQuery}");
@@ -1102,18 +1108,14 @@ namespace UdpNatPunchClient
                         return;
                     }
 
-                    var positionOfUserWithSameID = usersListResponse.FindIndex(user => user.ID == ID);
-                    if (positionOfUserWithSameID != -1)
-                    {
-                        usersListResponse.RemoveAt(positionOfUserWithSameID);
-                    }
-
-                    _tracker?.PrintListOfUsers(usersListResponse);
-
                     if (usersListResponse.Count == 1)
                     {
                         CurrentMessage = $"connect {usersListResponse[0].ID}";
                         SendMessage();
+                    }
+                    else
+                    {
+                        _tracker?.PrintListOfUsers(usersListResponse);
                     }
 
                     if (WindowState == WindowState.Minimized ||
