@@ -4,7 +4,6 @@ using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Diagnostics;
-using System.Linq;
 using LiteNetLib;
 using LiteNetLib.Layers;
 using Networking.Messages;
@@ -188,16 +187,12 @@ namespace Networking
                         MessageFromTrackerReceived?.Invoke(this, new NetEventArgs(Tracker, type, json));
                     }
                     else
-                    if (!Tracker.IsSecurityEnabled)
+                    if (!Tracker.IsSecurityEnabled &&
+                        dataReader.TryGetBytesWithLength(out byte[] publicKey) &&
+                        dataReader.TryGetBytesWithLength(out byte[] signaturePublicKey))
                     {
-                        if (dataReader.TryGetBytesWithLength(out byte[] publicKey) &&
-                            dataReader.TryGetBytesWithLength(out byte[] signaturePublicKey) &&
-                            dataReader.TryGetULong(out ulong recepientsIncomingSegmentNumber))
-                        {
-                            Tracker.ApplyKeys(publicKey, signaturePublicKey, recepientsIncomingSegmentNumber);
-
-                            TrackerConnected?.Invoke(this, EventArgs.Empty);
-                        }
+                        Tracker.ApplyKeys(publicKey, signaturePublicKey);
+                        TrackerConnected?.Invoke(this, EventArgs.Empty);
                     }
                 }
                 else
@@ -209,16 +204,12 @@ namespace Networking
                         MessageFromPeerReceived?.Invoke(this, new NetEventArgs(peer, type, json));
                     }
                     else
-                    if (!peer.IsSecurityEnabled)
+                    if (!peer.IsSecurityEnabled &&
+                        dataReader.TryGetBytesWithLength(out byte[] publicKey) &&
+                        dataReader.TryGetBytesWithLength(out byte[] signaturePublicKey))
                     {
-                        if (dataReader.TryGetBytesWithLength(out byte[] publicKey) &&
-                            dataReader.TryGetBytesWithLength(out byte[] signaturePublicKey) &&
-                            dataReader.TryGetULong(out ulong recepientsIncomingSegmentNumber))
-                        {
-                            peer.ApplyKeys(publicKey, signaturePublicKey, recepientsIncomingSegmentNumber);
-
-                            PeerConnected?.Invoke(this, new EncryptedPeerEventArgs(peer));
-                        }
+                        peer.ApplyKeys(publicKey, signaturePublicKey);
+                        PeerConnected?.Invoke(this, new EncryptedPeerEventArgs(peer));
                     }
                 }
 

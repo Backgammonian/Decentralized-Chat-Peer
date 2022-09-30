@@ -7,7 +7,6 @@ namespace Networking.Utils
     public sealed class RandomGenerator : IDisposable
     {
         private const string _chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-        private readonly static Random _random = new Random();
 
         private readonly RNGCryptoServiceProvider _csp;
         private bool _isDisposed;
@@ -62,7 +61,6 @@ namespace Networking.Utils
         public static string GetRandomString(int length)
         {
             using var rnd = new RandomGenerator();
-
             var result = new StringBuilder();
             for (var j = 0; j < length; j++)
             {
@@ -75,30 +73,25 @@ namespace Networking.Utils
         public static long GetRandomLong()
         {
             using var rnd = new RandomGenerator();
-            var result = "";
+            var result = new StringBuilder();
             for (var j = 0; j < 64; j++)
             {
-                result += rnd.Next(0, 100) < 50 ? "0" : "1";
+                result.Append(rnd.Next(0, 100) < 50 ? "0" : "1");
             }
 
-            return Convert.ToInt64(result, 2);
+            return Convert.ToInt64(result.ToString(), 2);
         }
 
         public static ulong GetRandomULong()
         {
             using var rnd = new RandomGenerator();
-            var result = "";
+            var result = new StringBuilder();
             for (var j = 0; j < 64; j++)
             {
-                result += rnd.Next(0, 100) < 50 ? "0" : "1";
+                result.Append(rnd.Next(0, 100) < 50 ? "0" : "1");
             }
 
-            return Convert.ToUInt64(result, 2);
-        }
-
-        public static byte GetPseudoRandomByte(byte minValue, byte maxValue)
-        {
-            return (byte)_random.Next(minValue, maxValue);
+            return Convert.ToUInt64(result.ToString(), 2);
         }
 
         public void Dispose()

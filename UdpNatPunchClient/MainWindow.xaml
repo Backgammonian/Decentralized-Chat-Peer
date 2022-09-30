@@ -423,7 +423,7 @@
                                                 Background="{Binding Direction, Converter={StaticResource MessageDirectionColorConverter}}"
                                                 Text="{Binding AvailableFile.Size, Converter={StaticResource BytesToMegabytesConverter}}"/>
                                             <Button 
-                                                Style="{StaticResource BaseButton}"
+                                                Style="{StaticResource DownloadFileFromMessageButton}"
                                                 Command="{Binding DataContext.DownloadFileCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"
                                                 CommandParameter="{Binding AvailableFile}">
                                                 <TextBlock

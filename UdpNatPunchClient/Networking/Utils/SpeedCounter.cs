@@ -8,16 +8,13 @@ namespace Networking.Utils
 {
     public sealed class SpeedCounter
     {
-        private const int _speedValuesInitialQueueCount = 10;
+        private const int _speedValuesInitialQueueCount = 20;
 
         private readonly DispatcherTimer _timer;
         private readonly Stopwatch _stopwatch;
         private readonly Queue<double> _speedValues;
         private long _oldAmountOfBytes, _newAmountOfBytes;
-        private long _currentAmountOfBytes;
         private DateTime _oldTimeStamp, _newTimeStamp;
-        private double _speed;
-        private double _averageSpeed;
 
         public SpeedCounter()
         {
@@ -38,25 +35,25 @@ namespace Networking.Utils
 
         public event EventHandler? Updated;
 
-        public double Speed => _speed;
-        public double AverageSpeed => _averageSpeed;
-        public long Bytes => _currentAmountOfBytes;
+        public double Speed { get; private set; }
+        public double AverageSpeed { get; private set; }
+        public long Bytes { get; private set; }
 
         private void PerformCalculations()
         {
             _oldAmountOfBytes = _newAmountOfBytes;
-            _newAmountOfBytes = _currentAmountOfBytes;
+            _newAmountOfBytes = Bytes;
             _oldTimeStamp = _newTimeStamp;
             _newTimeStamp = DateTime.Now;
 
             var value = (_newAmountOfBytes - _oldAmountOfBytes) / (_newTimeStamp - _oldTimeStamp).TotalSeconds;
-            _speedValues.Enqueue(value);
             _speedValues.Dequeue();
-
-            _speed = _speedValues.CalculateAverageValue();
+            _speedValues.Enqueue(value);
+           
+            Speed = _speedValues.CalculateAverageValue();
 
             var seconds = _stopwatch.Elapsed.Seconds > 0 ? _stopwatch.Elapsed.Seconds : 0.01;
-            _averageSpeed = _currentAmountOfBytes / Convert.ToDouble(seconds);
+            AverageSpeed = Bytes / Convert.ToDouble(seconds);
         }
 
         private void OnTimerTick(object? sender, EventArgs e)
@@ -67,15 +64,12 @@ namespace Networking.Utils
 
         public void AddBytes(long newBytes)
         {
-            _currentAmountOfBytes += newBytes;
-
-            PerformCalculations();
-            Updated?.Invoke(this, EventArgs.Empty);
+            Bytes += newBytes;
         }
 
         public void Stop()
         {
-            _speed = 0;
+            Speed = 0;
             Updated?.Invoke(this, EventArgs.Empty);
             _timer.Stop();
         }
