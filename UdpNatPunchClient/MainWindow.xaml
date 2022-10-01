@@ -428,6 +428,7 @@
                                                 CommandParameter="{Binding AvailableFile}">
                                                 <TextBlock
                                                     Style="{StaticResource BaseTextBlock}"
+                                                    FontWeight="SemiBold"
                                                     Text="Download">
                                                 </TextBlock>
                                             </Button>
