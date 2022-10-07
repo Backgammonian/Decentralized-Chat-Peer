@@ -3,8 +3,9 @@ using System.IO;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Threading.Tasks;
+using System.Diagnostics;
 using Microsoft.Toolkit.Mvvm.ComponentModel;
-using Networking.Utils;
+using NetworkingLib.Utils;
 using Extensions;
 
 namespace UdpNatPunchClient.Models
@@ -29,8 +30,9 @@ namespace UdpNatPunchClient.Models
                     Directory.CreateDirectory(_imagesFolderName);
                 }
             }
-            catch (Exception) 
+            catch (Exception)
             {
+                Debug.WriteLine("(ImageItem_CreateFolders) Can't create folder");
             }
         }
 

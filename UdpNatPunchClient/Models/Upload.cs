@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using Microsoft.Toolkit.Mvvm.ComponentModel;
-using Networking;
-using Networking.Utils;
-using Networking.Messages;
+using NetworkingLib.Utils;
 
 namespace UdpNatPunchClient.Models
 {

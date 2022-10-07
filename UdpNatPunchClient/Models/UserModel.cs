@@ -2,9 +2,8 @@
 using System.Threading.Tasks;
 using System.Linq;
 using System.Diagnostics;
-using Networking;
-using Networking.Messages;
-using Networking.Utils;
+using NetworkingLib;
+using NetworkingLib.Messages;
 
 namespace UdpNatPunchClient.Models
 {

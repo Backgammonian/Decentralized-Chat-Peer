@@ -1,15 +1,15 @@
 ﻿using System;
 using System.IO;
 using Microsoft.Toolkit.Mvvm.ComponentModel;
-using Networking;
-using Networking.Utils;
+using NetworkingLib.Cryptography;
+using NetworkingLib.Utils;
 
 namespace UdpNatPunchClient.Models
 {
     public sealed class SharedFile : ObservableObject
     {
         private FileStream? _stream;
-        private string _hash = CryptographyModule.DefaultFileHash;
+        private string _hash = FileHashHelper.DefaultFileHash;
         private string _name = string.Empty;
         private long _size;
         private long _numberOfSegments;
@@ -26,7 +26,7 @@ namespace UdpNatPunchClient.Models
 
         public string ID { get; }
         public string FilePath { get; }
-        public bool IsHashCalculated => Hash != CryptographyModule.DefaultFileHash;
+        public bool IsHashCalculated => Hash != FileHashHelper.DefaultFileHash;
 
         public string Name
         {
@@ -97,8 +97,8 @@ namespace UdpNatPunchClient.Models
                 return true;
             }
 
-            var fileHash = CryptographyModule.ComputeFileHash(FilePath);
-            if (fileHash == CryptographyModule.DefaultFileHash)
+            var fileHash = FileHashHelper.ComputeFileHash(FilePath);
+            if (fileHash == FileHashHelper.DefaultFileHash)
             {
                 return false;
             }

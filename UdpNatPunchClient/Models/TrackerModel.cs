@@ -3,8 +3,8 @@ using System.Diagnostics;
 using System.Linq;
 using System.Collections.Generic;
 using System.Text;
-using Networking;
-using Networking.Messages;
+using NetworkingLib;
+using NetworkingLib.Messages;
 
 namespace UdpNatPunchClient.Models
 {
@@ -12,10 +12,11 @@ namespace UdpNatPunchClient.Models
     {
         private static readonly StringBuilder _helpStringBuilder = new StringBuilder()
             .AppendLine("List of commands:")
-            .AppendLine("connect [ID] - establish connection to peer with specified ID")
-            .AppendLine("connect [Nickname] - get list of users with such nickname")
-            .AppendLine("ping - get pong from tracker")
-            .AppendLine("time - get tracker's current time");
+            .AppendLine("\tconnect [ID] - establish connection to peer with specified ID")
+            .AppendLine("\tconnect [Nickname] - get list of users with such nickname")
+            .AppendLine("\tping - get pong from tracker")
+            .AppendLine("\ttime - get tracker's current time");
+
         private static readonly string _helpText = _helpStringBuilder.ToString();
 
         //commandID, messageID

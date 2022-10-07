@@ -3,7 +3,7 @@ using System.Globalization;
 using System.Windows.Data;
 using System.Net;
 using UdpNatPunchClient.Models;
-using Networking;
+using NetworkingLib;
 
 namespace Converters
 {

@@ -6,17 +6,17 @@ using System.IO;
 using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Input;
-using System.Windows.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
+using System.Timers;
 using Microsoft.Toolkit.Mvvm.ComponentModel;
 using Microsoft.Toolkit.Mvvm.Input;
 using Newtonsoft.Json;
 using Meziantou.Framework.WPF.Collections;
 using SystemTrayApp.WPF;
-using Networking;
-using Networking.Messages;
-using Networking.Utils;
+using NetworkingLib;
+using NetworkingLib.Messages;
+using NetworkingLib.Utils;
 using InputBox;
 using ImageShowcase;
 using DropFiles;
@@ -41,8 +41,8 @@ namespace UdpNatPunchClient
 
         private readonly Client _client;
         private readonly Users _connectedUsers;
-        private readonly DispatcherTimer _nicknameUpdateTimer;
-        private readonly DispatcherTimer _localAddressUpdater;
+        private readonly Timer _nicknameUpdateTimer;
+        private readonly Timer _localAddressUpdater;
         private readonly AvailableFiles _availableFiles;
         private readonly Downloads _downloads;
         private readonly SharedFiles _sharedFiles;
@@ -96,23 +96,23 @@ namespace UdpNatPunchClient
             _client.PeerConnected += OnPeerConnected;
             _client.PeerRemoved += OnPeerRemoved;
             _client.MessageFromPeerReceived += OnMessageFromPeerReceived;
-            _client.TrackerAdded += OnTrackerAdded;
-            _client.TrackerConnected += OnTrackerConnected;
-            _client.TrackerRemoved += OnTrackerRemoved;
-            _client.MessageFromTrackerReceived += OnMessageFromTrackerReceived;
-            _client.TrackerConnectionAttemptFailed += OnTrackerConnectionAttemptFailed;
+            _client.ServerAdded += OnTrackerAdded;
+            _client.ServerConnected += OnTrackerConnected;
+            _client.ServerRemoved += OnTrackerRemoved;
+            _client.MessageFromServerReceived += OnMessageFromTrackerReceived;
+            _client.ServerConnectionAttemptFailed += OnTrackerConnectionAttemptFailed;
 
             _connectedUsers = new Users();
             _connectedUsers.UserAdded += OnConnectedPeerAdded;
             _connectedUsers.UserRemoved += OnConnectedPeerRemoved;
 
-            _localAddressUpdater = new DispatcherTimer();
-            _localAddressUpdater.Interval = TimeSpan.FromSeconds(2);
-            _localAddressUpdater.Tick += OnLocalAddressUpdaterTick;
+            _localAddressUpdater = new Timer();
+            _localAddressUpdater.Interval = 2000;
+            _localAddressUpdater.Elapsed += OnLocalAddressUpdaterTick;
 
-            _nicknameUpdateTimer = new DispatcherTimer();
-            _nicknameUpdateTimer.Interval = TimeSpan.FromSeconds(1);
-            _nicknameUpdateTimer.Tick += OnNicknameUpdateTimerTick;
+            _nicknameUpdateTimer = new Timer();
+            _nicknameUpdateTimer.Interval = 1000;
+            _nicknameUpdateTimer.Elapsed += OnNicknameUpdateTimerTick;
 
             _availableFiles = new AvailableFiles();
             _availableFiles.FileAdded += OnAvailableFileAdded;
@@ -389,7 +389,7 @@ namespace UdpNatPunchClient
             _nicknameUpdateTimer.Start();
         }
 
-        private void OnNicknameUpdateTimerTick(object? sender, EventArgs e)
+        private void OnNicknameUpdateTimerTick(object? sender, ElapsedEventArgs e)
         {
             _nicknameUpdateTimer.Stop();
             NicknameUpdateState = NicknameUpdateState.Updated;
@@ -397,9 +397,9 @@ namespace UdpNatPunchClient
             _tracker?.SendUpdatedPersonalInfo(Nickname);
             _connectedUsers.SendUpdatedInfoToConnectedUsers(Nickname);
 
-            var resetTimer = new DispatcherTimer(DispatcherPriority.Background, Application.Current.Dispatcher);
-            resetTimer.Interval = new TimeSpan(0, 0, 1);
-            resetTimer.Tick += (s, e) =>
+            var resetTimer = new Timer();
+            resetTimer.Interval = 1000;
+            resetTimer.Elapsed += (s, e) =>
             {
                 resetTimer.Stop();
                 NicknameUpdateState = NicknameUpdateState.None;
@@ -407,7 +407,7 @@ namespace UdpNatPunchClient
             resetTimer.Start();
         }
 
-        private void OnLocalAddressUpdaterTick(object? sender, EventArgs e)
+        private void OnLocalAddressUpdaterTick(object? sender, ElapsedEventArgs e)
         {
             _localAddressUpdater.Stop();
             LocalEndPoint = new IPEndPoint(LocalAddressResolver.GetLocalAddress(), _client.LocalPort);
@@ -443,12 +443,12 @@ namespace UdpNatPunchClient
 
         private void OnPeerAdded(object? sender, EncryptedPeerEventArgs e)
         {
-            Debug.WriteLine($"(OnPeerAdded) {e.Peer.Id}");
+            Debug.WriteLine($"(OnPeerAdded) {e.PeerID}");
         }
 
         private void OnPeerConnected(object? sender, EncryptedPeerEventArgs e)
         {
-            Debug.WriteLine($"(OnPeerConnected) {e.Peer.Id}");
+            Debug.WriteLine($"(OnPeerConnected) {e.PeerID}");
 
             var profilePictureByteArray = Array.Empty<byte>();
             var profilePictureExtension = string.Empty;
@@ -461,14 +461,16 @@ namespace UdpNatPunchClient
             }
 
             var introducePeerToPeerMessage = new IntroducePeerToPeerMessage(ID, Nickname, profilePictureByteArray, profilePictureExtension);
-            e.Peer.SendEncrypted(introducePeerToPeerMessage, 1);
+
+            var peer = _client.GetPeerByID(e.PeerID);
+            peer?.SendEncrypted(introducePeerToPeerMessage, 1);
         }
 
         private void OnPeerRemoved(object? sender, EncryptedPeerEventArgs e)
         {
-            Debug.WriteLine($"(OnPeerRemoved) {e.Peer.Id}");
+            Debug.WriteLine($"(OnPeerRemoved) {e.PeerID}");
 
-            var user = _connectedUsers.GetUserByPeer(e.Peer);
+            var user = _connectedUsers.GetUserByPeerID(e.PeerID);
             if (user == null)
             {
                 return;
@@ -480,9 +482,9 @@ namespace UdpNatPunchClient
             }
 
             _connectedUsers.Remove(user.UserID);
-            _downloads.CancelAllDownloadsFromServer(e.Peer.Id);
-            _uploads.CancelAllUploadsOfPeer(e.Peer.Id);
-            _availableFiles.RemoveAllFilesFromServer(e.Peer.Id);
+            _downloads.CancelAllDownloadsFromServer(e.PeerID);
+            _uploads.CancelAllUploadsOfPeer(e.PeerID);
+            _availableFiles.RemoveAllFilesFromServer(e.PeerID);
         }
 
         private async Task OnMessageFromPeerReceived(object? sender, NetEventArgs e)
@@ -494,7 +496,7 @@ namespace UdpNatPunchClient
             Debug.WriteLine($"(OnMessageFromPeerReceived) source = {source.EndPoint}");
             Debug.WriteLine($"(OnMessageFromPeerReceived) type = {type}");
 
-            var author = _connectedUsers.GetUserByPeer(source);
+            var author = _connectedUsers.GetUserByPeerID(source.Id);
 
             switch (type)
             {
@@ -872,9 +874,9 @@ namespace UdpNatPunchClient
 
         private void OnTrackerAdded(object? sender, EventArgs e)
         {
-            if (_client.Tracker != null)
+            if (_client.Server != null)
             {
-                _tracker = new TrackerModel(_client.Tracker);
+                _tracker = new TrackerModel(_client.Server);
                 OnPropertyChanged(nameof(TrackerAddress));
             }
         }
@@ -886,7 +888,7 @@ namespace UdpNatPunchClient
 
             _tracker?.SendIntroductionMessage(ID, Nickname);
 
-            ExpectedTracker = _client.ExpectedTracker;
+            ExpectedTracker = _client.ExpectedServer;
             TrackerConnectionStatus = TrackerConnectionStatusType.Connected;
 
             if (WindowState == WindowState.Minimized &&
@@ -898,9 +900,9 @@ namespace UdpNatPunchClient
                     System.Windows.Forms.ToolTipIcon.Info);
             }
 
-            var resetTimer = new DispatcherTimer(DispatcherPriority.Background, Application.Current.Dispatcher);
-            resetTimer.Interval = TimeSpan.FromSeconds(5);
-            resetTimer.Tick += (s, e) =>
+            var resetTimer = new Timer();
+            resetTimer.Interval = 5000;
+            resetTimer.Elapsed += (s, e) =>
             {
                 resetTimer.Stop();
                 TrackerConnectionStatus = TrackerConnectionStatusType.None;
@@ -908,9 +910,9 @@ namespace UdpNatPunchClient
             resetTimer.Start();
         }
 
-        private void OnTrackerRemoved(object? sender, TrackerDisconnectedEventArgs e)
+        private void OnTrackerRemoved(object? sender, ServerDisconnectedEventArgs e)
         {
-            ExpectedTracker = e.TrackerEndPoint;
+            ExpectedTracker = e.ServerEndPoint;
             TrackerConnectionStatus = TrackerConnectionStatusType.DisconnectFromTracker;
 
             var oldTrackerAddress = _tracker?.EndPoint;
@@ -1132,7 +1134,7 @@ namespace UdpNatPunchClient
 
         private void OnTrackerConnectionAttemptFailed(object? sender, EventArgs e)
         {
-            ExpectedTracker = _client.ExpectedTracker;
+            ExpectedTracker = _client.ExpectedServer;
             TrackerConnectionStatus = TrackerConnectionStatusType.FailedToConnect;
         }
 
@@ -1211,7 +1213,7 @@ namespace UdpNatPunchClient
             if (result &&
                 address != null)
             {
-                if (_client.IsConnectedToTracker(address))
+                if (_client.IsConnectedToServer(address))
                 {
                     MessageBox.Show(
                         "Already connected to this tracker",
@@ -1221,10 +1223,10 @@ namespace UdpNatPunchClient
                 }
                 else
                 {
-                    _client.ConnectToTracker(address);
+                    _client.ConnectToServer(address);
 
                     TrackerConnectionStatus = TrackerConnectionStatusType.TryingToConnect;
-                    ExpectedTracker = _client.ExpectedTracker;
+                    ExpectedTracker = _client.ExpectedServer;
                 }
             }
             else
@@ -1730,9 +1732,9 @@ namespace UdpNatPunchClient
 
                 Debug.WriteLine($"(UpdateProfilePicture) Length of profile picture array: {_profilePictureBytes.Length}");
 
-                var resetTimer = new DispatcherTimer(DispatcherPriority.Background, Application.Current.Dispatcher);
-                resetTimer.Interval = new TimeSpan(0, 0, 2);
-                resetTimer.Tick += (s, e) =>
+                var resetTimer = new Timer();
+                resetTimer.Interval = 2000;
+                resetTimer.Elapsed += (s, e) =>
                 {
                     resetTimer.Stop();
                     ProfilePictureLoadingStatus = ProfilePictureLoadingStatusType.None;

@@ -4,8 +4,8 @@ using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading.Tasks;
-using Networking;
-using Networking.Messages;
+using NetworkingLib;
+using NetworkingLib.Messages;
 
 namespace UdpNatPunchClient.Models
 {
@@ -24,11 +24,11 @@ namespace UdpNatPunchClient.Models
 
         public IEnumerable<UserModel> List => _users.Values.OrderBy(user => user.ConnectionTime);
 
-        public UserModel? GetUserByPeer(EncryptedPeer peer)
+        public UserModel? GetUserByPeerID(int peerID)
         {
             try
             {
-                return _users.Values.First(user => user.PeerID == peer.Id);
+                return _users.Values.First(user => user.PeerID == peerID);
             }
             catch (InvalidOperationException)
             {

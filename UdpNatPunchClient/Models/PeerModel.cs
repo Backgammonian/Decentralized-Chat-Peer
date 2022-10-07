@@ -3,8 +3,8 @@ using System.Diagnostics;
 using System.Linq;
 using Microsoft.Toolkit.Mvvm.ComponentModel;
 using Meziantou.Framework.WPF.Collections;
-using Networking;
-using Networking.Messages;
+using NetworkingLib;
+using NetworkingLib.Messages;
 
 namespace UdpNatPunchClient.Models
 {
@@ -38,7 +38,7 @@ namespace UdpNatPunchClient.Models
             protected set => SetProperty(ref _hasNewMessages, value);
         }
 
-        protected virtual void Send(BaseMessage baseMessage, byte channel)
+        protected void Send(BaseMessage baseMessage, byte channel)
         {
             if (channel >= 0 &&
                 channel < NetworkingConstants.ChannelsCount)
@@ -47,7 +47,7 @@ namespace UdpNatPunchClient.Models
             }
         }
 
-        public virtual void Disconnect()
+        public void Disconnect()
         {
             _peer.Disconnect();
         }

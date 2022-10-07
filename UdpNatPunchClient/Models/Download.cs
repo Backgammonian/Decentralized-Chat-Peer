@@ -3,8 +3,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.Toolkit.Mvvm.ComponentModel;
-using Networking;
-using Networking.Utils;
+using NetworkingLib.Cryptography;
+using NetworkingLib.Utils;
 
 namespace UdpNatPunchClient.Models
 {
@@ -15,7 +15,7 @@ namespace UdpNatPunchClient.Models
         private bool _isDownloaded;
         private bool _isCancelled;
         private HashVerificationStatus _hashVerificationStatus;
-        private string _calculatedHash = CryptographyModule.DefaultFileHash;
+        private string _calculatedHash = FileHashHelper.DefaultFileHash;
         private long _numberOfReceivedSegments;
 
         public Download(AvailableFile availableFile, string path)
@@ -30,7 +30,7 @@ namespace UdpNatPunchClient.Models
             IsCancelled = false;
             HashVerificationStatus = HashVerificationStatus.None;
             StartTime = DateTime.Now;
-            CalculatedHash = CryptographyModule.DefaultFileHash;
+            CalculatedHash = FileHashHelper.DefaultFileHash;
             NumberOfReceivedSegments = 0;
         }
 
@@ -125,9 +125,8 @@ namespace UdpNatPunchClient.Models
             }
             catch (Exception)
             {
+                return false;
             }
-
-            return false;
         }
 
         private void FinishDownload()
@@ -152,9 +151,9 @@ namespace UdpNatPunchClient.Models
             }
 
             HashVerificationStatus = HashVerificationStatus.Started;
-            CalculatedHash = CryptographyModule.ComputeFileHash(FilePath);
+            CalculatedHash = FileHashHelper.ComputeFileHash(FilePath);
 
-            if (CalculatedHash == CryptographyModule.DefaultFileHash)
+            if (CalculatedHash == FileHashHelper.DefaultFileHash)
             {
                 HashVerificationStatus = HashVerificationStatus.Failed;
             }
@@ -226,8 +225,9 @@ namespace UdpNatPunchClient.Models
                 File.Delete(FilePath);
                 FileRemoved?.Invoke(this, EventArgs.Empty);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Debug.WriteLine($"(DownloadFile_CancelWithDeletion) Can't delete file {Name}: {ex}");
             }
         }
 
