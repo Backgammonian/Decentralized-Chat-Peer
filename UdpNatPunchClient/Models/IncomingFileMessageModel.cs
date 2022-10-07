@@ -1,4 +1,4 @@
-﻿using Networking.Messages;
+﻿using NetworkingLib.Messages;
 
 namespace UdpNatPunchClient.Models
 {

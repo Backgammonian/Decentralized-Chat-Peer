@@ -7,7 +7,9 @@ namespace Extensions
     {
         public static bool IsPortOccupied(this int port)
         {
-            return IPGlobalProperties.GetIPGlobalProperties().GetActiveUdpListeners().Any(p => p.Port == port);
+            return port > 0 &&
+                port < 65536 &&
+                IPGlobalProperties.GetIPGlobalProperties().GetActiveUdpListeners().Any(p => p.Port == port);
         }
     }
 }
