@@ -9,6 +9,7 @@ using System.Windows.Input;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Timers;
+using Microsoft.Win32;
 using Microsoft.Toolkit.Mvvm.ComponentModel;
 using Microsoft.Toolkit.Mvvm.Input;
 using Newtonsoft.Json;
@@ -23,7 +24,6 @@ using DropFiles;
 using Helpers;
 using Extensions;
 using UdpNatPunchClient.Models;
-using Microsoft.Win32;
 
 namespace UdpNatPunchClient
 {
