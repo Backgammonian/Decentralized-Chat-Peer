@@ -667,6 +667,8 @@
                                                     </Button>
                                                     <TextBlock 
                                                         Style="{StaticResource HashVerificationStatus}"/>
+                                                    <TextBlock 
+                                                        Style="{StaticResource DurationTimeTextBlock}"/>
                                                     <Button 
                                                         Style="{StaticResource PopUpButtonStyle}"
                                                         Command="{Binding DataContext.OpenFileInFolderCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"
@@ -775,10 +777,7 @@
                                                         Style="{StaticResource PopUpTextBlock}" 
                                                         Text="{Binding FileHash, StringFormat={}SHA256 Hash: {0}}"/>
                                                     <TextBlock 
-                                                        Style="{StaticResource PopUpTextBlock}" 
-                                                        Text="{Binding StartTime, Converter={StaticResource DateTimeConverter}, StringFormat={}Start time: {0}}"/>
-                                                    <TextBlock 
-                                                        Style="{StaticResource FinishTimeTextBlock}"/>
+                                                        Style="{StaticResource DurationTimeTextBlock}"/>
                                                 </StackPanel>
                                             </DataTemplate>
                                         </ListBox.ItemTemplate>

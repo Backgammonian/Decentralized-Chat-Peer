@@ -42,6 +42,7 @@ namespace UdpNatPunchClient.Models
         public double UploadSpeed => _uploadSpeedCounter.Speed;
         public double AverageSpeed => _uploadSpeedCounter.AverageSpeed;
         public long BytesUploaded => _uploadSpeedCounter.Bytes;
+        public TimeSpan Duration => FinishTime - StartTime;
 
         public long NumberOfAckedSegments
         {
@@ -104,6 +105,7 @@ namespace UdpNatPunchClient.Models
         {
             IsFinished = true;
             FinishTime = DateTime.Now;
+            OnPropertyChanged(nameof(Duration));
             _uploadSpeedCounter.Stop();
         }
 

@@ -12,11 +12,12 @@ namespace UdpNatPunchClient.Models
     {
         private readonly SpeedCounter _downloadSpeedCounter;
         private FileStream? _stream;
-        private bool _isDownloaded;
+        private bool _isFinished;
         private bool _isCancelled;
         private HashVerificationStatus _hashVerificationStatus;
         private string _calculatedHash = FileHashHelper.DefaultFileHash;
         private long _numberOfReceivedSegments;
+        private DateTime _finishTime;
 
         public Download(AvailableFile availableFile, string path)
         {
@@ -26,7 +27,7 @@ namespace UdpNatPunchClient.Models
             SourceInfo = availableFile;
             Name = Path.GetFileName(path);
             FilePath = path;
-            IsDownloaded = false;
+            IsFinished = false;
             IsCancelled = false;
             HashVerificationStatus = HashVerificationStatus.None;
             StartTime = DateTime.Now;
@@ -48,11 +49,12 @@ namespace UdpNatPunchClient.Models
         public long Size => SourceInfo.Size;
         public long NumberOfSegments => SourceInfo.NumberOfSegments;
         public string Hash => SourceInfo.Hash;
-        public bool IsActive => !IsCancelled && !IsDownloaded;
+        public bool IsActive => !IsCancelled && !IsFinished;
         public double DownloadSpeed => _downloadSpeedCounter.Speed;
         public double AverageSpeed => _downloadSpeedCounter.AverageSpeed;
         public long BytesDownloaded => _downloadSpeedCounter.Bytes;
         public decimal Progress => NumberOfReceivedSegments / Convert.ToDecimal(NumberOfSegments);
+        public TimeSpan Duration => FinishTime - StartTime;
 
         public long NumberOfReceivedSegments
         {
@@ -69,10 +71,10 @@ namespace UdpNatPunchClient.Models
             }
         }
 
-        public bool IsDownloaded
+        public bool IsFinished
         {
-            get => _isDownloaded;
-            private set => SetProperty(ref _isDownloaded, value);
+            get => _isFinished;
+            private set => SetProperty(ref _isFinished, value);
         }
 
         public bool IsCancelled
@@ -91,6 +93,12 @@ namespace UdpNatPunchClient.Models
         {
             get => _calculatedHash;
             private set => SetProperty(ref _calculatedHash, value);
+        }
+
+        public DateTime FinishTime
+        {
+            get => _finishTime;
+            private set => SetProperty(ref _finishTime, value);
         }
 
         private void OnDownloadSpeedCounterUpdated(object? sender, EventArgs e)
@@ -132,8 +140,10 @@ namespace UdpNatPunchClient.Models
         private void FinishDownload()
         {
             Finished?.Invoke(this, new DownloadFinishedEventArgs(Name));
-            IsDownloaded = true;
+            FinishTime = DateTime.Now;
+            IsFinished = true;
             ShutdownFile();
+            OnPropertyChanged(nameof(Duration));
 
             Debug.WriteLine($"(FinishDownload) File '{Name}' - bytes downloaded: {BytesDownloaded} of {Size}, " +
                 $"segments received: {NumberOfReceivedSegments} of {NumberOfSegments}");
@@ -145,7 +155,7 @@ namespace UdpNatPunchClient.Models
         private void VerifyHash()
         {
             if (HashVerificationStatus != HashVerificationStatus.None ||
-                !IsDownloaded)
+                !IsFinished)
             {
                 return;
             }
