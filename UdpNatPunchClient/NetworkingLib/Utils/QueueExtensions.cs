@@ -6,13 +6,18 @@ namespace NetworkingLib.Utils
     {
         public static double CalculateAverageValue(this Queue<double> queue)
         {
+            if (queue.Count == 0)
+            {
+                return 0;
+            }
+
             var result = 0.0;
             foreach (var value in queue)
             {
                 result += value;
             }
 
-            return queue.Count > 0 ? (result / queue.Count) : 0;
+            return result / queue.Count;
         }
     }
 }

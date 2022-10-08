@@ -7,7 +7,7 @@ namespace NetworkingLib.Utils
 {
     public sealed class SpeedCounter : IDisposable
     {
-        private const int _speedValuesInitialQueueCount = 20;
+        private const int _speedValuesInitialQueueCount = 200;
 
         private readonly Timer _timer;
         private readonly Stopwatch _stopwatch;
@@ -47,7 +47,7 @@ namespace NetworkingLib.Utils
             _newTimeStamp = DateTime.Now;
 
             var value = (_newAmountOfBytes - _oldAmountOfBytes) / (_newTimeStamp - _oldTimeStamp).TotalSeconds;
-            _speedValues.Dequeue();
+            _ = _speedValues.Dequeue();
             _speedValues.Enqueue(value);
 
             Speed = _speedValues.CalculateAverageValue();
@@ -69,9 +69,11 @@ namespace NetworkingLib.Utils
 
         public void Stop()
         {
+            PerformCalculations();
             Speed = 0;
             Updated?.Invoke(this, EventArgs.Empty);
             _timer.Stop();
+            _stopwatch.Stop();
         }
 
         private void Dispose(bool disposing)
@@ -80,6 +82,7 @@ namespace NetworkingLib.Utils
             {
                 if (disposing)
                 {
+                    _stopwatch.Stop();
                     _timer.Stop();
                     _timer.Dispose();
                 }
