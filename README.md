@@ -21,5 +21,7 @@ UPD: Now users can send files of any size and extension to each other! This func
 * [System.Drawing.Common](https://www.nuget.org/packages/System.Drawing.Common/)
 * [Placeholder Text Box](https://youtu.be/QUx2gh0PaEc)
 ## Demonstration:
-![demo](demo.jpeg)
-![animated-demo](animated-demo.gif)
+![profile-demo](profile-demo.png)
+![chat-demo](chat-demo.gif)
+![file-receive-demo](file-receive-demo.png)
+![ile-download-demo](file-download-demo.gif)
