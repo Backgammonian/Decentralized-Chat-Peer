@@ -104,6 +104,7 @@ namespace UdpNatPunchClient.Models
         {
             IsFinished = true;
             FinishTime = DateTime.Now;
+            _uploadSpeedCounter.Stop();
         }
 
         public void AddAck()
