@@ -277,9 +277,9 @@
         </Style.Triggers>
     </Style>
 
-    <Style x:Key="FinishTimeTextBlock" TargetType="TextBlock" BasedOn="{StaticResource BaseTextBlock}">
+    <Style x:Key="DurationTimeTextBlock" TargetType="TextBlock" BasedOn="{StaticResource BaseTextBlock}">
         <Setter Property="Visibility" Value="Collapsed"/>
-        <Setter Property="Text" Value="Finish time"/>
+        <Setter Property="Text" Value="Duration"/>
         <Style.Triggers>
             <MultiDataTrigger>
                 <MultiDataTrigger.Conditions>
@@ -291,7 +291,7 @@
                         Value="True"/>
                 </MultiDataTrigger.Conditions>
                 <MultiDataTrigger.Setters>
-                    <Setter Property="Text" Value="{Binding FinishTime, Converter={StaticResource DateTimeConverter}, StringFormat={}Finish time: {0}}"/>
+                    <Setter Property="Text" Value="{Binding Duration, Converter={StaticResource TimeSpanConverter}, StringFormat={}Duration: {0}}"/>
                     <Setter Property="Visibility" Value="Visible"/>
                 </MultiDataTrigger.Setters>
             </MultiDataTrigger>
