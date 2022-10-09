@@ -39,6 +39,7 @@ namespace Extensions
                 }
                 else
                 {
+                    //default delay
                     times = new byte[4 * frameCount];
                     for (int i = 0; i < times.Length; i++)
                     {
