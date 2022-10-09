@@ -74,13 +74,21 @@ namespace UdpNatPunchClient.Models
         public bool IsFinished
         {
             get => _isFinished;
-            private set => SetProperty(ref _isFinished, value);
+            private set
+            {
+                SetProperty(ref _isFinished, value);
+                OnPropertyChanged(nameof(IsActive));
+            }
         }
 
         public bool IsCancelled
         {
             get => _isCancelled;
-            private set => SetProperty(ref _isCancelled, value);
+            private set
+            {
+                SetProperty(ref _isCancelled, value);
+                OnPropertyChanged(nameof(IsActive));
+            }
         }
 
         public HashVerificationStatus HashVerificationStatus
