@@ -138,7 +138,8 @@ namespace NetworkingLib
                 return;
             }
 
-            SendEncrypted(message.GetContent().Data, channelNumber);
+            var content = message.GetContent(_cryptography.MyPublicKeyHash).Data;
+            SendEncrypted(content, channelNumber);
         }
 
         private void SendEncrypted(byte[] message, byte channelNumber)
@@ -180,7 +181,10 @@ namespace NetworkingLib
                 _cryptography.TryVerifySignature(decompressedMessage, signature))
             {
                 var messageReader = new NetDataReader(decompressedMessage);
-                if (messageReader.TryGetByte(out byte typeByte) &&
+                if (messageReader.TryGetString(out var recepientPublicKeyHash) &&
+                    _cryptography.RecepientPublicKeyHash != string.Empty &&
+                    recepientPublicKeyHash == _cryptography.RecepientPublicKeyHash &&
+                    messageReader.TryGetByte(out byte typeByte) &&
                     typeByte.TryParseType(out NetworkMessageType type) &&
                     messageReader.TryGetString(out string json))
                 {

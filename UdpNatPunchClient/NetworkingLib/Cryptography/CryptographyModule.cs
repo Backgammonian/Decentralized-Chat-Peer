@@ -2,11 +2,30 @@
 using System.IO;
 using System.Security.Cryptography;
 using System.Diagnostics;
+using System.Linq;
+using System.Text;
+using NetworkingLib.Extensions;
 
 namespace NetworkingLib.Cryptography
 {
     public sealed class CryptographyModule : IDisposable
     {
+        #region Static methods
+        public static string CalculateHash(string input)
+        {
+            using var sha1 = SHA1.Create();
+            var hash = sha1.ComputeHash(Encoding.UTF8.GetBytes(input));
+            return string.Concat(hash.Select(b => b.ToString("x2")));
+        }
+
+        public static string CalculateHash(byte[] input)
+        {
+            using var sha1 = SHA1.Create();
+            var hash = sha1.ComputeHash(input);
+            return string.Concat(hash.Select(b => b.ToString("x2")));
+        }
+        #endregion
+
         private readonly ECDiffieHellman _ecdh;
         private readonly byte[] _publicKey;
         private byte[] _privateKey;
@@ -22,12 +41,15 @@ namespace NetworkingLib.Cryptography
             _privateKey = Array.Empty<byte>();
             _ecdsa = ECDsa.Create();
             _signaturePublicKey = _ecdsa.ExportSubjectPublicKeyInfo();
+            MyPublicKeyHash = CalculateHash(_publicKey.Add(_signaturePublicKey));
             IsEnabled = false;
         }
 
         public byte[] PublicKey => (byte[])_publicKey.Clone();
         public byte[] SignaturePublicKey => (byte[])_signaturePublicKey.Clone();
         public bool IsEnabled { get; private set; }
+        public string MyPublicKeyHash { get; }
+        public string RecepientPublicKeyHash { get; private set; } = string.Empty;
 
         public bool TrySetKeys(byte[] publicKey, byte[] publicSignatureKey)
         {
@@ -41,8 +63,12 @@ namespace NetworkingLib.Cryptography
                 using var ecdhRecepient = ECDiffieHellman.Create();
                 ecdhRecepient.ImportSubjectPublicKeyInfo(publicKey, out _);
                 _privateKey = _ecdh.DeriveKeyMaterial(ecdhRecepient.PublicKey);
+
                 _ecdsaRecepient = ECDsa.Create();
                 _ecdsaRecepient.ImportSubjectPublicKeyInfo(publicSignatureKey, out _);
+
+                RecepientPublicKeyHash = CalculateHash(publicKey.Add(publicSignatureKey));
+
                 IsEnabled = true;
 
                 return true;
