@@ -220,7 +220,7 @@
                                 Text="Connected peers:"/>
                             <ListBox
                                 Grid.Row="3"
-                                ScrollViewer.CanContentScroll="False"
+                                ScrollViewer.CanContentScroll="True"
                                 ScrollViewer.VerticalScrollBarVisibility="Auto"
                                 ScrollViewer.HorizontalScrollBarVisibility="Auto"
                                 ItemsSource="{Binding ConnectedUsers}"
@@ -281,7 +281,7 @@
                                 Text="{Binding SelectedPeer, Converter={StaticResource RecepientConverter}}"/>
                             <ListBox
                                 Grid.Row="1"
-                                ScrollViewer.CanContentScroll="False"
+                                ScrollViewer.CanContentScroll="True"
                                 HorizontalContentAlignment="Stretch"
                                 ItemsSource="{Binding Messages.AsObservable}"
                                 SelectedItem="{Binding SelectedMessage}"
@@ -570,7 +570,7 @@
                                     <ListBox
                                         Background="{StaticResource ClientColor}"
                                         ItemsSource="{Binding AvailableFiles}"
-                                        ScrollViewer.CanContentScroll="False"
+                                        ScrollViewer.CanContentScroll="True"
                                         myBehaviours:ListBoxBehaviours.AutoScrollToEnd="True">
                                         <ListBox.ItemTemplate>
                                             <DataTemplate>
@@ -621,7 +621,7 @@
                                     <ListBox
                                         Background="{StaticResource ClientColor}"
                                         ItemsSource="{Binding Downloads}"
-                                        ScrollViewer.CanContentScroll="False"
+                                        ScrollViewer.CanContentScroll="True"
                                         myBehaviours:ListBoxBehaviours.AutoScrollToEnd="True">
                                         <ListBox.ItemTemplate>
                                             <DataTemplate>
@@ -701,7 +701,7 @@
                                     <ListBox
                                         Background="{StaticResource ServerColor}"
                                         ItemsSource="{Binding SharedFiles}"
-                                        ScrollViewer.CanContentScroll="False"
+                                        ScrollViewer.CanContentScroll="True"
                                         myBehaviours:ListBoxBehaviours.AutoScrollToEnd="True">
                                         <ListBox.ItemTemplate>
                                             <DataTemplate>
@@ -750,7 +750,7 @@
                                     <ListBox
                                         Background="{StaticResource ServerColor}"
                                         ItemsSource="{Binding Uploads}"
-                                        ScrollViewer.CanContentScroll="False"
+                                        ScrollViewer.CanContentScroll="True"
                                         myBehaviours:ListBoxBehaviours.AutoScrollToEnd="True">
                                         <ListBox.ItemTemplate>
                                             <DataTemplate>

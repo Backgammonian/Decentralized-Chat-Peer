@@ -20,7 +20,7 @@
     <converters:TimeSpanConverter x:Key="TimeSpanConverter"/>
     <converters:TrackerConnectionStatusConverter x:Key="TrackerConnectionStatusConverter"/>
 
-    <SolidColorBrush x:Key="ServerColor" Color="LightCoral" Opacity="0.7"/>
+    <SolidColorBrush x:Key="ServerColor" Color="LightGreen" Opacity="0.6"/>
     <SolidColorBrush x:Key="ClientColor" Color="Blue" Opacity="0.2"/>
     
     <Style TargetType="TextBlock" x:Key="BaseTextBlock">
