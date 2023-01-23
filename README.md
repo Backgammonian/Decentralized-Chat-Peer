@@ -20,6 +20,7 @@ UPD: Now users can send files of any size and extension to each other! This func
 * [NGif](https://www.codeproject.com/Articles/11505/NGif-Animated-GIF-Encoder-for-NET)
 * [System.Drawing.Common](https://www.nuget.org/packages/System.Drawing.Common/)
 * [Placeholder Text Box](https://youtu.be/QUx2gh0PaEc)
+* [xUnit](https://xunit.net/), [Fluent Assertions](https://fluentassertions.com/) & [FakeItEasy](https://fakeiteasy.github.io/)
 ## Demonstration:
 ![profile-demo](profile-demo.png)
 ![chat-demo](chat-demo.gif)
