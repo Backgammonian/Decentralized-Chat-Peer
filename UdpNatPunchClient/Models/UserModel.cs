@@ -182,7 +182,12 @@ namespace UdpNatPunchClient.Models
             _unreadMessages.Add(message);
             Messages.Add(message);
 
-            var messageToPeer = new FileMessage(sharedFileInfo, message.MessageID);
+            var messageToPeer = new FileMessage(sharedFileInfo.FileHash,
+                sharedFileInfo.FileID,
+                sharedFileInfo.Name,
+                sharedFileInfo.Size,
+                sharedFileInfo.NumberOfSegments,
+                message.MessageID);
             Send(messageToPeer, 0);
         }
 

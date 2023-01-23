@@ -6,7 +6,12 @@ namespace UdpNatPunchClient.Models
     {
         public IncomingFileMessageModel(FileMessage fileMessage, UserModel server) : base(fileMessage.MessageID)
         {
-            AvailableFile = new AvailableFile(fileMessage.SharedFileInfo, server);
+            var sharedFileInfo = new SharedFileInfo(fileMessage.SharedFileHash,
+                fileMessage.SharedFileID,
+                fileMessage.SharedFileName,
+                fileMessage.SharedFileSize,
+                fileMessage.SharedFileNumberOfSegments);
+            AvailableFile = new AvailableFile(sharedFileInfo, server);
         }
 
         public AvailableFile AvailableFile { get; }

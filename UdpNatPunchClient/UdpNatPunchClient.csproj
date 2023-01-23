@@ -10,15 +10,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Litenetlib" Version="0.9.5.2" />
     <PackageReference Include="Meziantou.Framework.WPF" Version="1.5.4" />
     <PackageReference Include="microsoft.toolkit.mvvm" Version="7.1.2" />
     <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.39" />
-    <PackageReference Include="newtonsoft.json" Version="13.0.1" />
     <PackageReference Include="System.drawing.common" Version="6.0.0" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\NetworkingLib\NetworkingLib.csproj" />
     <ProjectReference Include="..\PlaceholderTextBoxControl\PlaceholderTextBoxControl.csproj" />
   </ItemGroup>
 

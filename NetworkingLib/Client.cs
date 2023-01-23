@@ -23,7 +23,7 @@ namespace NetworkingLib
         public Client()
         {
             _listener = new EventBasedNetListener();
-            _xor = new XorEncryptLayer("VerySecretSymmetricXorPassword3923");
+            _xor = new XorEncryptLayer(NetworkingConstants.XorLayerPassword);
             _client = new NetManager(_listener, _xor);
             _client.ChannelsCount = NetworkingConstants.ChannelsCount;
             _client.DisconnectTimeout = NetworkingConstants.DisconnectionTimeoutMilliseconds;
