@@ -4,7 +4,7 @@ Peer (client) of decentralized chat application.
 
 This project is a client of decentralized chat application. This app works on top of [reliable UDP library](https://github.com/RevenantX/LiteNetLib) and establishes encrypted connections using algorithms AES-256 and ECDH (⚠️WARNING: implemented encryption scheme hasn't been thoroughly tested for vulnerabilities such as MITM, replay attack, etc.) 
 
-Main reason of using UDP instead of TCP is the ability to perform [UDP hole punching technique](https://bford.info/pub/net/p2pnat) so users that are inside different local networks can establish direct connection via Internet with help of [rendevous server](https://github.com/Backgammonian/Decentralized-Chat-Tracker-Console). After connection is done peers are able to send text messages and images to each other. 
+Main reason of using UDP instead of TCP is the ability to perform [UDP hole punching technique](https://bford.info/pub/net/p2pnat) so users that are inside different local networks can establish direct connection via Internet with help of [specialized rendevous server](https://github.com/Backgammonian/Decentralized-Chat-Tracker-Console). After connection is done peers are able to send text messages and images to each other. 
 
 This app can also be hidden in system tray and can send receipt notifications to user.
 
