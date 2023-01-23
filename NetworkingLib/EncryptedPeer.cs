@@ -132,6 +132,11 @@ namespace NetworkingLib
 
         public void SendEncrypted(BaseMessage message, byte channelNumber)
         {
+            if (!IsSecurityEnabled)
+            {
+                return;
+            }
+
             if (channelNumber < 0 ||
                 channelNumber >= _peer.NetManager.ChannelsCount)
             {
@@ -144,11 +149,6 @@ namespace NetworkingLib
 
         private void SendEncrypted(byte[] message, byte channelNumber)
         {
-            if (!IsSecurityEnabled)
-            {
-                return;
-            }
-
             if (_cryptography.TrySignData(message, out byte[] signature) &&
                 message.TryCompressByteArray(out byte[] compressedMessage) &&
                 _cryptography.TryEncrypt(compressedMessage, out byte[] encryptedMessage, out byte[] iv))
