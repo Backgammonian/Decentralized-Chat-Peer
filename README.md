@@ -1,5 +1,6 @@
 # Decentralized-Chat-Peer
-Peer (client) of decentralized chat application.
+Peer (client) of decentralized chat application.\
+Server side of this app is located in [this repo](https://github.com/Backgammonian/Decentralized-Chat-Tracker-Console).
 ## Overview
 This project is a client of the decentralized chat application. This app works on top of [reliable UDP library](https://github.com/RevenantX/LiteNetLib) and establishes encrypted connections using AES-256 and ECDH.\
 ⚠️WARNING: Implemented encryption scheme wasn't thoroughly tested for vulnerabilities such as MITM, replay attack, etc.
