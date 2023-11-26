@@ -15,7 +15,7 @@ UPD: Now users can send files of any size and extension to each other! This func
 ![profile-demo](profile-demo.png)
 ![chat-demo](chat-demo.gif)
 ![file-receive-demo](file-receive-demo.png)
-![ile-download-demo](file-download-demo.gif)
+![file-download-demo](file-download-demo.gif)
 ## Dependencies:
 * [LiteNetLib](https://github.com/RevenantX/LiteNetLib)
 * [Newtonsoft.Json](https://www.newtonsoft.com/json)
